@@ -39,15 +39,19 @@ def server_exe(base_dir, kind):
     return d / "llama-server.exe"
 
 
-def server_env(env, exe_dir=None):
+def server_env(env, exe_dir=None, extra_path=None):
     """On Android its libraries sit beside it, OpenCL is the phone maker's (vendor) library and Hexagon's DSP code is
-    found through ADSP_LIBRARY_PATH. On Linux its .so files sit beside llama-server."""
+    found through ADSP_LIBRARY_PATH. On Linux its .so files sit beside llama-server. extra_path adds ffmpeg/ffprobe."""
+    env = dict(env)
+    if extra_path:
+        cur_p = env.get("PATH", "")
+        env["PATH"] = f"{extra_path}{os.pathsep}{cur_p}" if cur_p else str(extra_path)
     if paths.ANDROID:
         lib = os.environ.get("CLOVER_NATIVE_LIB_DIR", "")
-        env = dict(env, LD_LIBRARY_PATH=":".join([lib, "/vendor/lib64", "/system/vendor/lib64"]), ADSP_LIBRARY_PATH=lib)
+        env.update(LD_LIBRARY_PATH=":".join([lib, "/vendor/lib64", "/system/vendor/lib64"]), ADSP_LIBRARY_PATH=lib)
     elif os.name != "nt" and exe_dir:
         cur = env.get("LD_LIBRARY_PATH", "")
-        env = dict(env, LD_LIBRARY_PATH=f"{exe_dir}:{cur}" if cur else str(exe_dir))
+        env["LD_LIBRARY_PATH"] = f"{exe_dir}:{cur}" if cur else str(exe_dir)
     return env
 
 
@@ -97,7 +101,7 @@ def _no_power_throttling(proc):
 class LlamaServer:
     # Larger token window and ubatch size for faster one-time C1 prefill across longer prompts
     def __init__(self, base_dir, kind="vulkan", ctx=32768, timeout_s=180, ubatch=1024, model=None, mmproj=None,
-                 extra_args=(), name=None, threads=None, embeddings=False):
+                 extra_args=(), name=None, threads=None, embeddings=False, extra_path=None):
         base_dir = Path(base_dir)
         self.exe = server_exe(base_dir, kind)
         self.model = Path(model) if model else base_dir / "data" / "lfm3" / "gguf" / GGUF
@@ -122,7 +126,7 @@ class LlamaServer:
         args += [str(a) for a in extra_args]
         # llama-server allows any web origin; a per-launch key keeps web pages in the user's browser from using it
         self._key = secrets.token_urlsafe(24)
-        env = server_env(dict(os.environ, LLAMA_API_KEY=self._key), self.exe.parent)
+        env = server_env(dict(os.environ, LLAMA_API_KEY=self._key), self.exe.parent, extra_path=extra_path)
         self.device, dev_id = self._list_device(env)
         if paths.ANDROID:  # one build with every backend: name the GPU, or none (no offload) for the CPU
             if kind == "vulkan" and not dev_id:
@@ -266,11 +270,121 @@ class LlamaServer:
 
     def tts(self, text, voice="female", lang="en"):
         """Speech for `text` as WAV bytes (llama-server /tts; LFM3-Omni's projector carries the speech decoder)."""
-        status, data = self._request("POST", "/tts", {"input": text, "voice": voice, "lang": lang, "response_format": "wav"},
-                                     timeout=600)
+        status, data = self._request("POST", "/tts", {"input": text, "voice": voice, "lang": lang,
+                                                      "repeat_penalty": 1.2, "response_format": "wav"}, timeout=600)
         if status != 200:
             raise RuntimeError(f"llama-server /tts HTTP {status}: {data[:300]!r}")
         return data
+
+    def realtime_turn(self, *, text="", pcm16_16k=None, instructions="Respond with interleaved text and audio.",
+                      output_modalities=("text", "audio"), max_tokens=1024, on_text_delta=None, on_audio_delta=None,
+                      cancel=None):
+        """Official LFM3-Omni-2B single-pass realtime generation over `WS /v1/realtime` (`<|mixed_start|>` interleaved
+        text + 24 kHz speech when `output_modalities=("text","audio")`, or `<|audio_start|>` when `("audio",)`).
+        Accepts raw 16 kHz mono PCM16 audio bytes (`pcm16_16k`), text (`text`), or both."""
+        import base64
+        import io
+        import struct
+        import wave
+
+        ws = _MiniWS("127.0.0.1", self.port, "/v1/realtime", api_key=self._key)
+        t0 = time.perf_counter()
+        t_first = None
+        text_out = ""
+        pcm24 = bytearray()
+        cancelled = False
+        try:
+            ev0 = ws.recv_json()
+            if not ev0 or ev0.get("type") == "error":
+                raise RuntimeError(f"realtime handshake failed: {ev0}")
+            mods = list(output_modalities or ("text", "audio"))
+            ws.send_json({
+                "type": "session.update",
+                "session": {
+                    "instructions": str(instructions or ""),
+                    "output_modalities": mods,
+                },
+            })
+            ev_upd = ws.recv_json()
+            if ev_upd and ev_upd.get("type") == "error":
+                raise RuntimeError(f"realtime session.update failed: {ev_upd}")
+
+            if pcm16_16k:
+                # Stream 16 kHz PCM16 audio in 64 KB chunks
+                mv = memoryview(pcm16_16k)
+                step = 65536
+                for off in range(0, len(mv), step):
+                    ws.send_json({
+                        "type": "input_audio_buffer.append",
+                        "audio": base64.b64encode(mv[off : off + step]).decode("ascii"),
+                    })
+            if text and str(text).strip():
+                ws.send_json({
+                    "type": "conversation.item.create",
+                    "item": {
+                        "type": "message",
+                        "role": "user",
+                        "content": [{"type": "input_text", "text": str(text)}],
+                    },
+                })
+            resp_cfg = {"output_modalities": mods}
+            if max_tokens and int(max_tokens) > 0:
+                resp_cfg["max_output_tokens"] = int(max_tokens)
+            ws.send_json({"type": "response.create", "response": resp_cfg})
+
+            while True:
+                if cancel is not None and cancel.is_set() and not cancelled:
+                    cancelled = True
+                    ws.send_json({"type": "response.cancel"})
+                ev = ws.recv_json()
+                if ev is None:
+                    break
+                et = ev.get("type")
+                if et == "response.output_text.delta":
+                    if t_first is None:
+                        t_first = time.perf_counter()
+                    d_txt = ev.get("delta") or ""
+                    if d_txt:
+                        text_out += d_txt
+                        if on_text_delta:
+                            on_text_delta(d_txt, text_out)
+                elif et == "response.output_audio.delta":
+                    if t_first is None:
+                        t_first = time.perf_counter()
+                    b64 = ev.get("delta") or ""
+                    if b64:
+                        raw_pcm = base64.b64decode(b64)
+                        pcm24.extend(raw_pcm)
+                        if on_audio_delta:
+                            on_audio_delta(b64, raw_pcm)
+                elif et == "error":
+                    err_obj = ev.get("error") or ev
+                    raise RuntimeError(f"realtime error: {err_obj}")
+                elif et == "response.done":
+                    break
+        finally:
+            ws.close()
+
+        t_end = time.perf_counter()
+        wav_bytes = b""
+        if pcm24:
+            bio = io.BytesIO()
+            with wave.open(bio, "wb") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(24000)
+                wf.writeframes(bytes(pcm24))
+            wav_bytes = bio.getvalue()
+        prefill_s = (t_first - t0) if t_first is not None else (t_end - t0)
+        decode_s = (t_end - t_first) if t_first is not None else 0.0
+        stats = {
+            "prefill_s": round(prefill_s, 2),
+            "decode_s": round(decode_s, 2),
+            "audio_seconds": round(len(pcm24) / (2.0 * 24000.0), 2) if pcm24 else 0.0,
+            "finish": "cancelled" if cancelled else "stop",
+            "mode": "interleaved" if ("text" in output_modalities and "audio" in output_modalities) else "audio",
+        }
+        return text_out.strip(), wav_bytes, stats
 
     def close(self):
         if self.proc.poll() is None:
@@ -280,6 +394,85 @@ class LlamaServer:
             except subprocess.TimeoutExpired:
                 self.proc.kill()
         self._log.close()
+
+
+class _MiniWS:
+    """Zero-dependency RFC 6455 localhost WebSocket client for llama-server /v1/realtime."""
+
+    def __init__(self, host: str, port: int, path: str, timeout: float = 180.0, api_key: str = ""):
+        import base64
+        self.sock = socket.create_connection((host, port), timeout=timeout)
+        key = base64.b64encode(os.urandom(16)).decode("ascii")
+        auth_hdr = f"Authorization: Bearer {api_key}\r\n" if api_key else ""
+        req = (f"GET {path} HTTP/1.1\r\nHost: {host}:{port}\r\n{auth_hdr}Upgrade: websocket\r\n"
+               f"Connection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\n\r\n")
+        self.sock.sendall(req.encode("ascii"))
+        buf = b""
+        while b"\r\n\r\n" not in buf:
+            chunk = self.sock.recv(4096)
+            if not chunk:
+                raise EOFError("WebSocket closed during handshake")
+            buf += chunk
+        hdr, self.rem = buf.split(b"\r\n\r\n", 1)
+        if b"101" not in hdr.splitlines()[0]:
+            self.sock.close()
+            raise RuntimeError(f"WebSocket upgrade rejected: {hdr[:200]!r}")
+
+    def _read_exact(self, n: int) -> bytes:
+        while len(self.rem) < n:
+            chunk = self.sock.recv(65536)
+            if not chunk:
+                raise EOFError("WebSocket closed")
+            self.rem += chunk
+        out, self.rem = self.rem[:n], self.rem[n:]
+        return out
+
+    def send_json(self, obj: dict) -> None:
+        import struct
+        payload = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        mask = os.urandom(4)
+        n = len(payload)
+        hdr = bytearray([0x81])
+        if n < 126:
+            hdr.append(0x80 | n)
+        elif n < 65536:
+            hdr.append(0x80 | 126)
+            hdr.extend(struct.pack("!H", n))
+        else:
+            hdr.append(0x80 | 127)
+            hdr.extend(struct.pack("!Q", n))
+        hdr.extend(mask)
+        masked = bytes(b ^ mask[i & 3] for i, b in enumerate(payload))
+        self.sock.sendall(bytes(hdr) + masked)
+
+    def recv_json(self) -> dict | None:
+        import struct
+        while True:
+            b0, b1 = self._read_exact(2)
+            opcode = b0 & 0x0F
+            masked = bool(b1 & 0x80)
+            length = b1 & 0x7F
+            if length == 126:
+                length = struct.unpack("!H", self._read_exact(2))[0]
+            elif length == 127:
+                length = struct.unpack("!Q", self._read_exact(8))[0]
+            mask = self._read_exact(4) if masked else b""
+            data = self._read_exact(length)
+            if masked:
+                data = bytes(b ^ mask[i & 3] for i, b in enumerate(data))
+            if opcode == 0x8:
+                return None
+            if opcode == 0x9:
+                self.sock.sendall(bytes([0x8A, 0x80]) + os.urandom(4))
+                continue
+            if opcode == 0x1:
+                return json.loads(data.decode("utf-8"))
+
+    def close(self) -> None:
+        try:
+            self.sock.close()
+        except Exception:
+            pass
 
 
 def sampling_params(cfg, max_new, seed, ctx=8192):

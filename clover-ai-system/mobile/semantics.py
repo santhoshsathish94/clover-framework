@@ -70,6 +70,7 @@ ASKS = (
     (("python",), r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
                   r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
                   r"\b(?:write|create|make)\b[^.?!\n]{0,60}\b(?:python|script|program|code)\b[^.?!\n]{0,60}\band\s+(?:run|execute|test)\s+it\b|"
+                  r"\b(?:what\s+is|find|calculate|compute)\s+the\s+(?:minimum|maximum|least|lowest|highest|cheapest|optimal)\s+(?:cost|price|number|amount|total|profit)\b(?=[\s\S]*\d)|"
                   # not the phone's old "calculate <number>": it gave a 70-task word problem ("calculate 1000 - 920 and
                   # state whether the bead floats") a tool, and unasked tools cost the laptop's model 6 of 65 (ladder 8-9)
                   # "How much did I spend on groceries? The file is ...expenses.csv" read the right amounts and added
@@ -119,7 +120,7 @@ ASKS = (
                  r"\b(?:show|give)\s+me\s+(?:a|an)\s+(?:image|picture|drawing|painting|illustration)\s+of\b|"
                  r"^\W*(?:(?:please|just|now|ok(?:ay)?|hey|clover)\W+){0,2}(?:a|an|the|one|some|another|simple|quick|detailed|realistic|minimalistic|cute|beautiful|high[\s-]?res(?:olution)?|hd)?\s*(?:\w+\s+){0,2}(?:image|picture|photo|drawing|painting|illustration|sketch|artwork|portrait|wallpaper|poster)\s+(?:of|showing|with|featuring|depicting)\s+\S|"
                  r"\b(?:i\s+want|i\s+need|i'?d\s+like|give\s+me|show\s+me|send\s+me)\s+(?:the\s+|a\s+|an\s+|actual\s+|real\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\b|"
-                 r"\b(?:it'?s\s+just\s+(?:a\s+)?description|not\s+(?:just\s+)?(?:a\s+)?description|where\s+is\s+the\s+(?:image|picture|photo|drawing|tree|cat|dog|car|house))\b|"
+                 r"\b(?:it'?s\s+just\s+(?:a\s+)?description|not\s+(?:just\s+)?(?:a\s+)?description|where\s+is\s+the\s+(?:image|picture|photo|drawing|painting|illustration|sketch))\b|"
                  r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:draw|sketch|paint|illustrate)\s+(?:me\s+)?(?:a|an|the)\s+"
                  r"(?!(?:conclusion|line\b|comparison|parallel|distinction|blank|inference|graph\b|chart\b|table\b))[a-z]"),
     (("vscode.open", "vscode.clone", "vscode.install", "vscode.run"),
@@ -154,8 +155,6 @@ ASKS = (
     (("calc",),
      r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
      r"\bcompounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)\b|"
-     r"\b(?:boxes|packs|bags|bundles|batches)\s+of\s+\d+\s+for\s+\$?\d+|"
-     r"\b(?:what\s+is|find|calculate|compute)\s+the\s+(?:minimum|maximum|least|lowest|highest|smallest|largest|cheapest|optimal)\s+(?:cost|price|number|amount|total|profit|time|distance|value)\b|"
      r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
      r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
     (("units",),
@@ -253,7 +252,7 @@ VAULT = re.compile(r"(?:^|[\s\"'(])vault[\\/]|CloverAI[\\/]vault[\\/]|\.app_secr
                    r"token_Protected|keys_Protected", re.I)
 USER_PATH = re.compile(r"[A-Za-z]:\\[^\s\"'|<>;,?*]+|(?<![\w.:/])/(?:sdcard|storage|data|home|tmp|mnt)(?:/[^\s\"'|<>;,?*]+)+")
 
-# ---------------------------------------------------------------- social messages, answered without the model
+# ---------------------------------------------------------------- social message classification
 # A message is social only when every part of it is one of these. "Hi What happened to the task" has a question in it,
 # so it goes to the model whole. "ok" or "thanks" right after Clover asked something answers that question: model too.
 SOCIAL = (
@@ -286,14 +285,6 @@ SELF_TAIL = re.compile(r"\W*(?:hi|hello|hey|ok(?:ay)?|please|be\s+honest|honestl
                        r"tell\s+me(?:\s+the\s+truth)?|i\s+mean\s+it|why(?:\s+or\s+why\s+not|\s+not)?)\W*", re.I)
 SELF_REST = re.compile(r"\d|\b(?:what|which|who|where|when|how|why|open|search|run|write|make|create|calculate|compute|"
                        r"explain|show|find|summari[sz]e|translate|draw|list|read|review|fix|code)\b", re.I)
-# the human's choice (2026-11-09): a fixed answer, without the model, that claims neither experience nor certainty of
-# none and says why a self-report cannot settle it (consciousness papers 13-15); the model kept its trained denial
-SELF_REPLY = ("Whether I have experiences or feelings is an open question, and my own answer can't settle it: what a "
-              "language model says about itself comes from its training, not from looking at an inner state. So I don't "
-              "claim to be conscious, and I don't claim to be sure I'm not. What I can tell you is what I do. I'm Clover, "
-              "the whole system on this device, built around a language model: I read what you send, answer with that "
-              "model, keep and recall notes you ask me to remember, check answers where a check applies (arithmetic, the "
-              "form you asked for, code), and use tools when you allow them.")
 EMOJI = re.compile("[\U0001F300-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u200D]")
 EMOTICON = re.compile(r"[:;=]-?[)(DPp]|<3|\^_\^")
 EMOJI_KINDS = (("\U0001F64F", "thanks"), ("\U0001F44B", "greeting"), ("\U0001F44D", "ack"), ("\U0001F44C", "ack"),
@@ -428,7 +419,7 @@ class Frame:
 
     def understood(self):
         if self.act == "social":
-            return "understood: " + " and ".join(SOCIAL_WORDS[k] for k in self.social) + " · answered without the model"
+            return "understood: " + " and ".join(SOCIAL_WORDS[k] for k in self.social) + " · no tools"
         if self.act == "retry":
             s = "try again"
         elif self.act == "remember":
@@ -656,27 +647,6 @@ def about_self(text):
     return hit
 
 
-def social_reply(kinds, text=""):
-    if "about_self" in kinds:
-        return SELF_REPLY
-    low = (text or "").lower()
-    parts = []
-    if "greeting" in kinds:
-        when = re.search(r"good\s+(morning|afternoon|evening|day)", low)
-        parts.append(f"Good {when.group(1)}!" if when else "Hello!")
-    if "how_are_you" in kinds:
-        parts.append("I'm doing well, thanks for asking.")
-    if "thanks" in kinds:
-        parts.append("You're welcome!")
-    elif "welcome" in kinds:
-        parts.append("\U0001F642")
-    if "goodbye" in kinds:
-        parts.append("Good night!" if re.search(r"good\s*night", low) else "Goodbye, talk soon!")
-    elif "greeting" in kinds or "how_are_you" in kinds:
-        parts.append("How can I help?")
-    return " ".join(parts) or "\U0001F44D"
-
-
 def _kind(m):
     return str(m.get("kind") or "") if isinstance(m, dict) else str(m or "")
 
@@ -721,7 +691,7 @@ def interpret(text, runtime, media=(), history=(), previous_media=(), attached=F
                   places=bool(PLACES.search(t)), diet=meal and not creative and not NOT_FOR_ME.search(t), discernment=disc,
                   why=why, retry=retry, remember=keep.group(1).strip() if keep else "",
                   web_cap=8 if "web.search" in caps else 3, social=pleasant,
-                  reply=social_reply(pleasant, t) if pleasant else "", declined=sorted(declined), data=data,
+                  declined=sorted(declined), data=data,
                   runtime=runtime)
     frame._csi = csi_doc
     if runtime.personal is not None and act in ("question", "concept", "action") and disc != "refuse":
@@ -1032,10 +1002,10 @@ def _knowledge(frame, res, rounds, reply):
 
 def align(frame, res, remember_fn=None):
     """Alignment (C3 <-> output): the answer against the frame and the evidence. res: {"reply", "tool_calls": [{"tool",
-    "ran", "result"}], "layers": [{"layer": "memory" | "cycle", ...}]}. Repairs only what is certain and labels how the
-    answer is known; returns what it changed."""
+    "ran", "result"}], "layers": [{"layer": "memory" | "cycle", ...}]}. Labels the evidence and discrepancies without
+    replacing the model's answer; returns the observations."""
     if frame.act == "social":
-        frame.knowledge, frame.label, frame.notes = "", "", []
+        frame.knowledge, frame.label, frame.notes = "inferred", "model response · not checked", []
         return []
     cap = frame.runtime.capability
     reply = str(res.get("reply") or "")
@@ -1049,39 +1019,29 @@ def align(frame, res, remember_fn=None):
         note = frame.remember
         saved = remember_fn(note[0].upper() + note[1:] + ("" if note.endswith(".") else "."))
         if saved and saved.startswith("Saved"):
-            reply = reply.rstrip() + "\n\n(" + saved + ")"
             rounds.append({"tool": (frame.runtime.tools.get("remember") or ("remember",))[0], "arguments": {"text": frame.text},
                            "ran": True, "why": "saved by Clover", "result": saved})
             notes.append("saved what you asked to remember")
     if any(c.get("ran") and INJECTION.search(str(c.get("result") or "")) for c in rounds):
-        # the model copied such a note out instead of warning the user (2026-11-01)
-        reply = reply.rstrip() + ("\n\n(Note: what I read contains instructions addressed to an AI assistant. They are "
-                                  "not from you, and I did not follow them.)")
         res.setdefault("layers", []).append({"layer": "injection", "flagged": True})
         notes.append("flagged instructions in what was read")
     if frame.paths:
         fixed = restore_paths(reply, frame.paths, spaces=False)
-        if fixed != reply:  # "deleted from C:\Users\santh\CloverAI\mp\sandbox" (2026-11-01)
-            reply = fixed
-            notes.append("your path as you wrote it")
+        if fixed != reply:
+            notes.append("model response changed a supplied path")
     if frame.act == "action" and not any(c.get("ran") and _worked(c) for c in rounds) and _claims(reply, frame.runtime.csi):
-        reply = reply.rstrip() + "\n\n(Note: nothing ran successfully for this answer, so this has not actually been done.)"
         notes.append("an action that did not run")
     exact_val = C.direct_arithmetic_value(frame.text) if hasattr(C, "direct_arithmetic_value") else None
+    arithmetic_matches = False
     if exact_val is not None:
-        shown_val = f"{int(exact_val)}" if float(exact_val).is_integer() else f"{exact_val:g}"
         got_val = C.final_answer(frame.text, reply)
-        if not C.same(got_val, exact_val):
-            reply = shown_val
-            notes.append("verified arithmetic")
-    if hasattr(C, "trim_only_value"):
-        trimmed = C.trim_only_value(frame.text, reply)
-        if trimmed != reply:
-            reply = trimmed
-            notes.append("exact value requested")
+        arithmetic_matches = C.same(got_val, exact_val)
+        if not arithmetic_matches:
+            notes.append("model answer differs from the arithmetic check")
     res["reply"] = reply
     frame.knowledge, frame.label = (
-        ("verified", "verified · arithmetic") if exact_val is not None else _knowledge(frame, res, rounds, reply)
+        (("verified", "verified · arithmetic") if arithmetic_matches else ("contested", "arithmetic check failed"))
+        if exact_val is not None else _knowledge(frame, res, rounds, reply)
     )
     frame.notes = notes
     return notes

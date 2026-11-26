@@ -1,2 +1,2 @@
-c895d129af80bb0ce21e87e4e971bfa585b18ef20adb73ce660dc87b721e4f6b  clover-ai-studio-beta.aab
-d0684b3349c515cd7d24893af177da350da2917092dbab28f7e959acfe68b33b  clover-ai-studio-beta.apk
+9e3086b588f2f210f5a75a0eda23eb18b57dcefb3c0a8a8ea441309c2915026a  clover-ai-studio-beta.apk
+6ee19e45bcfe9b43a680b2de99d9f97478f45289bfe16a63e48b9ffdde7f6d37  clover-ai-studio-beta.aab

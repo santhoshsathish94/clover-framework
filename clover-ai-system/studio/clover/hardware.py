@@ -103,13 +103,13 @@ def gpus(base):
 
 def choose(c, ram, gpu_list):
     """Settings for this machine. GPU when Vulkan finds a real one (the 2B model with its projector needs about 2 GB of
-    the GPU's memory); context 65,536 tokens from 15 GB; the speech instance and CSI use
+    the GPU's memory); context 32,768 tokens (LFM3-Omni-2B's full 32K context window); the speech instance and CSI use
     the physical cores the chat engine leaves."""
     usable = [g for g in gpu_list if not g["software"] and g["memory_mb"] >= 2048]
     best = max(usable, key=lambda g: g["memory_mb"]) if usable else None
     cores = c.get("cores") or max(1, (c.get("threads") or 2) // 2)
     return {"engine": "gpu" if best else "cpu", "gpu": best["name"] if best else None,
-            "ctx": 65536 if (ram or 0) >= 24 else 32768,
+            "ctx": 32768,
             "voice_threads": max(4, min(16, cores)),
             "csi_threads": 2 if cores <= 10 else 4}
 

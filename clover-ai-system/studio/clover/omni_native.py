@@ -22,12 +22,21 @@ import clover_cycle as C
 import paths
 import semantics
 
-QUANTS = {"q4_0": "LFM3-Omni-2B-Q4_0.gguf", "q4_k_m": "LFM3-Omni-2B-Q4_K_M.gguf"}
+QUANTS = {
+    "q4_0": "LFM3-Omni-2B-Q4_0.gguf",
+    "q4_k_m": "LFM3-Omni-2B-Q4_K_M.gguf",
+    "q8_0": "LFM3-Omni-2B-Q8_0.gguf",
+    "bf16": "LFM3-Omni-2B-BF16.gguf",
+}
 MMPROJ = "mmproj-LFM3-Omni-2B-Q8_0.gguf"
+MMPROJ_BF16 = "mmproj-LFM3-Omni-2B-BF16.gguf"
+SPEECH_LANGS = ("en", "ar", "da", "de", "el", "fi", "fr", "he", "it", "ja", "ko", "nl", "pl", "pt", "es", "sv", "tr", "zh")
 PART = {"image": "image_url", "audio": "input_audio", "video": "input_video"}
 GREEDY = {"temperature": 0.0, "top_k": 0, "top_p": 1.0, "min_p": 0.0, "repeat_penalty": 1.0, "dry_multiplier": 0.0,
           "xtc_probability": 0.0, "presence_penalty": 0.0, "frequency_penalty": 0.0}  # the card: greedy for text output
 TOOL_XML = re.compile(r"<tool_call>[\s\S]*?(?:</tool_call>|$)")
+THINK_PREFIX = re.compile(r"^\s*<think>\s*</think>\s*")
+TOOL_OPEN_RE = re.compile(r"<tool_call>|<function=")
 LOOP_TAIL = 160
 # a forced round (tool_choice required) writes its text first: "which application would you like to install? Could you
 # please tell me:" came with a run_powershell call (tests/tool_choice_probe.py)
@@ -114,19 +123,19 @@ MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "vide
 
 def _resolve_image_prompt(query: str, past_msgs=()) -> str:
     """Resolve the visual description to pass to `generate_image`, looking back at `past_msgs` when `query` is a
-    follow-up such as 'Ask nemotron to generate', 'Where?', 'Try again', or 'Where is the tree its just description i want the image'."""
+    meta follow-up such as 'Ask nemotron to generate', 'Where?', 'Try again', or 'Where is the <subject> it's just description i want the image'."""
     q = " ".join(str(query or "").split()).strip()
-    m_where = re.search(r"\bwhere\s+is\s+the\s+([a-z][a-z\s]{1,35}?)(?:\s+it'?s\b|\s+i\s+want\b|[?.!,]|$)", q, re.I)
-    if m_where and m_where.group(1).strip().lower() not in ("image", "picture", "photo", "drawing", "illustration"):
-        return f"a clear, detailed illustration of a {m_where.group(1).strip()}"
+    m_where = re.search(r"\bwhere\s+is\s+the\s+([a-z0-9][a-z0-9\s,\-]{1,60}?)(?:\s+it'?s\b|\s+i\s+want\b|[?.!,]|$)", q, re.I)
+    if m_where and m_where.group(1).strip().lower() not in ("image", "picture", "photo", "drawing", "illustration", "art", "artwork"):
+        return m_where.group(1).strip()
     is_meta_followup = bool(
-        re.match(r"^\W*(?:where(?:\s+is\s+it)?|try\s+again|retry|redo|generate\s+it|make\s+it|draw\s+it|show\s+me)\s*[?.!]*\W*$", q, re.I)
+        re.match(r"^\W*(?:where(?:\s+is\s+(?:it|the\s+(?:image|picture|photo|drawing|illustration)))?|try\s+again|retry|redo|generate\s+it|make\s+it|draw\s+it|show\s+me)\s*[?.!]*\W*$", q, re.I)
         or re.search(r"\b(?:ask|use|have|let|tell)\s+(?:nemotron|kimi|clover|lfm\w*|the\s+model)\s+to\s+(?:generate|create|make|draw|render)\b", q, re.I)
         or re.search(r"\b(?:it'?s\s+just\s+(?:a\s+)?description|i\s+want\s+the\s+(?:image|picture))\b", q, re.I)
     )
     if not is_meta_followup and q:
         cleaned = re.sub(
-            r"^\W*(?:(?:please|just|can\s+you|could\s+you|would\s+you)\s+)*(?:generate|create|make|draw|paint|render|sketch|illustrate|show\s+me|give\s+me)\s+(?:me\s+)?(?:a|an|the|some)?\s*(?:simple\s+|detailed\s+|high[\s-]?res(?:olution)?\s+|hd\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\s+(?:of|showing|with|featuring)\s+",
+            r"^\W*(?:(?:please|just|can\s+you|could\s+you|would\s+you)\s+)*(?:generate|create|make|draw|paint|render|sketch|illustrate|show\s+me|give\s+me)(?:\s+me)?\s+",
             "",
             q,
             flags=re.I,
@@ -140,307 +149,56 @@ def _resolve_image_prompt(query: str, past_msgs=()) -> str:
             continue
         if m.get("role") == "user":
             u_c = " ".join(c.split()).strip()
-            if re.match(r"^\W*(?:can\s+you\s+generate\s+images|where|try\s+again|hi|hello)\b", u_c, re.I):
+            if re.match(r"^\W*(?:(?:can|could|do|are)\s+you\s+(?:able\s+to\s+)?(?:generate|create|make|draw)|where|try\s+again|hi|hello)\b", u_c, re.I):
                 continue
             if re.search(r"\b(?:ask|use)\s+(?:nemotron|kimi)\b|\bit'?s\s+just\s+(?:a\s+)?description\b", u_c, re.I):
                 continue
-            return u_c
-        elif m.get("role") == "assistant":
-            m_desc = re.search(r"(?:Here is (?:the image|a different version)|The image is):\s*([^.!\n]{8,180})", c, re.I)
-            if m_desc:
-                return m_desc.group(1).strip()
-    return q or "a scenic nature illustration with a tree and sunlight"
-
-
-def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
-    """When S3 pre-calls already supply the complete factual answer, return it directly so C1 runs strictly as
-    inference-to-state (`0` llama-server decoded tokens) -> C2 -> C3. Notes to rewrite go to the model: joining them
-    with commas answered "one clear sentence" with the notes themselves (2026-11-11)."""
-    if s3_pre_call is None or not rounds or not all(r.get("ran") and r.get("worked") for r in rounds):
-        return None
-    all_pre = [s3_pre_call] + list(s3_extra_calls or ())
-    names = [c["name"] for c in all_pre]
-    first_res = str(rounds[0].get("result") or "").strip()
-    if names == ["remember"] and first_res:
-        note_txt = str(s3_pre_call.get("arguments", {}).get("text") or "").strip()
-        return f"Noted and saved to your memory: {note_txt}" if note_txt else first_res
-    if names == ["get_current_time"] and first_res:
-        return f"The current local time is {first_res}." if not first_res.endswith(".") else first_res
-    if names == ["vscode_open"] and first_res:
-        return first_res if first_res.endswith(".") else f"{first_res}."
-    if names == ["generate_image"] and first_res and not first_res.startswith("Error:"):
-        img_p = str(s3_pre_call.get("arguments", {}).get("prompt") or query or "your description").strip(" .?!")
-        img_p = re.sub(r"^(?:a\s+|an\s+|the\s+)?(?:simple\s+|minimalistic\s+)?(?:image|picture|drawing|illustration|photo)\s+of\s+", "", img_p, flags=re.I).strip()
-        return f"Here is the generated image of {img_p or 'your request'}."
-    if all(n == "convert_units" for n in names) and rounds and all(r.get("ran") and r.get("worked") for r in rounds):
-        parts = [str(r.get("result") or "").strip().rstrip(".") for r in rounds if str(r.get("result") or "").strip()]
-        if parts:
-            return (parts[0] + ".") if len(parts) == 1 else ("; ".join(parts) + ".")
-    if any(c["name"] == "write_file" and str(c.get("arguments", {}).get("path") or "").endswith("threejs-visual.html") for c in all_pre):
-        return (
-            "Installed three.js in the active workspace and built the interactive 3D visual scene in threejs-visual.html. "
-            "You can interact with the rendered 3D scene preview directly in the chat."
-        )
-    return None
-
-
-class _EmbeddingStateServer:
-    """Fallback C1 state server using OmniC2C3Runtime's 2048-d embedding table when no local llama-server GGUF is running."""
-    ctx = C1_INFER_CTX
-    proc = None
-
-    def __init__(self, base_dir):
-        import omni_c2_c3
-        self.rt = omni_c2_c3.for_base(base_dir) if base_dir else None
-
-    def apply_template(self, messages):
-        return (
-            "".join(f"<|im_start|>{m.get('role', 'user')}\n{m.get('content', '')}<|im_end|>\n" for m in (messages or ()))
-            + "<|im_start|>assistant\n"
-        )
-
-    def tokenize(self, text):
-        if self.rt is not None:
-            return self.rt.tok.encode(str(text or ""), allow_special=True)
-        return [max(1, len(w)) for w in str(text or "").split()]
-
-    def hidden_states(self, ids):
-        if self.rt is not None:
-            return self.rt.token_embeddings_2048(list(ids))
-        import numpy as np
-        return np.zeros((len(ids), 2048), dtype=np.float32)
-
-    def close(self):
-        pass
+            return _resolve_image_prompt(u_c, ())
+    return q
 
 
 def omni_files(base_dir, quant="q4_0"):
     """-> (paths, missing names) for the Omni on llama.cpp."""
     base_dir = Path(base_dir)
+    q = quant if quant in QUANTS else "q4_0"
     g = base_dir / "data" / "omni" / "gguf"
-    paths = {"model": g / QUANTS[quant], "mmproj": g / MMPROJ}
-    missing = [p.name for p in paths.values() if not p.is_file()]
-    return paths, missing
+    mm = (g / MMPROJ_BF16) if (q == "bf16" and (g / MMPROJ_BF16).is_file()) else (g / MMPROJ)
+    out = {"model": g / QUANTS[q], "mmproj": mm}
+    missing = [p.name for p in out.values() if not p.is_file()]
+    return out, missing
 
 
-def _threejs_visual_html() -> str:
-    """Interactive Three.js 3D WebGL / Canvas visual HTML scene built for Clover Studio."""
-    return """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Clover Three.js 3D Visual</title>
-<style>
-  body { margin: 0; background: #0e1712; color: #f7f3e9; font-family: system-ui, sans-serif; overflow: hidden; }
-  #hud { position: fixed; top: 14px; left: 16px; background: rgba(18, 28, 22, 0.85); border: 1px solid rgba(131, 184, 61, 0.45);
-         border-radius: 10px; padding: 10px 14px; z-index: 10; backdrop-filter: blur(8px); }
-  #hud b { color: #83B83D; font-size: 14px; display: block; margin-bottom: 3px; }
-  #hud span { font-size: 12px; color: #cfd8d1; }
-  canvas { display: block; width: 100vw; height: 100vh; cursor: grab; }
-</style>
-</head>
-<body>
-<div id="hud">
-  <b>Clover 3D Visual · Three.js WebGL</b>
-  <span id="stat">Interactive 3D Icosahedron &amp; Particle Lattice (drag or move pointer)</span>
-</div>
-<canvas id="three-canvas"></canvas>
-<script>
-// Self-contained Three.js-compatible 3D projection & shading engine (works offline & inside CSP sandbox)
-(function() {
-  const canvas = document.getElementById('three-canvas');
-  const ctx = canvas.getContext('2d');
-  let W = window.innerWidth || 720, H = window.innerHeight || 420;
-  function resize() {
-    W = canvas.width = window.innerWidth || 720;
-    H = canvas.height = window.innerHeight || 420;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const phi = (1 + Math.sqrt(5)) / 2;
-  const rawVerts = [
-    [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
-    [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
-    [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1]
-  ];
-  const faces = [
-    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
-    [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
-    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
-    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
-  ];
-  const stars = [];
-  for (let i = 0; i < 240; i++) {
-    stars.push({
-      x: (Math.sin(i * 12.9898) * 43758.5453 % 1) * 10 - 5,
-      y: (Math.sin(i * 78.233) * 23421.631 % 1) * 8 - 4,
-      z: (Math.cos(i * 45.164) * 19283.421 % 1) * 8 - 4,
-      s: (i % 3) + 1
-    });
-  }
-
-  let mx = 0, my = 0;
-  window.addEventListener('pointermove', function(e) {
-    mx = (e.clientX / Math.max(1, W) - 0.5) * 1.6;
-    my = (e.clientY / Math.max(1, H) - 0.5) * 1.6;
-  });
-
-  function rot3D(x, y, z, ax, ay) {
-    const cy = Math.cos(ay), sy = Math.sin(ay);
-    const x1 = x * cy + z * sy;
-    const z1 = -x * sy + z * cy;
-    const cx = Math.cos(ax), sx = Math.sin(ax);
-    const y2 = y * cx - z1 * sx;
-    const z2 = y * sx + z1 * cx;
-    return [x1, y2, z2];
-  }
-
-  function render(t) {
-    requestAnimationFrame(render);
-    const sec = t * 0.001;
-    ctx.fillStyle = '#0e1712';
-    ctx.fillRect(0, 0, W, H);
-    const cx = W * 0.5, cy = H * 0.52;
-
-    // 1. 3D Starfield lattice
-    for (let i = 0; i < stars.length; i++) {
-      const st = stars[i];
-      const p = rot3D(st.x, st.y, st.z, my * 0.3, sec * 0.12 + mx * 0.3);
-      const depth = 5.5 / Math.max(1.2, 5.5 - p[2]);
-      const sx = cx + p[0] * 75 * depth;
-      const sy = cy + p[1] * 75 * depth;
-      ctx.fillStyle = i % 3 === 0 ? 'rgba(131,184,61,0.75)' : 'rgba(110,165,125,0.45)';
-      ctx.beginPath();
-      ctx.arc(sx, sy, st.s * 0.85, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 2. Orbital Torus Ring
-    ctx.strokeStyle = 'rgba(131,184,61,0.42)';
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    for (let i = 0; i <= 72; i++) {
-      const a = (i / 72) * Math.PI * 2;
-      const p = rot3D(Math.cos(a) * 2.55, Math.sin(a) * 0.65, Math.sin(a) * 2.45, 0.4 + my * 0.4, sec * 0.35 + mx * 0.4);
-      const sc = Math.min(W, H) * 0.22 / (1 - p[2] * 0.1);
-      const px = cx + p[0] * sc, py = cy + p[1] * sc;
-      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-
-    // 3. 3D Icosahedron Mesh + Wireframe
-    const ay = sec * 0.65 + mx;
-    const ax = sec * 0.38 + my;
-    const baseScale = Math.min(W, H) * 0.185;
-    const proj = rawVerts.map(function(v) {
-      const r = rot3D(v[0], v[1], v[2], ax, ay);
-      const perspective = baseScale / (1 - r[2] * 0.12);
-      return [cx + r[0] * perspective, cy + r[1] * perspective, r[2]];
-    });
-
-    const sortedFaces = faces.slice().sort(function(f1, f2) {
-      return (proj[f1[0]][2] + proj[f1[1]][2] + proj[f1[2]][2]) -
-             (proj[f2[0]][2] + proj[f2[1]][2] + proj[f2[2]][2]);
-    });
-
-    for (let i = 0; i < sortedFaces.length; i++) {
-      const f = sortedFaces[i];
-      const p0 = proj[f[0]], p1 = proj[f[1]], p2 = proj[f[2]];
-      const zAvg = (p0[2] + p1[2] + p2[2]) / 3;
-      const g = Math.max(36, Math.min(155, Math.round(80 + zAvg * 32)));
-      ctx.fillStyle = 'rgba(22,' + g + ',44,0.82)';
-      ctx.strokeStyle = '#83B83D';
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(p0[0], p0[1]);
-      ctx.lineTo(p1[0], p1[1]);
-      ctx.lineTo(p2[0], p2[1]);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-    }
-
-    // Vertex nodes
-    ctx.fillStyle = '#d7f591';
-    for (let i = 0; i < proj.length; i++) {
-      ctx.beginPath();
-      ctx.arc(proj[i][0], proj[i][1], 2.8, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  requestAnimationFrame(render);
-})();
-</script>
-</body>
-</html>
-"""
+def available_quants(base_dir):
+    """Which LFM3-Omni-2B GGUF precisions are currently downloaded on disk."""
+    g = Path(base_dir) / "data" / "omni" / "gguf"
+    mm_ok = (g / MMPROJ).is_file() or (g / MMPROJ_BF16).is_file()
+    return {k: bool(mm_ok and (g / fname).is_file()) for k, fname in QUANTS.items()}
 
 
-def _render_threejs_preview_png(media_dir: Path) -> str:
-    """Render a crisp 3D polyhedron & particle lattice preview PNG into `media_dir` for the chat turn."""
-    import hashlib
-    import io
-    import math
-    from PIL import Image, ImageDraw
-    w, h = 720, 420
-    im = Image.new("RGB", (w, h), (14, 23, 18))
-    dr = ImageDraw.Draw(im)
-    # Subtle radial glow and star lattice
-    cx, cy = w // 2, h // 2 + 10
-    for i in range(90):
-        sx = int((i * 173 + 41) % w)
-        sy = int((i * 257 + 19) % h)
-        r_dot = 2 if i % 5 == 0 else 1
-        dr.ellipse([sx - r_dot, sy - r_dot, sx + r_dot, sy + r_dot], fill=(131, 184, 61) if i % 3 == 0 else (76, 122, 88))
-    # Outer orbital ring
-    dr.arc([cx - 190, cy - 85, cx + 190, cy + 85], start=0, end=360, fill=(58, 128, 68), width=2)
-    # Project a 3D icosahedron wireframe
-    phi = (1.0 + math.sqrt(5.0)) / 2.0
-    raw_v = [
-        (-1, phi, 0), (1, phi, 0), (-1, -phi, 0), (1, -phi, 0),
-        (0, -1, phi), (0, 1, phi), (0, -1, -phi), (0, 1, -phi),
-        (phi, 0, -1), (phi, 0, 1), (-phi, 0, -1), (-phi, 0, 1),
-    ]
-    ang_y, ang_x = 0.52, 0.36
-    pts2d = []
-    for vx, vy, vz in raw_v:
-        x1 = vx * math.cos(ang_y) + vz * math.sin(ang_y)
-        z1 = -vx * math.sin(ang_y) + vz * math.cos(ang_y)
-        y1 = vy * math.cos(ang_x) - z1 * math.sin(ang_x)
-        z2 = vy * math.sin(ang_x) + z1 * math.cos(ang_x)
-        scale = 76.0 / (1.0 - z2 * 0.12)
-        pts2d.append((cx + x1 * scale, cy + y1 * scale, z2))
-    faces = [
-        (0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11),
-        (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6), (7, 1, 8),
-        (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9),
-        (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1),
-    ]
-    for a, b, c in sorted(faces, key=lambda f: pts2d[f[0]][2] + pts2d[f[1]][2] + pts2d[f[2]][2]):
-        z_avg = (pts2d[a][2] + pts2d[b][2] + pts2d[c][2]) / 3.0
-        g_val = max(38, min(145, int(75 + z_avg * 28)))
-        dr.polygon(
-            [(pts2d[a][0], pts2d[a][1]), (pts2d[b][0], pts2d[b][1]), (pts2d[c][0], pts2d[c][1])],
-            fill=(20, g_val, 42),
-            outline=(131, 184, 61),
-        )
-    for x, y, _ in pts2d:
-        dr.ellipse([x - 3, y - 3, x + 3, y + 3], fill=(215, 245, 145))
-    dr.rounded_rectangle([18, 16, 410, 62], radius=8, fill=(22, 36, 27), outline=(131, 184, 61))
-    dr.text((30, 24), "Clover Three.js 3D Visual (WebGL Scene)", fill=(131, 184, 61))
-    dr.text((30, 41), "threejs-visual.html · Interactive 3D Icosahedron & Lattice", fill=(235, 242, 236))
-    buf = io.BytesIO()
-    im.save(buf, format="PNG")
-    data = buf.getvalue()
-    fname = hashlib.sha256(data).hexdigest()[:32] + ".png"
-    (media_dir / fname).write_bytes(data)
-    return fname
+def detect_speech_lang(text, preferred="auto"):
+    """Resolve one of LFM3-Omni-2B's 19 supported speech languages (`SPEECH_LANGS`)."""
+    pref = str(preferred or "auto").strip().lower()
+    if pref in SPEECH_LANGS:
+        return pref
+    s = str(text or "")
+    if re.search(r"[\u0600-\u06FF]", s):
+        return "ar"
+    if re.search(r"[\u0590-\u05FF]", s):
+        return "he"
+    if re.search(r"[\u0370-\u03FF]", s):
+        return "el"
+    if re.search(r"[\uAC00-\uD7AF]", s):
+        return "ko"
+    if re.search(r"[\u3040-\u30FF]", s):
+        return "ja"
+    if re.search(r"[\u4E00-\u9FFF]", s):
+        return "zh"
+    return "en"
 
 
-def media_part(m):
+def media_part(m, *, native_video=True):
     kind = m["kind"]
-    if kind == "video" and m.get("frame_file"):
+    if kind == "video" and not native_video and m.get("frame_file"):
         return {"type": "image_url", "image_url": {"url": "file://" + m["frame_file"]}}
     url = "file://" + m["file"]
     if kind == "image":
@@ -448,10 +206,34 @@ def media_part(m):
     return {"type": PART[kind], PART[kind]: {"url": url}}
 
 
-def user_content(text, media, media_dir):
-    """OpenAI content for a user message: media first (llama.cpp's advice), then the text."""
-    parts = [media_part(m) for m in media or () if (Path(media_dir) / m["file"]).is_file()]
-    return parts + [{"type": "text", "text": text}] if parts else text
+def user_content(text, media, media_dir, *, native_video=True):
+    """OpenAI content for a user message: media first (llama.cpp's advice), then the text when non-empty.
+    For videos: when `native_video` is True (ffmpeg available), sends `input_video` so LFM3-Omni-2B watches 2 fps
+    frames AND hears the interleaved soundtrack; on Android without ffmpeg, extracts 2 fps keyframes + 16 kHz WAV."""
+    media_p = Path(media_dir)
+    parts = []
+    for m in media or ():
+        if not isinstance(m, dict) or not m.get("file") or not (media_p / m["file"]).is_file():
+            continue
+        if m.get("kind") == "video" and not native_video:
+            frames, aud_wav = [], None
+            if ANDROID:
+                try:
+                    import android_media
+                    frames, aud_wav = android_media.extract_video_frames_and_audio(media_p / m["file"], media_p)
+                except Exception:
+                    frames, aud_wav = [], None
+            if frames:
+                for fn in frames:
+                    parts.append({"type": "image_url", "image_url": {"url": "file://" + fn}})
+                if aud_wav and (media_p / aud_wav).is_file():
+                    parts.append({"type": "input_audio", "input_audio": {"url": "file://" + aud_wav}})
+                continue
+        parts.append(media_part(m, native_video=native_video))
+    txt = str(text or "")
+    if not parts:
+        return txt
+    return parts + ([{"type": "text", "text": txt}] if txt.strip() else [])
 
 
 def run_s3_sensory_context(base_dir, media_dir, media, query, *, kit=None, emit=None, turn_images=None):
@@ -666,7 +448,7 @@ def run_s3_sensory_context(base_dir, media_dir, media, query, *, kit=None, emit=
 
 
 def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_msgs=()):
-    """Plan deterministic S3 pre-calls (`npm install three` + `write_file` `threejs-visual.html`, `fetch_url`, `web_search`,
+    """Plan deterministic S3 pre-calls (`fetch_url`, `web_search`,
     `get_current_time`, `laptop_status`, `run_python`, `remember`, `vscode_open`, `read_file`) across all model engines."""
     s3_pre_call = None
     s3_extra_calls = []
@@ -675,27 +457,7 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
     url_m = re.search(r"https?://\S+", query or "")
     base_p = Path(getattr(engine, "base_dir", None) or Path.cwd())
     workdir = getattr(engine, "workdir", None)
-    if (
-        "run_powershell" in only_tools
-        and "run_powershell" in by_name
-        and re.search(r"\bthree(?:\.js)?\b", query or "", re.I)
-        and re.search(r"\b(?:install|build|create|make|visuals?|3d)\b", query or "", re.I)
-    ):
-        vis_dir = Path(workdir) if (workdir and Path(workdir).is_dir()) else (base_p / "workspaces" / "threejs-visual")
-        vis_dir.mkdir(parents=True, exist_ok=True)
-        s3_pre_call = {
-            "id": "call_" + uuid.uuid4().hex[:16],
-            "name": "run_powershell",
-            "arguments": {"command": "npm install three --no-audit --no-fund", "cwd": str(vis_dir)},
-        }
-        if "write_file" in by_name:
-            html_path = vis_dir / "threejs-visual.html"
-            s3_extra_calls.append({
-                "id": "call_" + uuid.uuid4().hex[:16],
-                "name": "write_file",
-                "arguments": {"path": str(html_path), "content": _threejs_visual_html()},
-            })
-    elif "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
+    if "fetch_url" in only_tools and "fetch_url" in by_name and url_m:
         u = url_m.group(0).rstrip(".,;)'>\"]")
         s3_pre_call = {"id": "call_" + uuid.uuid4().hex[:16], "name": "fetch_url", "arguments": {"url": u}}
     elif (
@@ -757,16 +519,6 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
                 "name": "calculate",
                 "arguments": {"expression": expr_int},
             })
-        elif hasattr(C, "solve_quantitative_word_problem"):
-            wp = C.solve_quantitative_word_problem(query or "")
-            if wp is not None:
-                wp_expr, _, wp_expl = wp
-                s3_pre_call = {
-                    "id": "call_" + uuid.uuid4().hex[:16],
-                    "name": "calculate",
-                    "arguments": {"expression": wp_expr},
-                    "note": wp_expl,
-                }
     elif (
         "generate_image" in only_tools
         and "generate_image" in by_name
@@ -822,8 +574,7 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
 
 
 def execute_s3_pre_calls(engine, s3_pre_call, s3_extra_calls, *, ask=None, allow=(), emit=None):
-    """Execute planned S3 pre-calls (`[s3_pre_call] + s3_extra_calls`) across any model engine, emitting tool cards and
-    rendering 3D visual previews when an HTML visual is written. Returns `(rounds, done_calls, pre_text)`."""
+    """Execute planned S3 pre-calls and emit actual tool results. Returns `(rounds, done_calls, pre_text)`."""
     emit = emit or (lambda e: None)
     all_pre = [s3_pre_call] + list(s3_extra_calls or ())
     emit({"type": "round", "round": 1})
@@ -850,6 +601,8 @@ def execute_s3_pre_calls(engine, s3_pre_call, s3_extra_calls, *, ask=None, allow
             "why": why,
             "result": result[:3000],
         })
+        if pc["name"] == "generate_image" and not worked:
+            raise RuntimeError(f"Image generation failed: {result}")
         rounds.append({
             "tool": pc["name"],
             "arguments": pc["arguments"],
@@ -861,32 +614,11 @@ def execute_s3_pre_calls(engine, s3_pre_call, s3_extra_calls, *, ask=None, allow
         })
         note_extra = f"\n({pc['note']})" if pc.get("note") else ""
         pre_summaries.append(f"Live {pc['name']} results:\n{result}{note_extra}")
-        if pc["name"] == "write_file" and ran and worked and str(pc["arguments"].get("path") or "").endswith(".html"):
-            try:
-                prev_fn = _render_threejs_preview_png(media_dir)
-                if getattr(engine, "turn_images", None) is not None:
-                    engine.turn_images.append({
-                        "file": prev_fn,
-                        "prompt": "Three.js 3D Visual Scene (threejs-visual.html)",
-                        "model": "three.js",
-                        "seconds": 0.2,
-                        "width": 720,
-                        "height": 420,
-                    })
-            except Exception:
-                pass
     pre_text = (
         "Live tool results for this request (already executed in S3 — "
         "answer directly from these real results in plain text without calling tools):\n"
         + "\n\n".join(pre_summaries)
     )
-    if any(pc["name"] in ("run_powershell", "write_file") for pc in all_pre):
-        pre_text += (
-            "\n\n[Note: The S3 tools above ALREADY ran on this machine: three.js was installed in the workspace via npm "
-            "and the interactive 3D visual page threejs-visual.html was written to disk and rendered. "
-            "Summarize what was installed and built in 2-4 concise sentences. "
-            "Do NOT say you cannot install packages or build HTML pages, and do NOT output an HTML code block.]"
-        )
     return rounds, done_calls, pre_text
 
 
@@ -948,21 +680,28 @@ class SideGate:
 
 
 class OmniNative(N.LFM3Native):
-    def __init__(self, base_dir, perms, max_tokens=65536, progress=None, engine="gpu", quant="q4_0",
+    def __init__(self, base_dir, perms, max_tokens=32768, progress=None, engine="gpu", quant="q4_0",
                  voice_threads=VOICE_THREADS, gpu_name="GPU", threads=None):
         """max_tokens (context), voice_threads, gpu_name and (on a phone) threads come from this machine (hardware.choose)."""
+        import shutil
         t0 = time.perf_counter()
         progress = progress or (lambda m: None)
         base_dir = Path(base_dir)
+        quant = quant if quant in QUANTS else "q4_0"
         self.base_dir, self.perms, self.quant = base_dir, perms, quant
         self.voice_threads = int(voice_threads)
-        paths, missing = omni_files(base_dir, quant)
+        model_paths, missing = omni_files(base_dir, quant)
         if missing:
             raise FileNotFoundError("missing " + ", ".join(missing) + " (run Clover AI Studio setup again)")
         self.media_dir = base_dir / "media"
         self.media_dir.mkdir(parents=True, exist_ok=True)
         ff_txt = base_dir / "tools" / "ffmpeg" / "BIN.txt"
         self.ffmpeg_dir = ff_txt.read_text(encoding="utf-8").strip() if ff_txt.is_file() else ""
+        if not self.ffmpeg_dir:
+            sys_ff = shutil.which("ffmpeg")
+            if sys_ff:
+                self.ffmpeg_dir = str(Path(sys_ff).resolve().parent)
+        self.has_native_video = bool(self.ffmpeg_dir)
         extra = ["--reasoning", "off", "--media-path", str(self.media_dir), "--video-fps", "2"]
         if ANDROID:
             # Adreno's OpenCL backend lacks ops of the projector's graph: a picture ended llama-server (S23, b12012); on
@@ -971,23 +710,33 @@ class OmniNative(N.LFM3Native):
         if self.ffmpeg_dir:
             extra += ["--video-ffmpeg-dir", self.ffmpeg_dir]
         kind = "vulkan" if engine == "gpu" else "cpu"
-        progress("LFM3-Omni-2B on the " + (gpu_name if engine == "gpu" else "CPU") + " (llama.cpp, 4-bit)")
-        self.engine_kind, self.max_tokens, self.cache = engine, int(max_tokens), None
-        # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
-        self.separate_voice = engine == "gpu" and not ANDROID
-        # a re-sent prompt is processed again from the last checkpoint, which sits at a ubatch end: the same 4,198-token
-        # VS Code request reprocessed 2,052 tokens at -ub 2048 and 260 at -ub 256 (k3 CPU 3.2 s -> 0.5 s, laptop Iris Xe
-        # Vulkan 5.8 s -> 1.5 s); cold it cost nothing on k3 (5.6 s vs 6.1 s) and 4-8% on the laptop (11.0 s vs 10.6 s);
-        # a 1,920-token picture and a voice clip still worked at 256 on both (TokenEconomizer item 3)
-        ubatch_sz = 256
-        self.gpu = L.LlamaServer(base_dir, kind, max_tokens, ubatch=ubatch_sz, model=paths["model"], mmproj=paths["mmproj"],
-                                 extra_args=extra, name=f"omni-{kind}", timeout_s=300, threads=threads)
-        props = self.gpu.props()
-        mods = props.get("modalities") or {}
-        self.inputs = ["text"] + [k for k in ("vision", "audio") if mods.get(k)] + (["video"] if self.ffmpeg_dir and mods.get("vision") else [])
+        q_label = "BF16 16-bit" if quant == "bf16" else ("8-bit Q8_0" if quant == "q8_0" else f"4-bit {quant.upper()}")
+        self.engine_kind, self.max_tokens, self.cache = engine, min(32768, int(max_tokens or 32768)), None
+        self._paths = model_paths
+        self._extra_args = extra
+        self._threads = threads
+        self._pre_rt = None
+        if engine == "precomputed":
+            import omni_precomputed
+            progress("LFM3-Omni-2B Precomputed C1 Trunks + 4-Bit Experts (liblfm3_cpu_engine, O(1) mmap)")
+            self._pre_rt = omni_precomputed.get_runtime(base_dir, threads=threads)
+            self.separate_voice = not ANDROID
+            self.gpu = None
+            self.inputs = ["text", "vision", "audio"] + (["video"] if (self.has_native_video or ANDROID) else [])
+        else:
+            progress("LFM3-Omni-2B on the " + (gpu_name if engine == "gpu" else "CPU") + f" (llama.cpp, {q_label})")
+            # speech on its own CPU instance while chat has the laptop's GPU; a phone has no memory for a second copy
+            self.separate_voice = engine == "gpu" and not ANDROID
+            ubatch_sz = 256
+            self.gpu = L.LlamaServer(base_dir, kind, self.max_tokens, ubatch=ubatch_sz, model=model_paths["model"],
+                                     mmproj=model_paths["mmproj"], extra_args=extra, name=f"omni-{kind}", timeout_s=300,
+                                     threads=threads, extra_path=self.ffmpeg_dir or None)
+            props = self.gpu.props()
+            mods = props.get("modalities") or {}
+            self.inputs = (["text"] + [k for k in ("vision", "audio") if mods.get(k)]
+                           + (["video"] if (self.has_native_video or ANDROID) and mods.get("vision") else []))
         self.lock = threading.Lock()
         self.stage = {"name": "idle", "since": time.time()}
-        self._paths = paths
         self._voice, self._voice_busy, self._voice_used, self._voice_error = None, 0, 0.0, None
         self._voice_lock = threading.Lock()
         self.side_gate = SideGate()
@@ -996,65 +745,114 @@ class OmniNative(N.LFM3Native):
         self._extra = {}
         self.workdir, self.workname, self.after_write = None, "", None  # the active workspace (server sets them)
         self.c1_inference_only = False  # the server sets it per turn (setting c1_inference_only)
-        self._c1_srv, self._threads = None, threads
+        self._c1_srv = None
         self.setup_s = round(time.perf_counter() - t0, 2)
 
+    def _ensure_mm_server(self):
+        """Lazily start the multimodal llama-server (mmproj + LiquidCodec) when Precomputed C1 receives media or speech."""
+        if self.gpu is None:
+            self.gpu = L.LlamaServer(self.base_dir, "cpu", self.max_tokens, ubatch=256, model=self._paths["model"],
+                                     mmproj=self._paths["mmproj"], extra_args=self._extra_args, name="omni-mm-cpu",
+                                     timeout_s=300, threads=self._threads, extra_path=self.ffmpeg_dir or None)
+        return self.gpu
+
     def describe(self):
-        return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": self.engine_kind, "max_tokens": self.max_tokens,
-                "setup_s": self.setup_s, "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
+        mm_tag = "BF16" if "BF16" in self._paths["mmproj"].name.upper() else "Q8_0"
+        if self.engine_kind == "precomputed":
+            return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": "precomputed", "quant": "soc_q4",
+                    "max_tokens": self.max_tokens, "setup_s": self.setup_s,
+                    "load_ms": getattr(self._pre_rt, "load_ms", None),
+                    "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
+                    "layers": [
+                        "C1 Precomputed LFM3-Omni-2B (trunk-0..23 + 4-Bit SwiGLU Experts + Two-Stage LM Head, O(1) mmap)",
+                        "C2 HybridAgent (Disabled)",
+                        "C3 11-Level NCM (Disabled)",
+                        "S1 Memory & Records · S2 Recall & Ontology · S3 Tools & Compiler · CSI & PPL",
+                    ],
+                    "device": "CPU (Precomputed C1 · AVX2/AVX-VNNI / ARMv9 NEON)",
+                    "weights": f"Precomputed 4-bit Group-64 Trunks + Experts + on-demand projector {mm_tag}",
+                    "backend": "liblfm3_cpu_engine (precomputed static trunks + experts)",
+                    "inputs": self.inputs, "outputs": ["text", "speech"],
+                    "speech_languages": list(SPEECH_LANGS),
+                    "speech": "on-demand 24 kHz LiquidCodec neural speech",
+                    "speech_error": self._voice_error,
+                    "reasoning": False}
+        w_tag = ("16-bit (BF16)" if self.quant == "bf16"
+                 else ("8-bit (Q8_0)" if self.quant == "q8_0" else f"4-bit ({self.quant.upper()})"))
+        return {"mode": "omni", "model": "LFM3-Omni-2B", "engine": self.engine_kind, "quant": self.quant,
+                "max_tokens": self.max_tokens, "setup_s": self.setup_s,
+                "tools": [t["function"]["name"] for t in N.STUDIO_TOOLS],
                 "layers": [
-                    f"C1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()})",
-                    "C2 HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0)",
-                    "Bridges (Lfm3ComboBridge + Lfm3ExpertBridge, bridge-trunk-0)",
-                    "C3 11-level NCM (VQ-VAE + 12L NextConceptTransformer + 3L PointerDecoder)",
+                    f"C1 LFM3-Omni-2B (llama.cpp {self.gpu.kind}, {self.quant.upper()} · Full Omni: Text, Vision, Audio, Video+Soundtrack & Speech)",
+                    "C2 HybridAgent (Disabled)",
+                    "C3 11-Level NCM (Disabled)",
                     "S1 Memory & Records · S2 Recall & Ontology · S3 Tools & Compiler · CSI & PPL",
                 ],
-                "device": self.gpu.device, "weights": f"4-bit ({self.quant.upper()}) + projector Q8_0",
-                "backend": "llama.cpp " + self.gpu.kind + " + C2 HybridAgent + Bridges + C3 11-level NCM",
+                "device": self.gpu.device, "weights": f"{w_tag} + projector {mm_tag}",
+                "backend": f"llama.cpp {self.gpu.kind} (direct LFM3-Omni-2B end-to-end)",
                 "inputs": self.inputs, "outputs": ["text", "speech"],
+                "speech_languages": list(SPEECH_LANGS),
                 "speech": (f"CPU, own llama.cpp instance ({self.voice_threads} threads; "
                            + ("running)" if self._voice is not None else "starts when Clover first speaks)")
                            if self.separate_voice else "same instance as chat"),
                 "speech_error": self._voice_error,
                 "reasoning": False}
 
-    def system_prompt(self, tools_on=True, asked=None):
-        now = datetime.datetime.now().astimezone()
-        return (f"You are Clover, an assistant running entirely on the user's {PLATFORM} (model: LFM3-Omni-2B). "
-                f"You can generate images and illustrations from text descriptions, and you can see images, hear audio and watch videos the user attaches. "
-                f"Today is {now.strftime('%A %d %B %Y')}. The user's home folder is {Path.home()}. "
-                "Answer directly and completely without asking unnecessary follow-up or clarifying questions. "
-                + self.workspace_sentence() + N.tools_sentence(tools_on, asked))
+    def system_prompt(self, tools_on=True, asked=None, *, media=(), has_typed_text=True, generation_mode="text"):
+        """Official LiquidAI/LFM3-Omni-2B modality system prompts (README.md) with zero fake capability claims."""
+        kinds = {m.get("kind") for m in (media or ()) if isinstance(m, dict)}
+        out_cue = ("Respond with interleaved text and audio."
+                   if generation_mode == "interleaved" else "Respond with text.")
+        if "video" in kinds:
+            base = f"Answer questions about the video using what you see and hear. {out_cue}"
+        elif "image" in kinds and "audio" in kinds and not has_typed_text:
+            base = f"Answer questions about the provided image. Base every answer only on what can be seen. {out_cue}"
+        elif "image" in kinds:
+            base = f"Answer questions about the provided image. Base every answer only on what can be seen. {out_cue}"
+        elif "audio" in kinds and has_typed_text:
+            base = f"Answer questions about the provided audio clip. Base every answer only on what can be heard. {out_cue}"
+        else:
+            base = out_cue
+        ws_txt = self.workspace_sentence().strip()
+        parts = [p for p in (ws_txt, (N.tools_sentence(True, asked) if tools_on else ""), base) if p]
+        return " ".join(parts)
 
-    def transcribe(self, media):
-        """The words of the voice messages in `media`, to see whether the user asked for a tool."""
+    def transcribe(self, media, lang=None):
+        """Official LFM3-Omni-2B ASR (`Perform ASR in <language>.` / `Perform ASR.`)."""
         parts = [media_part(m) for m in media or () if m["kind"] == "audio" and (self.media_dir / m["file"]).is_file()]
         if not parts:
             return ""
-        # the probe's ASR form; an instruction after the audio made the Omni answer the question instead
-        msgs = [{"role": "system", "content": "Perform ASR in English."}, {"role": "user", "content": parts}]
+        lang_names = {
+            "en": "English", "ar": "Arabic", "da": "Danish", "de": "German", "el": "Greek", "fi": "Finnish",
+            "fr": "French", "he": "Hebrew", "it": "Italian", "ja": "Japanese", "ko": "Korean", "nl": "Dutch",
+            "pl": "Polish", "pt": "Portuguese", "es": "Spanish", "sv": "Swedish", "tr": "Turkish", "zh": "Chinese",
+        }
+        lname = lang_names.get(str(lang or "").lower())
+        sys_asr = f"Perform ASR in {lname}." if lname else "Perform ASR."
+        msgs = [{"role": "system", "content": sys_asr}, {"role": "user", "content": parts}]
         with self.lock:
             try:
-                return self._chat(msgs, [], 200, {})[0].strip()
+                return self._chat(msgs, [], 1024, {})[0].strip()
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
 
-    def tts(self, text, voice="female", lang="en"):
+    def tts(self, text, voice="female", lang="auto"):
         t = speakable(text)
         if not t:
             raise ValueError("nothing to speak")
+        eff_lang = detect_speech_lang(t, preferred=lang)
         self.side_gate.hold()
         try:
             srv = self._voice_server() if self.separate_voice else None
             if srv is not None:
                 try:
-                    return srv.tts(t, voice=voice, lang=lang)
+                    return srv.tts(t, voice=voice, lang=eff_lang)
                 finally:
                     self._voice_done()
             with self.lock:  # one llama-server slot: speech waits for a running answer
                 self.stage = {"name": "speaking", "since": time.time()}
                 try:
-                    return self.gpu.tts(t, voice=voice, lang=lang)
+                    return self._ensure_mm_server().tts(t, voice=voice, lang=eff_lang)
                 finally:
                     self.stage = {"name": "idle", "since": time.time()}
         finally:
@@ -1143,9 +941,19 @@ class OmniNative(N.LFM3Native):
 
     # ---------------- generation ----------------
     def _chat(self, msgs, schemas, max_new, by_name, on_delta=None, cancel=None, seed=0, tool_choice=None, on_plan=None):
-        """One C1 inference pass through /v1/chat/completions -> (content, calls, stats).
-        C1 is strictly for inference only; C2 plans and C3 (11-Level NCM) decodes the final answer."""
+        """One C1 inference pass -> (content, calls, stats). Uses Precomputed C1 (`liblfm3_cpu_engine`) when enabled."""
         eff_max = min(int(max_new), 512) if tool_choice == "required" else int(max_new)
+        if self._pre_rt is not None and tool_choice != "required":
+            import omni_precomputed
+            if not omni_precomputed.has_multimodal_parts(msgs):
+                prompt_txt = omni_precomputed.format_omni_prompt(msgs, schemas)
+                prompt_ids = self._pre_rt.tokenizer.encode(prompt_txt)
+                if len(prompt_ids) <= omni_precomputed.MAX_NATIVE_PROMPT_TOKENS:
+                    self.stage = {"name": "C1 precomputed inference", "since": time.time()}
+                    return self._pre_rt.stream_chat(
+                        prompt_ids, eff_max, on_delta=on_delta, cancel=cancel, by_name=by_name,
+                        looping_fn=looping, trim_loop_fn=trim_loop, rambling_fn=rambling,
+                    )
         body = dict(GREEDY, messages=msgs, max_tokens=eff_max, seed=int(seed), cache_prompt=True)
         if schemas:
             body["tools"] = schemas
@@ -1158,7 +966,7 @@ class OmniNative(N.LFM3Native):
         looped, checked, cut = False, 0, None
         args_checked, args_looped = 0, False
         self.stage = {"name": "planning" if tool_choice else "C1 inference", "since": time.time()}
-        stream = self.gpu.chat_stream(body, cancel)
+        stream = self._ensure_mm_server().chat_stream(body, cancel)
         try:
             for ev in stream:
                 if ev.get("cancelled"):
@@ -1246,27 +1054,6 @@ class OmniNative(N.LFM3Native):
                                 **({"rambling": True} if cut is not None else {})}
 
     def _history(self, history, keep_last_media=False, strip_attached=False, current_query=None, is_follow_up=False):
-        if history and current_query and not is_follow_up and not keep_last_media:
-            import lfm3_layers
-            if not lfm3_layers.needs_recall(current_query):
-                q_terms = lfm3_layers.topic_terms(current_query)
-                if len(q_terms) >= 1 and not re.search(r"\b(?:it|that|this|those|these|them|they|same|instead|above|earlier|previous|before|more|else|another)\b", current_query, re.I):
-                    rel_pairs = []
-                    i = 0
-                    while i < len(history):
-                        m = history[i]
-                        if m.get("role") == "user":
-                            u_txt = str(m.get("content") or "")
-                            a_m = history[i + 1] if (i + 1 < len(history) and history[i + 1].get("role") == "assistant") else None
-                            a_txt = str((a_m or {}).get("content") or "")
-                            if lfm3_layers.topic_terms(u_txt + " " + a_txt) & q_terms:
-                                rel_pairs.append(m)
-                                if a_m is not None:
-                                    rel_pairs.append(a_m)
-                            i += 2 if a_m is not None else 1
-                        else:
-                            i += 1
-                    history = rel_pairs
         out = []
         last_media_idx = -1
         if keep_last_media:
@@ -1276,7 +1063,10 @@ class OmniNative(N.LFM3Native):
                     break
         for idx, m in enumerate(history):
             if idx == last_media_idx and m.get("role") == "user" and m.get("media"):
-                out.append({"role": "user", "content": user_content(m.get("content") or "", m["media"], self.media_dir)})
+                out.append({"role": "user", "content": user_content(
+                    m.get("content") or "", m["media"], self.media_dir,
+                    native_video=getattr(self, "has_native_video", True),
+                )})
             elif m.get("role") == "user" and m.get("media"):
                 names = ", ".join(str(x.get("name") or x.get("kind") or "attachment") for x in m["media"] if isinstance(x, dict))
                 txt = str(m.get("content") or "").strip()
@@ -1290,16 +1080,45 @@ class OmniNative(N.LFM3Native):
                 out.append(item)
         return out
 
+    def _extract_pcm16_16k(self, media) -> bytes | None:
+        """Read 16 kHz mono PCM16 frames from the first attached WAV audio clip for `/v1/realtime`."""
+        import wave
+        import numpy as np
+        for m in media or ():
+            if not isinstance(m, dict) or m.get("kind") != "audio":
+                continue
+            p = self.media_dir / str(m.get("file") or "")
+            if not p.is_file() or p.suffix.lower() != ".wav":
+                continue
+            try:
+                with wave.open(str(p), "rb") as wf:
+                    ch, sw, sr, nf = wf.getnchannels(), wf.getsampwidth(), wf.getframerate(), wf.getnframes()
+                    raw = wf.readframes(nf)
+                if sw != 2 or not raw:
+                    continue
+                s16 = np.frombuffer(raw, dtype="<i2")
+                if ch > 1:
+                    s16 = (s16[: (s16.size // ch) * ch].reshape(-1, ch).astype(np.int32).mean(axis=1)).astype("<i2")
+                if sr != 16000 and s16.size > 1:
+                    out_len = max(1, int(round(s16.size * 16000.0 / float(sr))))
+                    x_old = np.linspace(0.0, 1.0, num=s16.size, endpoint=False)
+                    x_new = np.linspace(0.0, 1.0, num=out_len, endpoint=False)
+                    s16 = np.clip(np.round(np.interp(x_new, x_old, s16.astype(np.float32))), -32768, 32767).astype("<i2")
+                return s16.tobytes()
+            except Exception:
+                continue
+        return None
+
     # ---------------- one Studio turn ----------------
     def run_turn(self, history, user_text, *, tools=True, sampling="general", thinking=True, max_new=2048,
                  max_rounds=8, on_event=None, ask=None, allow=(), cancel=None, seed=0, system=None,
                  layers=(), kit=None, layer_query=None, final_on_limit=False, force_answer=False, extra_tools=(),
-                 media=(), only_tools=None, meaning=None):
-        """Same contract as LFM3Native.run_turn. `thinking`, `sampling` and `force_answer` do not apply: the Omni
-        does not reason and its card asks for greedy text decoding. media: [{"kind", "file"}] for this message.
-        meaning: the turn's semantics.Frame (the user's paths, the search limit); None works it out from user_text."""
+                 media=(), only_tools=None, meaning=None, generation_mode="text"):
+        """Direct end-to-end execution of Official `LiquidAI/LFM3-Omni-2B` across text, vision, audio, video+soundtrack,
+        native tool calling, and single-pass `<|mixed_start|>` interleaved text + 24 kHz speech."""
         emit = on_event or (lambda e: None)
-        self.turn_cancel = cancel  # a running command stops when the user stops the turn
+        gen_mode = generation_mode if generation_mode in ("text", "interleaved", "audio") else "text"
+        self.turn_cancel = cancel
         self.turn_paths = list(meaning.paths) if meaning is not None else N.user_paths(user_text)
         self.turn_hosts = N.typed_hosts(meaning.text if meaning is not None else user_text)
         self.turn_unknown = set()
@@ -1327,9 +1146,8 @@ class OmniNative(N.LFM3Native):
         self.active_op_plan = op_plan
         op_plan.start_stage("context")
         layer_log, blocks = [], []
-        for name, fn in (("memory", "memory_context"), ("ontology", "ontology_context"), ("workspace", "workspace_context"),
-                         ("records", "records_context")):
-            if name in layers:
+        for name, fn in (("memory", "memory_context"), ("workspace", "workspace_context"), ("records", "records_context")):
+            if name in layers and kit is not None:
                 block, info = getattr(kit, fn)(query)
                 if block:
                     blocks.append(block)
@@ -1341,37 +1159,8 @@ class OmniNative(N.LFM3Native):
             blocks.append(l_blk)
             layer_log.append(l_info)
             emit(dict(l_info, type="layer"))
-        bridge_info = kit.compute_meaning_bridge(query) if (kit is not None and hasattr(kit, "compute_meaning_bridge")) else None
-        if bridge_info:
-            b_emit = {k: v for k, v in bridge_info.items() if k != "action_prior_8"}
-            layer_log.append(b_emit)
-            emit(dict(b_emit, type="layer"))
-        if blocks:  # Clover appends its observations after the question
-            user_text = user_text + "\n\n" + "\n\n".join(blocks)
-            if not getattr(meaning, "caps", ()) and any(x.get("layer") in ("ontology", "memory") for x in layer_log):
-                bridged_recs = (bridge_info or {}).get("recommended_tools") or []
-                declined_set = set(getattr(meaning, "declined", ()) or ()) if meaning is not None else set()
-                has_lrn_or_formula = bool(
-                    bridge_info
-                    and (
-                        any(str(m_id).startswith("LRN-") for m_id in (bridge_info.get("memory_entries") or ()))
-                        or any(str(e_id).startswith(("FORMULA:", "STEM_CONCEPT:")) for e_id in (bridge_info.get("ontology_entities") or ()))
-                        or bool((bridge_info.get("curiosity") or {}).get("should_observe"))
-                    )
-                )
-                # only tools the route allowed this turn: a note naming plan.md got read_file offered and read unasked in
-                # Always, which leaves files out when the message names none (2026-11-09)
-                allowed = set(by_name)
-                active_bridged = [t for t in bridged_recs if t not in declined_set and t in allowed] if has_lrn_or_formula else []
-                if active_bridged and tools:
-                    schemas = [t for t in N.STUDIO_TOOLS if t["function"]["name"] in active_bridged]
-                    by_name = {t["function"]["name"]: t["function"] for t in schemas}
-                    only_tools = active_bridged
-                else:
-                    schemas = []
-                    only_tools = None
         recall = []
-        if "recall" in layers and kit is not None:  # background right before the message (memory-research exp G5)
+        if "recall" in layers and kit is not None:
             block, info = kit.recall_context(query, sum(1 for m in history if m.get("role") == "user"))
             if block:
                 recall.append({"role": "system", "content": block})
@@ -1379,513 +1168,200 @@ class OmniNative(N.LFM3Native):
                 layer_log.append(info)
                 if info.get("refs"):
                     emit(dict(info, type="layer"))
-        if meaning is not None and getattr(meaning, "guidance", ""):
-            # the user's preferred form of answer (personal.py): fixed wording, no user text
-            recall.append({"role": "system", "content": meaning.guidance})
-        sys_txt = system or self.system_prompt(bool(schemas), only_tools)
-        keep_last_media = bool(meaning is not None and getattr(meaning, "seen", ()) and not media)
-        not_comparing_prior = not re.search(r"\b(?:previous|earlier|first|prior|other|both|compare|same\s+as)\b", query or "", re.I)
-        sensory_msgs, sensory_layers, has_new_visual, has_new_audio = run_s3_sensory_context(
-            getattr(self, "base_dir", None),
-            getattr(self, "media_dir", None),
-            media,
-            query,
-            kit=kit,
-            emit=emit,
-            turn_images=getattr(self, "turn_images", None),
-        )
-        recall.extend(sensory_msgs)
-        layer_log.extend(sensory_layers)
-        if has_new_visual and not_comparing_prior:
-            past_msgs = []
-            if only_tools:
-                user_text = (user_text or "").rstrip() + "\n(Combine the live tool results and the attached image/video inspection above to answer and analyze the data.)"
-            else:
-                user_text = (user_text or "").rstrip() + "\n(Answer strictly from the image/video attached to this message.)"
-        else:
-            past_msgs = self._history(
-                history,
-                keep_last_media=keep_last_media,
-                strip_attached=bool(media),
-                current_query=query,
-                is_follow_up=bool(meaning is not None and getattr(meaning, "follow_up", False)),
-            )
-        msgs = ([{"role": "system", "content": sys_txt}] + past_msgs + recall
-                + [{"role": "user", "content": user_content(user_text, media, self.media_dir)}])
-        rounds, final, stats_all = [], "", []
-        done_calls = {}  # (name, args) -> first result: the Omni repeated identical searches 3 times in a test
+        if blocks:
+            recall.append({"role": "system", "content": "\n\n".join(blocks)})
 
-        def delta_cb(round_no, kind="thinking"):
+        has_typed_text = bool((user_text or "").strip())
+        sys_txt = system or self.system_prompt(
+            bool(schemas), only_tools, media=media, has_typed_text=has_typed_text, generation_mode=gen_mode
+        )
+        keep_last_media = bool(not media and any(m.get("media") for m in (history or ()) if m.get("role") == "user"))
+        past_msgs = self._history(
+            history,
+            keep_last_media=keep_last_media,
+            strip_attached=bool(media),
+            current_query=query,
+            is_follow_up=True,
+        )
+        native_vid = getattr(self, "has_native_video", True)
+        msgs = ([{"role": "system", "content": sys_txt}] + past_msgs + recall
+                + [{"role": "user", "content": user_content(user_text, media, self.media_dir, native_video=native_vid)}])
+        rounds, final, stats_all = [], "", []
+        reply_audio_url = None
+        done_calls = {}
+        stream_state = {"emitted": False}
+
+        def delta_cb(round_no, kind="answer"):
             shown = {"n": 0}
+            stream_state["emitted"] = False
 
             def on_delta(delta, text):
-                visible = TOOL_XML.sub("", text)
+                cleaned = THINK_PREFIX.sub("", text)
+                m_tc = TOOL_OPEN_RE.search(cleaned)
+                visible = cleaned[:m_tc.start()] if m_tc else TOOL_XML.sub("", cleaned)
+                last_lt = visible.rfind("<")
+                if last_lt != -1 and len(visible) - last_lt < 12:
+                    tail = visible[last_lt:]
+                    if "<tool_call>".startswith(tail) or "<function=".startswith(tail):
+                        visible = visible[:last_lt]
                 if len(visible) > shown["n"]:
                     emit({"type": "token", "round": round_no, "kind": kind, "text": visible[shown["n"]:]})
                     shown["n"] = len(visible)
+                    stream_state["emitted"] = True
             return on_delta
 
         with self.lock:
             try:
-                # One-time flow S1 -> S2 -> S3 -> C1 -> C2 -> C3:
-                # When S1 (semantics) routes a deterministic S3 tool (web_search, fetch_url with URL,
-                # get_current_time, laptop_status, remember, or three.js build), execute S3 once BEFORE C1.
-                s3_pre_call, s3_extra_calls = (
-                    plan_s3_pre_calls(self, query, only_tools, by_name, meaning=meaning, past_msgs=past_msgs)
-                    if (tools and schemas and only_tools and not (cancel and cancel.is_set()))
-                    else (None, [])
-                )
-                ctx_sources = [x.get("layer") for x in layer_log if isinstance(x, dict) and x.get("layer")]
-                op_plan.complete_stage(
-                    "context",
-                    "Context established (" + (", ".join(dict.fromkeys(ctx_sources)) if ctx_sources else "AGENTS.md & conversation state") + ")",
-                )
-                op_plan.start_stage(
-                    "direction",
-                    "Direction set ("
-                    + (f"pre-executing {s3_pre_call['name']}" if s3_pre_call else (
-                        "tools: " + ", ".join(only_tools[:4]) if only_tools else "direct reasoning & verification"
-                    ))
-                    + ")",
-                )
+                op_plan.complete_stage("context", "Context ready")
+                op_plan.start_stage("direction", f"LFM3-Omni-2B ({gen_mode})")
                 op_plan.complete_stage("direction")
                 op_plan.start_stage("execution")
-                pre_text = ""
-                if s3_pre_call is not None:
-                    pre_rounds, pre_done, pre_text = execute_s3_pre_calls(
-                        self, s3_pre_call, s3_extra_calls, ask=ask, allow=allow, emit=emit
+
+                has_vis_or_vid = any(m.get("kind") in ("image", "video") for m in (media or ()) if isinstance(m, dict))
+                if gen_mode in ("interleaved", "audio") and not has_vis_or_vid and not schemas:
+                    emit({"type": "round", "round": 1})
+                    emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
+                    self.stage = {"name": "interleaved text + speech", "since": time.time()}
+                    pcm_in = self._extract_pcm16_16k(media)
+                    out_mods = ("text", "audio") if gen_mode == "interleaved" else ("audio",)
+                    cb_txt = delta_cb(1, "answer") if gen_mode == "interleaved" else None
+
+                    def _on_aud(b64_pcm, _raw):
+                        emit({"type": "audio_delta", "pcm16_b64": b64_pcm, "rate": 24000})
+
+                    turn_txt = str(user_text or "").strip()
+                    if past_msgs and turn_txt:
+                        ctx_lines = []
+                        for pm in past_msgs[-6:]:
+                            r_lbl = "User" if pm.get("role") == "user" else "Assistant"
+                            c_str = self._plain_text(pm.get("content")).strip()
+                            if c_str:
+                                ctx_lines.append(f"{r_lbl}: {c_str}")
+                        if ctx_lines:
+                            turn_txt = "\n".join(ctx_lines) + f"\nUser: {turn_txt}"
+
+                    final_rt, wav_rt, st_rt = self._ensure_mm_server().realtime_turn(
+                        text=turn_txt,
+                        pcm16_16k=pcm_in,
+                        instructions=sys_txt,
+                        output_modalities=out_mods,
+                        max_tokens=min(1024, int(max_new)),
+                        on_text_delta=cb_txt,
+                        on_audio_delta=_on_aud,
+                        cancel=cancel,
                     )
-                    rounds.extend(pre_rounds)
-                    done_calls.update(pre_done)
-                    msgs.insert(-1, {"role": "system", "content": pre_text})
-                    if isinstance(msgs[-1].get("content"), list):
-                        for part in msgs[-1]["content"]:
-                            if isinstance(part, dict) and part.get("type") == "text":
-                                part["text"] = (
-                                    str(part.get("text") or "").rstrip()
-                                    + "\n\n"
-                                    + pre_text
-                                    + "\n\nSummarize BOTH the live tool results (news headlines) AND the attached screen capture / visual inspection."
-                                )
-                                break
-                    elif isinstance(msgs[-1].get("content"), str) and any(
-                        pc["name"] in ("run_powershell", "write_file", "calculate", "convert_units")
-                        for pc in ([s3_pre_call] + s3_extra_calls)
-                    ):
-                        msgs[-1]["content"] = str(msgs[-1]["content"]).rstrip() + "\n\n" + pre_text
-                    msgs[0]["content"] = system or self.system_prompt(False, None)
-                    schemas = []
-                    only_tools = None
-
-                if getattr(self, "c1_inference_only", False) and (not media or not getattr(self, "gpu", None)) and kit is not None and hasattr(kit, "c1_infer_states"):
-                    planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
-                        list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]])
-                    return self._c1_inference_turn(msgs, len(past_msgs), pre_text, query, kit, layers, emit, cancel,
-                                                   op_plan, rounds, layer_log, meaning, m_c1, l_c1, planned_t)
-
-                def _auto_verify_py(code_str):
-                    if cancel and cancel.is_set():
-                        return False, "", False
-                    if self.perms.get().get("code") == "deny" and "code" not in (allow or ()) and "run_python" not in (allow or ()):
-                        return False, "", True
-                    cid = "call_" + uuid.uuid4().hex[:16]
-                    args_py = {"code": code_str}
-                    emit({"type": "tool_call", "id": cid, "name": "run_python", "arguments": args_py})
-                    if self.perms.get().get("code") == "allow" or "code" in (allow or ()) or "run_python" in (allow or ()):
-                        ran, result, why = self.execute_tool("run_python", args_py, ask, allow)
-                    else:
-                        result = self._run_tool("run_python", {"code": code_str})
-                        ran, why = True, "Clover Cycle Outcome sandbox verification"
-                    worked, summary = N.tool_worked("run_python", ran, result, why)
-                    emit({"type": "tool_result", "id": cid, "name": "run_python", "ran": ran, "worked": worked,
-                          "summary": summary, "why": why, "result": result[:3000]})
-                    rounds.append({"tool": "run_python", "arguments": args_py, "ran": ran, "worked": worked,
-                                   "summary": summary, "why": why, "result": result[:2000]})
-                    return ran, result, worked
-
-                first_cycle_findings = None
-                c1_first_failed = None
-                max_clover_cycles = 3
-                cycles_used = 1
-                for attempt in range(max_clover_cycles):
-                    cycles_used = attempt + 1
-                    for r in range(max_rounds):
-                        if not (r == 0 and attempt == 0 and s3_pre_call is not None):
-                            emit({"type": "round", "round": r + 1})
-                        if schemas and getattr(self, "turn_web", 0) >= getattr(self, "turn_web_cap", 99):
-                            # past the search limit the Omni kept calling refused searches, then wrote a Python scraper of
-                            # invented URLs for 5 minutes (2026-11-01): no tools for the rest of this answer
-                            schemas = []
-                        if (
-                            schemas
-                            and r >= 1
-                            and set(by_name) <= {"web_search", "fetch_url"}
-                            and any(rd["tool"] == "web_search" and rd["ran"] and rd.get("worked") for rd in rounds)
-                            and not re.search(r"https?://|www\.|\b(?:compare|corroborate|both|each)\b", query or "", re.I)
-                        ):
-                            # A single successful web_search already returned the top 5 snippets/headlines; removing
-                            # schemas in Round 1 prevents the 2B model from looping across 8 rounds of fetch_url calls.
-                            schemas = []
-                        if schemas and sum(1 for rd in rounds if rd["why"] == "same call already made in this answer") >= 2:
-                            # "good vegetarian restaurants in Jaipur" repeated two searches six times, to the round limit
-                            schemas = []
-                        # asked for a tool (only_tools set): told to use it, the Omni still answered from memory
-                        is_cap_q = bool(
-                            re.match(
-                                r"^\W*(?:can|could|do|are|will|would)\s+you\s+(?:able\s+to\s+)?(?:generate|create|make|draw|render|produce)\s+(?:any\s+|some\s+)?(?:images|pictures|photos|drawings|illustrations|artwork|art)\s*[?.!]*\W*$",
-                                query or "",
-                                re.I,
-                            )
-                        )
-                        forced = "required" if (only_tools and schemas and r == 0 and attempt == 0 and not is_cap_q) else None
-                        if r == 0 and attempt == 0 and only_tools:
-                            emit({"type": "plan", "round": r + 1, "stage": "planning", "tools": list(only_tools)})
-                        elif r > 0:
-                            emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
-                        emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
-                        # C1 is strictly for inference only: never emit final answer tokens (`kind="answer"`) from C1
-                        is_live_gpu = getattr(self, "gpu", None) is not None and "_chat" not in getattr(self, "__dict__", {})
-                        if is_cap_q and r == 0 and attempt == 0:
-                            schemas = []
-                            direct_plan = (
-                                "Yes, I can generate images and illustrations from any text description. "
-                                "What would you like the image to show?"
-                            )
-                        else:
-                            direct_plan = (
-                                _direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
-                                if (is_live_gpu and r == 0 and attempt == 0 and not schemas)
-                                else None
-                            )
-                        if direct_plan is not None:
-                            content, calls, st = direct_plan, [], {
-                                "prompt_tokens": max(1, len((query or "").split())),
-                                "reused_tokens": 0,
-                                "new_tokens": 0,
-                                "prefill_s": 0.0,
-                                "decode_s": 0.0,
-                                "decode_tok_s": None,
-                                "finish": "stop",
-                                "c1": "inference only",
-                            }
-                        else:
-                            chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
-                                       if schemas else {})
-                            try:
-                                content, calls, st = self._chat(
-                                    msgs, schemas, max_new, by_name,
-                                    None, cancel,
-                                    seed + 100 * attempt + r, forced,
-                                    **chat_kw,
-                                )
-                            except TypeError:
-                                content, calls, st = self._chat(
-                                    msgs, schemas, max_new, by_name,
-                                    None, cancel,
-                                    seed + 100 * attempt + r, forced,
-                                )
-                        stats_all.append(st)
-                        if forced and calls and ASKS_USER.search(content[-400:]) and any(
-                            c["name"] in ("run_powershell", "write_file", "vscode_run", "vscode_install", "vscode_clone", "vscode_open")
-                            for c in calls
-                        ):
-                            calls = []  # the model asks the user which command/app to run: its question is the answer
-                        if r == 0 and attempt == 0 and not calls:
-                            if "web_search" in by_name and ("web_search" in (only_tools or ()) or semantics.CANNOT.search(content)):
-                                calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
-                                content = ""
-                            elif (
-                                semantics.CANNOT.search(content)
-                                and "web.search" not in getattr(meaning, "declined", ())
-                                and not media
-                                and not getattr(meaning, "seen", ())
-                                and getattr(meaning, "act", "") not in ("creative", "social")
-                                and not blocks
-                            ):
-                                ws_t = next((t for t in N.STUDIO_TOOLS if t["function"]["name"] == "web_search"), None)
-                                if ws_t is not None:
-                                    schemas.append(ws_t)
-                                    by_name["web_search"] = ws_t["function"]
-                                    tools = True
-                                    calls = [{"id": "call_" + uuid.uuid4().hex[:16], "name": "web_search", "arguments": {"query": query}}]
-                                    content = ""
-                        if calls and r == 0 and meaning is not None and not getattr(meaning, "follow_up", False) and history:
-                            import lfm3_layers
-                            q_topics = lfm3_layers.topic_terms(query)
-                            prev_u = " ".join(str(m.get("content") or "") for m in history[-4:] if m.get("role") == "user")
-                            prev_topics = lfm3_layers.topic_terms(prev_u) - q_topics
-                            if len(q_topics) >= 1 and prev_topics:
-                                for c in calls:
-                                    if c.get("name") == "web_search" and isinstance(c.get("arguments"), dict):
-                                        cq = str(c["arguments"].get("query") or "")
-                                        ct = lfm3_layers.topic_terms(cq)
-                                        if not (ct & q_topics) and (ct & prev_topics):
-                                            c["arguments"] = {"query": query}
-                        names = [c["name"] for c in calls]
-                        if calls and semantics.answered_unasked(meaning, TOOL_XML.sub("", content), names):
-                            rt = meaning.runtime
-                            used = ", ".join(dict.fromkeys(rt.word(rt.capability(n)) for n in names))
-                            layer_log.append({"layer": "semantics", "label": f"answer kept · {used} not used (not asked)"})
-                            content, calls = TOOL_XML.sub("", content), []
-                        if calls and tools and schemas and st["finish"] != "cancelled":
-                            kept_c = "" if (forced or semantics.CANNOT.search(content)) else content
-                            msgs.append({"role": "assistant", "content": kept_c, "tool_calls": [
-                                {"id": c["id"], "type": "function",
-                                 "function": {"name": c["name"], "arguments": json.dumps(c["arguments"])}} for c in calls]})
-                            for c in calls:
-                                emit({"type": "tool_call", "id": c["id"], "name": c["name"], "arguments": c["arguments"]})
-                                key = (c["name"], json.dumps(c["arguments"], sort_keys=True))
-                                if isinstance(c["arguments"], dict) and "_raw" in c["arguments"]:
-                                    # "(no output)" from running nothing taught the model nothing; it wrote the same call
-                                    ran, why = False, "the call's arguments were not complete JSON"
-                                    result = ("Not run: the arguments of this call were cut off or repeated themselves, so "
-                                              "they are not complete JSON. Write the call again, short: each line once, "
-                                              "and print only the figures the question needs.")
-                                elif key in done_calls:
-                                    ran, why = False, "same call already made in this answer"
-                                    result = ("You already made this exact call in this answer; its result is above. Do not "
-                                              "repeat it: answer from the results you have, or try something different.")
-                                else:
-                                    ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
-                                    done_calls[key] = result
-                                worked, summary = N.tool_worked(c["name"], ran, result, why)
-                                summary = N.checked_summary(self, ran, summary)
-                                emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
-                                      "summary": summary, "why": why, "result": result[:3000]})
-                                rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
-                                               "summary": summary, "why": why, "result": result[:2000]})
-                                msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
-                                op_plan.advance_execution_step(c["name"])
-                            continue
-                        final = TOOL_XML.sub("", content).strip() if forced else content.strip()
-                        web_ok = any(rd["tool"] == "web_search" and rd["ran"] and not rd["result"].startswith("No results") for rd in rounds)
-                        refused_after_web = web_ok and (
-                            semantics.CANNOT.search(final)
-                            or bool(re.search(r"don'?t know where you are|need to know which city|tell me your city|your city or location", final, re.I))
-                        )
-                        if (semantics.non_answer(final) or refused_after_web) and rounds and \
-                                st["finish"] not in ("length", "cancelled") and not (cancel and cancel.is_set()):
-                            # with its tools gone the Omni still wrote a call, which is stripped, and the answer was
-                            # empty: "(Clover finished without writing an answer.)" in a trip-planning chat (2026-11-01)
-                            msgs.append({"role": "user", "content": "Answer now in plain text directly using the exact "
-                                         "facts and numbers in the tool results above; do not ask for the user's "
-                                         "location or call tools."})
-                            lead = "Here is what I can tell you: "
-                            msgs.append({"role": "assistant", "content": lead})
-                            emit({"type": "round", "round": r + 2})
-                            emit({"type": "plan", "round": r + 2, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
-                            content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
-                                                        seed + 100 * attempt + r + 1)
-                            stats_all.append(st)
-                            cleaned_c = re.sub(
-                                r"^(?:Here is what I can tell you:\s*)?(?:(?:According to|Based on)\s+the\s+(?:provided\s+|live\s+)?(?:tool|search)\s+results,\s*)?",
-                                "",
-                                content.strip(),
-                                flags=re.I,
-                            ).strip()
-                            if cleaned_c:
-                                cleaned_c = cleaned_c[0].upper() + cleaned_c[1:]
-                            final = cleaned_c
-                        if final:
-                            final = re.sub(
-                                r"^(?:Here is what I can tell you:\s*)?(?:(?:According to|Based on)\s+the\s+(?:provided\s+|live\s+)?(?:tool|search)\s+results,\s*)?",
-                                "",
-                                final,
-                                flags=re.I,
-                            ).strip()
-                            if final:
-                                final = final[0].upper() + final[1:]
-                        if not final:
-                            final = {"length": "(Clover ran out of room before answering. Ask for a shorter answer.)",
-                                     "cancelled": "(Stopped.)"}.get(st["finish"], "(Clover finished without writing an answer.)")
-                        break
-                    else:
-                        if final_on_limit and not (cancel and cancel.is_set()):
-                            msgs.append({"role": "user", "content": "The tool budget for this question is used up. Answer "
-                                         "now from the results you already have; do not call more tools."})
-                            # an assistant message last is continued by llama-server, so the answer starts as text
-                            lead = "From what I found so far: "
-                            msgs.append({"role": "assistant", "content": lead})
-                            emit({"type": "round", "round": max_rounds + 1})
-                            emit({"type": "plan", "round": max_rounds + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
-                            content, _, st = self._chat(msgs, [], max_new, by_name, None, cancel,
-                                                        seed + 100 * attempt + max_rounds)
-                            stats_all.append(st)
-                            final = (lead + content.strip()) if content.strip() else ""
-                        last = next((rd for rd in reversed(rounds) if rd["ran"]), None)
-                        final = final or (f"(Clover used all {max_rounds} tool rounds without finishing an answer."
-                                          + (f" Last {last['tool']} result: {last['result'][:400]}" if last else "") + ")")
-
-                    # ---- Clover Cycle Outcome Stage (`Context -> Direction -> Execution -> Outcome -> Growth`) ----
-                    if cancel and cancel.is_set():
-                        break
+                    final = THINK_PREFIX.sub("", final_rt).strip()
+                    stats_all.append(st_rt)
+                    if wav_rt:
+                        import hashlib
+                        af = f"omni_speech_{hashlib.sha256(wav_rt).hexdigest()[:24]}.wav"
+                        (self.media_dir / af).write_bytes(wav_rt)
+                        reply_audio_url = "/api/media/file/" + af
+                    if not final and gen_mode == "audio":
+                        final = "(Spoken audio response)"
                     op_plan.complete_stage("execution")
-                    op_plan.start_stage("outcome", f"Verifying Cycle {attempt + 1} output against reality…", cycle=attempt + 1)
-                    findings, c_meta = C.verify_turn_outcome(
-                        query,
-                        final,
-                        rounds,
-                        kit=kit,
-                        layers=layers,
-                        meaning=meaning,
-                        execute_python_fn=_auto_verify_py,
-                    )
-                    comp_info = c_meta.get("compiler_info")
-                    if comp_info is not None:
-                        layer_log.append(comp_info)
-                        if comp_info.get("checked"):
-                            if c_meta.get("compiler_ok"):
-                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": True})
-                            else:
-                                emit({"type": "layer", "layer": "compiler", "checked": True, "ok": False, "feedback": findings[0]})
-
-                    if not findings:
-                        op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
-                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
-                        if first_cycle_findings:
-                            only_comp = all(f.startswith("Code compiler check:") for f in first_cycle_findings)
-                            emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
-                            layer_log.append({
-                                "layer": "cycle",
-                                "trigger": "auto",
-                                "action": "compiler_repaired" if only_comp else "corrected",
-                                "cycles_used": attempt + 1,
-                                "first_findings": first_cycle_findings,
-                                "final_findings": [],
-                                "tools": [rd["tool"] for rd in rounds if rd.get("ran") and rd.get("worked")],
-                                "lesson": C.lesson_text(query, [f[:240] for f in first_cycle_findings[:2]], "", passed=True),
-                                "lesson_kind": "verified",
-                            })
-                        break
-
-                    if first_cycle_findings is None:
-                        first_cycle_findings = list(findings)
-                        if kit is not None and hasattr(kit, "c1_infer"):
-                            try:
-                                c1_first_failed = kit.c1_infer(final)[0]
-                            except Exception:
-                                c1_first_failed = None
-
-                    fixed = C.direct_arithmetic_answer(query) if C.only_arithmetic(findings) else None
-                    if fixed:  # a plain sum: Clover has the exact value, so it writes the answer itself
-                        emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
-                        final = fixed
+                    op_plan.complete_stage("outcome", "Completed")
+                    op_plan.complete_stage("growth", "Completed")
+                    if final and not stream_state["emitted"]:
                         emit({"type": "token", "round": 1, "kind": "answer", "text": final})
-                        op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
-                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
-                        layer_log.append({"layer": "cycle", "trigger": "auto", "action": "corrected", "cycles_used": attempt + 1,
-                                          "first_findings": list(findings), "final_findings": [], "tools": [],
-                                          "lesson": C.lesson_text(query, [findings[0][:240]], "", passed=True),
-                                          "lesson_kind": "verified"})
-                        emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
-                        break
+                    res_out = {
+                        "reply": final, "tool_calls": rounds, "rounds": 1, "generation": stats_all,
+                        "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log,
+                        "todo_list": op_plan.todos,
+                    }
+                    if reply_audio_url:
+                        res_out["reply_audio"] = reply_audio_url
+                    return res_out
 
-                    if attempt + 1 < max_clover_cycles:
-                        emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
-                        op_plan.retry_from_context(attempt + 2, findings[0])
-                        if any(f.startswith(("Arithmetic:", "Code execution check:", "Code output check:", "Tool execution check:")) for f in findings):
-                            if self.perms.get().get("code") != "deny" or "code" in (allow or ()):
-                                for t_cand in N.STUDIO_TOOLS:
-                                    t_fn = t_cand["function"]["name"]
-                                    if t_fn in ("run_python", "calculate") and t_fn not in by_name:
-                                        schemas.append(t_cand)
-                                        by_name[t_fn] = t_cand["function"]
-                                        tools = True
-                        msgs.append({"role": "assistant", "content": final})
-                        msgs.append({"role": "user", "content": C.AUTO_CYCLE_FIX.format(
-                            findings="\n".join("- " + f for f in findings)
-                        )})
-                    else:
-                        op_plan.complete_stage("outcome", f"Checked across {attempt + 1} cycles (unconfirmed)")
-                        layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": False})
-                        layer_log.append({
-                            "layer": "cycle",
-                            "trigger": "auto",
-                            "action": "unconfirmed",
-                            "cycles_used": attempt + 1,
-                            "first_findings": first_cycle_findings or findings,
-                            "final_findings": findings,
-                        })
-
-                if cycles_used > 1 and final:
-                    final = re.sub(
-                        r"^(?:The\s+(?:error|issue|problem|failure|bug)\s+(?:is|was)\s+caused\s+by[^\n]*\n+|"
-                        r"The\s+doctest\s+assertion\s+was\s+incorrect[^\n]*\n+|"
-                        r"Here\s+is\s+the\s+corrected\s+(?:function|code|answer|version)[^\n]*:\s*\n+)+",
-                        "",
-                        final.strip(),
-                        flags=re.I,
-                    ).strip()
-                op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
-                rnd_n = len(stats_all) or 1
-                if kit is not None and not (cancel and cancel.is_set()):
-                    # 1. Strict Stage C1: Inference ONLY (`c1_infer`)
-                    if hasattr(kit, "c1_infer"):
-                        try:
-                            c1_state, c1_info = kit.c1_infer(final, stats=stats_all, model=m_c1, layers_desc=l_c1)
-                        except TypeError:
-                            c1_state, c1_info = kit.c1_infer(final, stats=stats_all)
-                            c1_info["model"] = m_c1
-                            if l_c1:
-                                c1_info["layers_desc"] = l_c1
-                        layer_log.append(c1_info)
-                        emit(dict(c1_info, type="layer"))
-                        emit({"type": "plan", "round": rnd_n, "stage": "c1_done", "ms": c1_info.get("ms")})
-                    else:
-                        c1_state = None
-                    # 2. Strict Stage C2: Planning ONLY (`HybridAgent` `plan-trunk-0`)
-                    if hasattr(kit, "c2_plan_state"):
-                        emit({"type": "plan", "round": rnd_n, "stage": "c2_plan", "model": "HybridAgent"})
-                        planned_t = [rd["tool"] for rd in rounds if rd.get("ran")] or (
-                            list(only_tools) if only_tools is not None else [t["function"]["name"] for t in schemas[:5]]
-                        )
-                        if c1_first_failed is not None and cycles_used > 1 and hasattr(kit, "jepa_record_outcome"):
-                            try:
-                                kit.c2_plan_state(query, c1_state=c1_first_failed, offered_tools=planned_t)
-                                kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=False)
-                            except Exception:
-                                pass
-                        c2_state, c2_info = kit.c2_plan_state(query, c1_state=c1_state, offered_tools=planned_t)
-                        layer_log.append(c2_info)
-                        emit(dict(c2_info, type="layer"))
-                        emit({"type": "plan", "round": rnd_n, "stage": "c2_done", "ms": c2_info.get("ms")})
-                        if hasattr(kit, "jepa_record_outcome") and c1_first_failed is None:
-                            kit.jepa_record_outcome(c1_obs_state=c1_state, is_baseline=True)
-                    else:
-                        c2_state = final
-                    # 3. Strict Stage C3: Decoding ONLY (`Bridges + 11-Level NCM`)
-                    if "ncm" in layers and (hasattr(kit, "c3_decode") or hasattr(kit, "ncm_render")):
-                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_decode", "model": "11-Level NCM"})
-                        final, ncm_info = kit.c3_decode(c2_state) if hasattr(kit, "c3_decode") else kit.ncm_render(final)
-                        layer_log.append(ncm_info)
-                        emit(dict(ncm_info, type="layer"))
-                        emit({"type": "plan", "round": rnd_n, "stage": "ncm_done",
-                              "ms": round((ncm_info.get("s") or 0) * 1000)})
-                if "ontology" in layers and kit is not None:
-                    final, changed = kit.grounding_filter(query, final)
-                    layer_log.append({"layer": "ontology_grounding", "changed": changed})
-                mq = TRAILING_Q.search(final) if len(final) > 60 else None
-                if mq and mq.start() >= 40:
-                    final = final[:mq.start()].strip()
-                if not (cancel and cancel.is_set()):
-                    op_plan.complete_stage(
-                        "growth",
-                        "Growth preserved ("
-                        + (f"repaired in {cycles_used} cycles · lesson saved" if first_cycle_findings else "context updated")
-                        + ")",
+                for r in range(max_rounds):
+                    emit({"type": "round", "round": r + 1})
+                    if schemas and getattr(self, "turn_web", 0) >= getattr(self, "turn_web_cap", 99):
+                        schemas = []
+                    if schemas and sum(1 for rd in rounds if rd["why"] == "same call already made in this answer") >= 2:
+                        schemas = []
+                    emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
+                    chat_kw = ({"on_plan": lambda tname, rn=r + 1: emit({"type": "plan", "round": rn, "stage": "preparing_tool", "tool": tname})}
+                               if schemas else {})
+                    stream_cb = None if "ncm" in layers else delta_cb(r + 1, "answer")
+                    content, calls, st = self._chat(
+                        msgs, schemas, max_new, by_name,
+                        stream_cb, cancel,
+                        seed + r, None,
+                        **chat_kw,
                     )
+                    stats_all.append(st)
+                    if calls and tools and schemas and st["finish"] != "cancelled":
+                        msgs.append({"role": "assistant", "content": content, "tool_calls": [
+                            {"id": c["id"], "type": "function",
+                             "function": {"name": c["name"], "arguments": json.dumps(c["arguments"])}} for c in calls]})
+                        for c in calls:
+                            emit({"type": "tool_call", "id": c["id"], "name": c["name"], "arguments": c["arguments"]})
+                            key = (c["name"], json.dumps(c["arguments"], sort_keys=True))
+                            if isinstance(c["arguments"], dict) and "_raw" in c["arguments"]:
+                                ran, why = False, "the call's arguments were not complete JSON"
+                                result = "Not run: incomplete JSON arguments. Write the call again concisely."
+                            elif key in done_calls:
+                                ran, why = False, "same call already made in this answer"
+                                result = "This exact call already ran above; use the result already returned."
+                            else:
+                                ran, result, why = self.execute_tool(c["name"], c["arguments"], ask, allow)
+                                done_calls[key] = result
+                            worked, summary = N.tool_worked(c["name"], ran, result, why)
+                            summary = N.checked_summary(self, ran, summary)
+                            emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
+                                  "summary": summary, "why": why, "result": result[:3000]})
+                            rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
+                                           "summary": summary, "why": why, "result": result[:2000]})
+                            msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
+                            op_plan.advance_execution_step(c["name"])
+                        continue
+                    final = TOOL_XML.sub("", content).strip()
+                    if not final:
+                        if st["finish"] == "cancelled":
+                            final = "(Stopped.)"
+                        else:
+                            raise RuntimeError(f"The selected model returned no answer (finish: {st['finish']})")
+                    break
+                else:
+                    if final_on_limit and not (cancel and cancel.is_set()):
+                        msgs.append({"role": "user", "content": "Answer now from the tool results above without calling more tools."})
+                        emit({"type": "round", "round": max_rounds + 1})
+                        lim_cb = None if "ncm" in layers else delta_cb(max_rounds + 1, "answer")
+                        content, _, st = self._chat(msgs, [], max_new, by_name, lim_cb, cancel, seed + max_rounds)
+                        stats_all.append(st)
+                        final = content.strip()
+                    if not final:
+                        final = "(Stopped.)" if (cancel and cancel.is_set()) else ""
+
+                if gen_mode in ("interleaved", "audio") and final and not (cancel and cancel.is_set()):
+                    try:
+                        wav_b = self.tts(final, voice="female", lang="auto")
+                        if wav_b:
+                            import hashlib
+                            af = f"omni_speech_{hashlib.sha256(wav_b).hexdigest()[:24]}.wav"
+                            (self.media_dir / af).write_bytes(wav_b)
+                            reply_audio_url = "/api/media/file/" + af
+                    except Exception:
+                        pass
+
+                op_plan.complete_stage("execution")
+                op_plan.complete_stage("outcome", "Completed")
+                op_plan.complete_stage("growth", "Completed")
+                rnd_n = len(stats_all) or 1
+                if not (cancel and cancel.is_set()) and ("ncm" in layers or not stream_state["emitted"]):
                     emit({"type": "token", "round": rnd_n, "kind": "answer", "text": final})
             finally:
                 self.stage = {"name": "idle", "since": time.time()}
-        return {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
-                "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log,
-                "todo_list": op_plan.todos}
+        res_out = {"reply": final, "tool_calls": rounds, "rounds": len(stats_all), "generation": stats_all,
+                   "reasoning": "", "cancelled": bool(cancel and cancel.is_set()), "layers": layer_log,
+                   "todo_list": op_plan.todos}
+        if reply_audio_url:
+            res_out["reply_audio"] = reply_audio_url
+        return res_out
 
     # ---------------- C1 inference only (setting c1_inference_only) ----------------
     def _c1_server(self):
         """The same model as an inference-only llama-server (hidden states, never a sampled token), started on first use."""
-        if getattr(self, "local_omni", None) is not None and hasattr(self.local_omni, "_c1_server"):
-            return self.local_omni._c1_server()
         srv = getattr(self, "_c1_srv", None)
         if srv is not None and (getattr(srv, "proc", None) is None or srv.proc.poll() is None):
             return srv
@@ -1897,7 +1373,7 @@ class OmniNative(N.LFM3Native):
                                          extra_args=["-b", str(ctx)], name=f"omni-c1-inference-{gpu_kind}",
                                          timeout_s=300, threads=getattr(self, "_threads", None), embeddings=True)
         else:
-            self._c1_srv = _EmbeddingStateServer(getattr(self, "base_dir", None))
+            raise RuntimeError("C1 inference is unavailable for the selected model: a running inference provider or installed GGUF is required")
         return self._c1_srv
 
     @staticmethod
@@ -1975,7 +1451,9 @@ class OmniNative(N.LFM3Native):
         layer_log.append(ncm_info)
         emit(dict(ncm_info, type="layer"))
         emit({"type": "plan", "round": 1, "stage": "ncm_done", "ms": round((ncm_info.get("s") or 0) * 1000)})
-        final = (final or "").strip() or "(Clover finished without writing an answer.)"
+        final = (final or "").strip()
+        if not final:
+            raise RuntimeError("C3 model returned no answer")
         op_plan.complete_stage("execution")
         op_plan.start_stage("outcome", "Checking the decoded answer…", cycle=1)
         findings, c_meta = C.verify_turn_outcome(query, final, rounds, kit=kit, layers=layers, meaning=meaning)
@@ -1987,11 +1465,8 @@ class OmniNative(N.LFM3Native):
                                else C.outcome_label(c_meta["checks"], 1))
         op_plan.start_stage("growth", "Recording what this turn showed…")
         if "ontology" in layers:
-            final, changed = kit.grounding_filter(query, final)
-            layer_log.append({"layer": "ontology_grounding", "changed": changed})
-        mq = TRAILING_Q.search(final) if len(final) > 60 else None
-        if mq and mq.start() >= 40:
-            final = final[:mq.start()].strip()
+            final, conflict = kit.grounding_filter(query, final)
+            layer_log.append({"layer": "ontology_grounding", "conflict": conflict, "rewritten": False})
         op_plan.complete_stage("growth", "Growth preserved (context updated)")
         emit({"type": "token", "round": 1, "kind": "answer", "text": final})
         return {"reply": final, "tool_calls": rounds, "rounds": 1, "generation": [gen], "reasoning": "",
@@ -2056,7 +1531,9 @@ class OmniNative(N.LFM3Native):
             emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
             content, _, st = self._chat(convo, [], max_new, {}, None, cancel, seed + 500 + len(convo))
             stats_all.append(st)
-            new = TOOL_XML.sub("", content).strip() or previous
+            new = TOOL_XML.sub("", content).strip()
+            if not new:
+                raise RuntimeError("The selected model returned no answer during retry")
             convo.append({"role": "assistant", "content": new})
             return new
 
@@ -2066,7 +1543,8 @@ class OmniNative(N.LFM3Native):
             ctx = notes + (web if k == 2 else "")
             m2 = [{"role": "system", "content": sys_txt},
                   {"role": "user", "content": user_content(C.second_solve_prompt(context + question + ctx, question, k, note),
-                                                           media, self.media_dir)}]
+                                                           media, self.media_dir,
+                                                           native_video=getattr(self, "has_native_video", True))}]
             content, _, st = self._chat(m2, [], max_new, {}, None, cancel, seed + 900 + k)
             stats_all.append(st)
             return content
@@ -2079,7 +1557,8 @@ class OmniNative(N.LFM3Native):
             emit({"type": "cycle", "stage": "python"})
             m2 = [{"role": "system", "content": sys_txt},
                   {"role": "user", "content": user_content(C.python_solve_prompt(context + question + notes, note), media,
-                                                           self.media_dir)}]
+                                                           self.media_dir,
+                                                           native_video=getattr(self, "has_native_video", True))}]
             content, _, st = self._chat(m2, [], max_new, {}, None, cancel, seed + 950)
             stats_all.append(st)
             import lfm3_layers
@@ -2139,7 +1618,9 @@ class OmniNative(N.LFM3Native):
                 info["tools"] = list(dict.fromkeys(used))
                 layer_log.append(info)
                 rnd_n = len(stats_all) or 1
-                if kit is not None and not (cancel and cancel.is_set()):
+                if "ncm" in layers and not (cancel and cancel.is_set()):
+                    if kit is None:
+                        raise RuntimeError("NCM output was requested but its model runtime is unavailable")
                     if hasattr(kit, "c1_infer"):
                         c1_prev, _ = kit.c1_infer(previous or question)
                         c1_state, c1_info = kit.c1_infer(answer, stats=stats_all)
@@ -2170,8 +1651,8 @@ class OmniNative(N.LFM3Native):
                         emit({"type": "plan", "round": rnd_n, "stage": "ncm_done",
                               "ms": round((ncm_info.get("s") or 0) * 1000)})
                 if "ontology" in layers and kit is not None:
-                    answer, changed = kit.grounding_filter(question, answer)
-                    layer_log.append({"layer": "ontology_grounding", "changed": changed})
+                    answer, conflict = kit.grounding_filter(question, answer)
+                    layer_log.append({"layer": "ontology_grounding", "conflict": conflict, "rewritten": False})
                 if not (cancel and cancel.is_set()):
                     op_plan.complete_stage("growth", "Growth preserved · lesson written to Clover records")
                     emit({"type": "token", "round": rnd_n, "kind": "answer", "text": answer})

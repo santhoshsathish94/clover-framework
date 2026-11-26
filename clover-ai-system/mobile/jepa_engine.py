@@ -636,22 +636,14 @@ class CloverJEPARuntime:
         self.base_dir = Path(base_dir) if base_dir else Path(__file__).resolve().parent.parent
         self.lock = threading.Lock()
         self.trunk_dir = self._resolve_trunk_dir(self.base_dir)
-        self.weights_source = "default_orthogonal"
-        if (self.trunk_dir / "index.bin").is_file():
-            try:
-                self.w = read_clvrtrk1(self.trunk_dir)
-                self.weights_source = f"clvrtrk1:{self.trunk_dir}"
-            except Exception:
-                self.w = _build_default_weights()
-        else:
-            self.w = _build_default_weights()
-
-        # Only build default weights if required keys are missing from the loaded trunk
-        if "bridge.lfm3_to_vq.weight" not in self.w or "residual.fc1.weight" not in self.w:
-            defaults = _build_default_weights()
-            for k, v in defaults.items():
-                if k not in self.w or self.w[k].shape != v.shape:
-                    self.w[k] = v
+        if not (self.trunk_dir / "index.bin").is_file():
+            raise FileNotFoundError(f"JEPA model is not installed: {self.trunk_dir}")
+        self.w = read_clvrtrk1(self.trunk_dir)
+        self.weights_source = f"clvrtrk1:{self.trunk_dir}"
+        required = {"bridge.lfm3_to_vq.weight", "residual.fc1.weight"}
+        missing = sorted(required - self.w.keys())
+        if missing:
+            raise ValueError("JEPA model is incomplete: " + ", ".join(missing))
 
         # Load persisted OutcomeResidualAdapter state if present in `<base>/growth/jepa_outcome_adapter.npz`
         self.adapter_path = self.base_dir / "growth" / "jepa_outcome_adapter.npz"

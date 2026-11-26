@@ -49,22 +49,25 @@ D_VQ = 384
 
 
 def ensure_lfm3_cpu_engine_so(src_dir: Path | None = None, force_rebuild: bool = False) -> Path:
-    """Compiles `lfm3_cpu_engine.c` into `liblfm3_cpu_engine.so` with `-O3 -march=native -fopenmp`."""
+    """Compiles `lfm3_cpu_engine.c` into `liblfm3_cpu_engine` (`.dll` on Windows, `.so` on POSIX) with `-O3 -march=native -fopenmp`."""
+    import os
+
     base_dir = src_dir or SCRIPT_DIR
     c_src = base_dir / "lfm3_cpu_engine.c"
-    so_path = base_dir / "liblfm3_cpu_engine.so"
+    so_name = "liblfm3_cpu_engine.dll" if os.name == "nt" else "liblfm3_cpu_engine.so"
+    so_path = base_dir / so_name
     if not force_rebuild and so_path.exists() and c_src.exists() and so_path.stat().st_mtime >= c_src.stat().st_mtime:
         return so_path
-    cmd = [
-        "gcc", "-O3", "-march=native", "-fopenmp", "-fPIC", "-shared",
-        str(c_src), "-lm", "-ldl", "-o", str(so_path),
-    ]
+    if os.name == "nt":
+        cmd = ["gcc", "-O3", "-march=native", "-fopenmp", "-shared", str(c_src), "-o", str(so_path)]
+    else:
+        cmd = ["gcc", "-O3", "-march=native", "-fopenmp", "-fPIC", "-shared", str(c_src), "-lm", "-ldl", "-o", str(so_path)]
     subprocess.run(cmd, check=True)
     return so_path
 
 
 class Lfm3NativeCPUEngine:
-    """Python `ctypes` wrapper around `liblfm3_cpu_engine.so` (BF16 and 4-Bit Planar Group-64 SwiGLU FFN)."""
+    """Python `ctypes` wrapper around `liblfm3_cpu_engine` (BF16 and 4-Bit Planar Group-64 SwiGLU FFN)."""
 
     def __init__(
         self,
@@ -73,8 +76,12 @@ class Lfm3NativeCPUEngine:
         use_4bit_ffn: bool = False,
         s23_big_cores_only: bool = False,
     ):
+        import os
+
         self.pruned_dataset_dir = Path(pruned_dataset_dir)
-        self.so_path = ensure_lfm3_cpu_engine_so() if so_path is None else so_path
+        self.so_path = ensure_lfm3_cpu_engine_so() if so_path is None else Path(so_path)
+        if os.name == "nt":
+            os.add_dll_directory(str(self.so_path.resolve().parent))
         self.lib = ctypes.CDLL(str(self.so_path))
 
         self.lib.lfm3_engine_init.argtypes = [ctypes.c_char_p]

@@ -311,9 +311,13 @@ class EmergentConceptEngine:
         # Compute 64-d JEPA latent representation for continuous similarity
         try:
             import jepa_engine
-            import lfm3_layers
+            import omni_c2_c3
             jrt = jepa_engine.for_base(self.base_dir)
-            h2048 = lfm3_layers.LayerKit._fallback_h2048(situation_text)
+            runtime = omni_c2_c3.for_base(self.base_dir)
+            if runtime is None:
+                raise RuntimeError("Model embeddings are unavailable for this observation")
+            token_ids = runtime.tok.encode(situation_text, allow_special=False)[:128]
+            h2048 = runtime.token_embeddings_2048(token_ids)[None, :, :]
             self._obs_vectors_64[obs_id] = jrt.encode_semantic_bridge_cue(h2048)
         except Exception:
             self._obs_vectors_64[obs_id] = None

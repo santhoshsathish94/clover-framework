@@ -733,14 +733,7 @@ class AutonomousCloverEngine:
             z_q_vq = self.c2c3.forward_expert_bridge(h_p).mean(axis=1).squeeze(0)
             z_a_vq = self.c2c3.forward_combo_bridge(self.c2c3.forward_hybridlink(c1_ans_state["h_primary"])).mean(axis=1).squeeze(0)
         else:
-            h_p = LL.LayerKit._fallback_h2048(prob.question)
-            r_p = LL.LayerKit._fallback_h2048(prob.question + "::plan")
-            h_ans = LL.LayerKit._fallback_h2048(str(c1_ans_state.get("raw_text") or prob.title))
-            h_q = h_p.mean(axis=1).squeeze(0)
-            r_q = r_p.mean(axis=1).squeeze(0)
-            h_a = h_ans.mean(axis=1).squeeze(0)
-            z_q_vq = JE._layer_norm(JE._linear(h_q[None, :], self.jepa.w["bridge.lfm3_to_vq.weight"], self.jepa.w["bridge.lfm3_to_vq.bias"])).squeeze(0)
-            z_a_vq = JE._layer_norm(JE._linear(h_a[None, :], self.jepa.w["bridge.lfm3_to_vq.weight"], self.jepa.w["bridge.lfm3_to_vq.bias"])).squeeze(0)
+            raise RuntimeError("Verified neural experience requires real C1 states and a C2/C3 model")
         act_v = JE.tool_capability_vector(used_tool)
         self.verified_experience.append({
             "problem_id": prob.problem_id,

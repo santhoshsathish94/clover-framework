@@ -747,7 +747,7 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
     and any earlier rewrite with its instruction); solve(k, note) -> an independent solution of the question alone
     (note: what the user added, or None); program(note) -> a third independent solution for a number, computed by a
     program Clover runs ('' when none); code_check(answer) -> compiler feedback or None; used: a list the caller fills
-    with the tools that gave more Context ("a web search", "a Python calculation"), named in the reply.
+    with the tools that gave more Context ("a web search", "a Python calculation"), recorded as evidence.
     One-value answers are decided by majority: another value replaces the earlier one only when at least two
     independent solutions give it and more of them back it than back the earlier answer.
     Returns (answer, info); info["lesson"] (with info["lesson_kind"]) when the correction taught something."""
@@ -757,15 +757,23 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
 
     def check(ans):
         found = outcome_findings(question, ans)
+        if _CODE.search(question or "") and "```" in previous and "```" not in ans:
+            found.append("Code: the revised answer omitted the previously supplied code; regenerate it rather than copying the old answer")
         if code_check is not None:
             fb = code_check(ans)
             if fb:
                 found.append("Code: " + fb.strip()[:600])
         return found
 
+    def model_rewrite(instruction):
+        answer = rewrite(instruction)
+        if not isinstance(answer, str) or not answer.strip():
+            raise RuntimeError("The model returned no answer during retry")
+        return answer
+
     def fix(found):
         emit({"type": "cycle", "stage": "retry", "findings": found})
-        return rewrite(FIX.format(said=said, findings="\n".join("- " + f for f in found)))
+        return model_rewrite(FIX.format(said=said, findings="\n".join("- " + f for f in found)))
 
     def repair(cands, rounds, first=0):
         """Fix the model's latest answer (cands[-1]) on its findings, up to `rounds` times; the attempt from
@@ -785,7 +793,7 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
         info.update(action="corrected" if len(nf) < len(found) else "rewritten", final_findings=nf)
         if not nf:
             info.update(lesson=lesson_text(question, found, detail, passed=True), lesson_kind="verified")
-        return new + _still(nf), info
+        return new, info
     if solve is not None and single_answer(question):  # one value: solved again independently; the majority decides
         mine = final_answer(question, previous)
         texts, vals = [], []
@@ -812,55 +820,38 @@ def retry_cycle(question, previous, feedback, rewrite, solve=None, code_check=No
                 groups.append((v, [i]))
         backing = [i for i, v in enumerate(vals) if same(v, mine)]
         best = max((g for g in groups if not same(g[0], mine)), key=lambda g: len(g[1]), default=None)
-        again, total = _again(detail, used), len(vals)
         words = {1: "one", 2: "two", 3: "three"}
         if best is not None and len(best[1]) >= 2 and len(best[1]) > len(backing):
             v1, n = best[0], len(best[1])
             info.update(action="overturned" if mine is not None else "answered", overturned={"from": mine, "to": v1})
-            head = again + ": " + ("two independent solutions both give" if n == total == 2 else
-                                   "all three independent solutions give" if n == total == 3 else
-                                   f"{words[n]} of {words[total]} independent solutions give")
-            head += f" **{_fmt(v1)}**" + _dissent(vals, v1, program_at)
             if mine is not None:
-                head += ", so my earlier answer" + ("" if is_choice(question) else f" ({_fmt(mine)})") + " was wrong"
                 # a lesson needs more than a majority of the model's own solves: what the user said, or the program
                 # (a wrong overturn became a "user_stated_belief" and leaked into an unrelated question, 2026-11-01)
                 if detail or (program_at is not None and program_at in best[1]):
                     info.update(lesson=lesson_text(question, [f"{words[n]} independent solutions gave {_fmt(v1)}, not "
                                                               f"{_fmt(mine)}"], detail),
                                 lesson_kind="user" if detail else "verified")
-            return head + ". Here is the working:\n\n" + _as_answer(question, texts[best[1][0]], v1), info
-        if backing:
+            model_choice = next(index for index in best[1] if index != program_at)
+            return texts[model_choice], info
+        model_backing = [index for index in backing if index != program_at]
+        if model_backing:
             info["action"] = "kept"
-            n = len(backing)
-            if n == total:
-                phrase = "both independent solutions give" if n == 2 else "all three independent solutions give"
-            else:
-                phrase = f"{words[n]} of {words[total]} independent solutions " + ("gives" if n == 1 else "give")
-            phrase += f" the same result, **{_fmt(mine)}**" + _dissent(vals, mine, program_at)
-            ask = ("If I have misunderstood what you meant, tell me what you expected and why." if detail else
-                   "If you expected a different result, tell me what you expected and why; I may have misread the "
-                   "question.")
-            return (f"{again}: {phrase}. Here is that working:\n\n"
-                    + _as_answer(question, texts[backing[0]], mine) + "\n\n" + ask), info
+            return texts[model_backing[0]], info
         info["action"] = "unconfirmed"
         how, direction = _redo(question, said, detail)
         info["direction"] = how
         emit({"type": "cycle", "stage": "rewrite", "how": how})
-        new = rewrite(direction)
-        seen = list(dict.fromkeys(_fmt(v) for v in [mine] + vals if v is not None))
-        why = (f": independent checks gave different results ({', '.join(seen)})" if len(seen) > 1 else
-               " with independent checks")
-        return new + f"\n\n(I could not confirm this answer{why}. If you know the expected result, tell me.)", info
+        new = model_rewrite(direction)
+        info["final_findings"] = check(new)
+        return new, info
     how, direction = _redo(question, said, detail)  # an open answer: a new one, Directed by what the user said
     emit({"type": "cycle", "stage": "rewrite", "how": how})
-    new = rewrite(direction)
-    new, kept_code = _keep_code(previous, new)
+    new = model_rewrite(direction)
     new, nf = repair([(new, check(new))], 1)  # a concrete defect in the new answer: one corrective round
-    info.update(action="rewritten", direction=how, final_findings=nf, kept_code=kept_code)
+    info.update(action="rewritten", direction=how, final_findings=nf, kept_code=False)
     if detail:
         info.update(lesson=lesson_text(question, [], detail), lesson_kind="user")
-    return new + _still(nf), info
+    return new, info
 
 
 def lesson_text(question, findings, said="", passed=False):

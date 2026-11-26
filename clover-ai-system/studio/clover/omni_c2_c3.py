@@ -100,39 +100,6 @@ REQUIRED_PRECOMPUTED_CORE = (
 
 REQUIRED_PRECOMPUTED = ("trunks/tokenizer.json",) + REQUIRED_PRECOMPUTED_CORE
 
-MODEL_STAGE_DEFAULTS: dict[str, tuple[str, ...]] = {
-    "omni": (
-        "/opt/clover-k3/web-studio/data/omni/precomputed",
-        str(Path.home() / "CloverAI" / "data" / "omni" / "precomputed"),
-    ),
-    "lfm3-1.7b": (
-        "/opt/clover-k3/web-studio/data/omni/precomputed",
-        "/opt/clover-k3/lfm3-computed/hf-stage",
-        str(Path.home() / "CloverAI" / "data" / "omni" / "precomputed"),
-    ),
-    "clover-35b-a3b": (
-        "/opt/clover-k3/clover-35b-computed/hf-stage",
-    ),
-    "clover-35b": (
-        "/opt/clover-k3/clover-35b-computed/hf-stage",
-    ),
-    "nemotron-3.5-super-vl": (
-        "/opt/clover-gx10/nemotron-computed/hf-stage",
-        "/opt/clover-k3/nemotron-computed/hf-stage",
-    ),
-    "nemotron": (
-        "/opt/clover-gx10/nemotron-computed/hf-stage",
-        "/opt/clover-k3/nemotron-computed/hf-stage",
-    ),
-    "kimi-k3": (
-        "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
-    ),
-    "kimi": (
-        "/opt/clover-k3/kimi-k3.1-pro-computed/hf-stage",
-    ),
-}
-
-
 def precomputed_dir(base_dir: str | Path, model_key: str | None = None) -> Path:
     b = Path(base_dir)
     if (b / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
@@ -141,10 +108,6 @@ def precomputed_dir(base_dir: str | Path, model_key: str | None = None) -> Path:
         return b / "models"
     if model_key:
         mk = str(model_key).strip().lower()
-        for cand_str in MODEL_STAGE_DEFAULTS.get(mk, ()):
-            cand = Path(cand_str)
-            if (cand / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
-                return cand
         sub_cand = b / "data" / mk / "precomputed"
         if (sub_cand / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
             return sub_cand
@@ -155,11 +118,6 @@ def precomputed_dir(base_dir: str | Path, model_key: str | None = None) -> Path:
         return p / "models"
     if (p / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
         return p
-    home_p = Path.home() / "CloverAI" / "data" / "omni" / "precomputed"
-    if (home_p / "models" / "trunks" / "tokenizer.json").is_file():
-        return home_p / "models"
-    if (home_p / "hybridagent" / "plan-trunk-0" / "index.bin").is_file():
-        return home_p
     return p
 
 
@@ -717,10 +675,7 @@ class OmniC2C3Runtime:
         ids = np.array([max(0, min(self.vocab_size - 1, int(x))) for x in (token_ids or [self.tok.bos_token_id])], dtype=np.int64)
         if self.lfm3_emb_mm is not None:
             return bf16_rows_to_f32(self.lfm3_emb_mm, ids)
-        # Fallback if only 384-d vqvae_wte is present: tile/pad to d_model
-        w384 = bf16_rows_to_f32(self.vq_wte_mm, ids) * self.vq_wte_scale
-        reps = (self.d_model + D_VQ - 1) // D_VQ
-        return np.tile(w384, (1, reps))[:, : self.d_model]
+        raise RuntimeError("The selected model's token embeddings are unavailable; VQ embeddings cannot replace C1")
 
     def forward_hybridlink(self, h_2048: np.ndarray) -> np.ndarray:
         """Run C2 `Lfm3NativeHybridLink(d=2048, bottleneck=512)` on `h_2048` (`[..., 2048]`)."""
@@ -1462,16 +1417,8 @@ class OmniC2C3Runtime:
                         break
 
         decoded_str = self.tok.decode(clean_ids).strip()
-        all_content_emitted = all(emitted_counts[c_id] >= max_counts.get(c_id, 1) for c_id in content_set)
-        has_dangling_tail = bool(
-            re.search(
-                r"(?:\b(?:and|or|to|for|of|in|with|by|from|the|a|an|as|at|on)\s*$|,\s*$|\d+,\d{1,2}$)",
-                decoded_str,
-                flags=re.IGNORECASE,
-            )
-        )
-        if not decoded_str or not all_content_emitted or has_dangling_tail:
-            return self.tok.decode(valid_p), list(valid_p), True
+        if not decoded_str:
+            raise RuntimeError("C3 model returned no decoded text")
         return decoded_str, clean_ids, False
 
     def _run_ncm_multiscale_levels(
@@ -1642,8 +1589,9 @@ class OmniC2C3Runtime:
                 z_pref_p = np.concatenate([z_rh_p, z_bpe_p], axis=1)
 
             # 2. Single one-time C3 12-Layer NextConceptTransformer + 11-Level Multiscale VQ-VAE pass
+            active_blocks = self._all_ncm_blocks() if full_ncm else self.ncm_blocks
             z_hat, codes_emitted, levels_run = self._run_ncm_multiscale_levels(
-                z_pref_p, min(len(pids_prim), level_cap), self._all_ncm_blocks() if full_ncm else None
+                z_pref_p, min(len(pids_prim), level_cap), active_blocks
             )
 
             # 3. Single one-time C3 3-Layer LexicalPointerDecoder + VQ-VAE Middle Block pass across `L_prim`
@@ -1714,9 +1662,10 @@ class OmniC2C3Runtime:
                 "windows": n_win,
                 "window_tokens": P_BPE,
                 "codes": codes_emitted,
-                "levels": levels_run or 11,
+                "levels": levels_run,
+                "transformer_layers": len(active_blocks),
                 "bridges": f"ComboBridge({self.d_model}->384) + ExpertBridge({self.d_model}->384)",
-                "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+                "decoder": f"{levels_run}-level VQ-VAE + {len(active_blocks)}L NextConceptTransformer + {len(self.ptr_blocks)}L LexicalPointerDecoder",
                 "s": elapsed_s,
             }
 
@@ -1758,10 +1707,6 @@ def for_base(base_dir: str | Path, model_key: str | None = None) -> OmniC2C3Runt
             return _RUNTIMES[key]
         if missing_c2_c3_files(base_dir, model_key=model_key):
             return None
-        try:
-            rt = OmniC2C3Runtime(base_dir, model_key=model_key)
-            _RUNTIMES[key] = rt
-            return rt
-        except Exception as exc:
-            print(f"[Clover] OmniC2C3Runtime({model_key or 'omni'}) could not load: {exc}", flush=True)
-            return None
+        rt = OmniC2C3Runtime(base_dir, model_key=model_key)
+        _RUNTIMES[key] = rt
+        return rt

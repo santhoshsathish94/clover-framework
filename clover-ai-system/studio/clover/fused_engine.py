@@ -297,56 +297,37 @@ class FusedEngine:
         cur_prompt = "\n\n".join(before + [prompt] + after)
         cur_hist = list(hist or ())
         reply = ""
-        direct_plan = ON._direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
-        if direct_plan is not None:
-            emit({"type": "plan", "round": 1, "stage": "c1_inference", "model": "LFM3-Omni-2B", "cycle": 1})
-            emit({"type": "plan", "round": 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B", "cycle": 1})
-            ans = {"reply": direct_plan, "input_tokens": max(1, len((query or "").split())), "generated_tokens": 0, "seconds": 0.0, "c1": "inference only"}
+        for attempt in range(max_clover_cycles):
+            cycle_num = attempt + 1
+            emit({"type": "plan", "round": len(answers) + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B", "cycle": cycle_num})
+            emit({"type": "plan", "round": len(answers) + 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B", "cycle": cycle_num})
+            ans = self._ask(cur_prompt, cur_hist, max_new)
             answers.append(ans)
-            emit({"type": "plan", "round": 1, "stage": "fused_done", "model": "LFM3-Omni-2B", "ms": 0, "cycle": 1})
-            reply = direct_plan
+            emit({"type": "plan", "round": len(answers), "stage": "fused_done", "model": "LFM3-Omni-2B",
+                  "ms": round((ans.get("seconds") or 0) * 1000), "cycle": cycle_num})
+            reply = ans.get("reply") or ""
+            if not reply.strip():
+                raise RuntimeError("The fused model returned no answer")
             if "ontology" in layers and kit is not None:
-                reply, changed = kit.grounding_filter(query, reply)
-                layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": 1})
+                reply, conflict = kit.grounding_filter(query, reply)
+                layer_log.append({"layer": "ontology_grounding", "conflict": conflict, "rewritten": False, "cycle": cycle_num})
             op_plan.complete_stage("execution")
-            op_plan.start_stage("outcome", "Cycle 1 Outcome: verifying output against reality…")
+            op_plan.start_stage("outcome", f"Cycle {cycle_num} Outcome: verifying output against reality…")
             findings, c_meta = C.verify_turn_outcome(query, reply, rounds, kit=kit, layers=layers, meaning=meaning)
-            c_meta["cycle"] = 1
+            c_meta["cycle"] = cycle_num
             c_meta["findings"] = list(findings)
             c_meta["ok"] = not bool(findings)
             cycle_history.append(c_meta)
             if c_meta.get("compiler_info") is not None:
                 layer_log.append(c_meta["compiler_info"])
-        else:
-            for attempt in range(max_clover_cycles):
-                cycle_num = attempt + 1
-                emit({"type": "plan", "round": len(answers) + 1, "stage": "c1_inference", "model": "LFM3-Omni-2B", "cycle": cycle_num})
-                emit({"type": "plan", "round": len(answers) + 1, "stage": "fused_c1_c2_c3", "model": "LFM3-Omni-2B", "cycle": cycle_num})
-                ans = self._ask(cur_prompt, cur_hist, max_new)
-                answers.append(ans)
-                emit({"type": "plan", "round": len(answers), "stage": "fused_done", "model": "LFM3-Omni-2B",
-                      "ms": round((ans.get("seconds") or 0) * 1000), "cycle": cycle_num})
-                reply = ans.get("reply") or ""
-                if "ontology" in layers and kit is not None:
-                    reply, changed = kit.grounding_filter(query, reply)
-                    layer_log.append({"layer": "ontology_grounding", "changed": changed, "cycle": cycle_num})
-                op_plan.complete_stage("execution")
-                op_plan.start_stage("outcome", f"Cycle {cycle_num} Outcome: verifying output against reality…")
-                findings, c_meta = C.verify_turn_outcome(query, reply, [], kit=kit, layers=layers, meaning=meaning)
-                c_meta["cycle"] = cycle_num
-                c_meta["findings"] = list(findings)
-                c_meta["ok"] = not bool(findings)
-                cycle_history.append(c_meta)
-                if c_meta.get("compiler_info") is not None:
-                    layer_log.append(c_meta["compiler_info"])
-                if not findings or (cancel and cancel.is_set()):
-                    break
-                if attempt + 1 >= max_clover_cycles:
-                    break
-                op_plan.retry_from_context(cycle_num + 1, findings[0])
-                emit({"type": "cycle", "step": "outcome_retry", "cycle": cycle_num + 1, "findings": findings})
-                cur_hist = cur_hist + [{"role": "user", "content": cur_prompt}, {"role": "assistant", "content": reply}]
-                cur_prompt = C.AUTO_CYCLE_FIX.format(findings="\n".join("- " + f for f in findings))
+            if not findings or (cancel and cancel.is_set()):
+                break
+            if attempt + 1 >= max_clover_cycles:
+                break
+            op_plan.retry_from_context(cycle_num + 1, findings[0])
+            emit({"type": "cycle", "step": "outcome_retry", "cycle": cycle_num + 1, "findings": findings})
+            cur_hist = cur_hist + [{"role": "user", "content": cur_prompt}, {"role": "assistant", "content": reply}]
+            cur_prompt = C.AUTO_CYCLE_FIX.format(findings="\n".join("- " + f for f in findings))
 
         if len(cycle_history) > 1 or (cycle_history and cycle_history[0].get("findings")):
             lesson_txt = (
@@ -448,7 +429,9 @@ class FusedEngine:
             text = instruction + (notes if len(convo) == start else "")
             ans = self._ask(text, convo, max_new)
             answers.append(ans)
-            new = (ans.get("reply") or "").strip() or previous
+            new = (ans.get("reply") or "").strip()
+            if not new:
+                raise RuntimeError("The fused model returned no answer during retry")
             convo.extend([{"role": "user", "content": text}, {"role": "assistant", "content": new}])
             return new
 
@@ -463,8 +446,8 @@ class FusedEngine:
         info["tools"] = []
         layer_log.append(info)
         if "ontology" in layers and kit is not None:
-            answer, changed = kit.grounding_filter(question, answer)
-            layer_log.append({"layer": "ontology_grounding", "changed": changed})
+            answer, conflict = kit.grounding_filter(question, answer)
+            layer_log.append({"layer": "ontology_grounding", "conflict": conflict, "rewritten": False})
         op_plan.complete_stage("execution")
         op_plan.start_stage("outcome", f"Outcome action: {info.get('action', 'corrected')}")
         op_plan.complete_stage("outcome")

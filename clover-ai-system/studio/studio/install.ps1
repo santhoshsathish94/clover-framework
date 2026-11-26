@@ -1,4 +1,4 @@
-param([switch]$Quiet, [string]$Base = '', [string]$Components = 'core,csi,c2c3', [string]$Reuse = '',
+param([switch]$Quiet, [string]$Base = '', [string]$Components = 'core,csi', [string]$Reuse = '',
       [switch]$NoShortcuts)
 # Clover AI Studio setup. Installs everything on this computer from the publishers, each file checked against the
 # SHA-256 its publisher lists (clover\launch\manifest.json, studio\requirements.lock):

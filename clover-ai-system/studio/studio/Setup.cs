@@ -173,7 +173,7 @@ namespace CloverAIStudioSetup
             bool noShortcuts = false;
             bool trustOnly = false;
             string baseDir = "";
-            string components = "core,csi,c2c3";
+            string components = "core,csi";
             string reuseDir = "";
 
             if (args != null)

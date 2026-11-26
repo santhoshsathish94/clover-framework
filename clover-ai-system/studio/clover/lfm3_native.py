@@ -48,9 +48,12 @@ def _fn(name, description, props=None, required=()):
 
 
 STUDIO_TOOLS = [
-    _fn("run_python", "Run Python 3 code on this laptop and return what it prints. Use print() for results. pandas, "
-        "openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). To show "
-        "a chart, save it as a PNG file (plt.savefig('chart.png')); the user sees it in the chat. 60-second limit.",
+    _fn("run_python", "Run Python 3 code and return what it prints. Use print() for results. "
+        "For math or optimization problems, define scalar variables size1, price1, size2, price2, target first "
+        "(do not use lists), loop c1 in range(target // size1 + 2) and c2 in range(target // size2 + 2), "
+        "check if c1 * size1 + c2 * size2 >= target, and find the minimum cost = c1 * price1 + c2 * price2. "
+        "pandas, openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). "
+        "To show a chart, save it as a PNG file (plt.savefig('chart.png')); the user sees it in the chat. 60-second limit.",
         {"code": {"type": "string", "description": "Python source code"}}, ["code"]),
     _fn("web_search", "Search the web. Returns results with links.",
         {"query": {"type": "string"}}, ["query"]),
@@ -123,10 +126,7 @@ TOOLS_ON = ("Use the tools when they help; their results are real. Answer direct
             "for weather, recent events, live information or facts you are not sure of. Never say you lack real-time "
             "access when web_search is available—call web_search instead. If a tool is not allowed, answer without it "
             "and say what you could not check.")
-TOOLS_OFF = ("Answer helpfully, clearly, and concisely from your knowledge. If the user asks what you can do or whether "
-             "you can generate images, search the web, or run code, confirm that yes, you can generate images and "
-             "illustrations from any text description, search the web, run Python code, and analyze images, audio, and "
-             "video—just ask them what they would like you to create or look up.")
+TOOLS_OFF = "Answer helpfully, clearly, and concisely."
 
 
 def tools_sentence(tools_on, asked=None):
@@ -1224,29 +1224,7 @@ class LFM3Native:
                         emit({"type": "plan", "round": r + 1, "stage": "reviewing"})
                     emit({"type": "plan", "round": r + 1, "stage": "c1_inference", "model": m_c1, "layers_desc": l_c1})
                     cb = delta_cb(r + 1)
-                    is_live_gen = (
-                        (getattr(self, "gpu", None) is not None or getattr(self, "cache", None) is not None)
-                        and "generate" not in getattr(self, "__dict__", {})
-                    )
-                    direct_plan = (
-                        ON._direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)
-                        if (is_live_gen and r == 0 and attempt == 0 and not schemas)
-                        else None
-                    )
-                    if direct_plan is not None:
-                        text = f"</think>\n{direct_plan}" if thinking else direct_plan
-                        st = {
-                            "prompt_tokens": max(1, len((query or "").split())),
-                            "reused_tokens": 0,
-                            "new_tokens": 0,
-                            "prefill_s": 0.0,
-                            "decode_s": 0.0,
-                            "decode_tok_s": None,
-                            "finish": "stop",
-                            "c1": "inference only",
-                        }
-                    else:
-                        text, st = self.generate(prompt, cfg, max_new, thinking, cb, cancel, seed + 100 * attempt + r)
+                    text, st = self.generate(prompt, cfg, max_new, thinking, cb, cancel, seed + 100 * attempt + r)
                     stats_all.append(st)
                     if force_answer and thinking and st["finish"] == "length" and "</think>" not in text:
                         forced = text + "\n</think>\n\n"
@@ -1267,18 +1245,18 @@ class LFM3Native:
                             worked, summary = tool_worked(c["name"], ran, result, why)
                             emit({"type": "tool_result", "id": c["id"], "name": c["name"], "ran": ran, "worked": worked,
                                   "summary": summary, "why": why, "result": result[:3000]})
+                            if c["name"] == "generate_image" and not worked:
+                                raise RuntimeError(f"Image generation failed: {result}")
                             rounds.append({"tool": c["name"], "arguments": c["arguments"], "ran": ran, "worked": worked,
                                            "summary": summary, "why": why, "result": result[:2000]})
                             msgs.append({"role": "tool", "tool_call_id": c["id"], "content": result})
                             op_plan.advance_execution_step(c["name"])
                         continue
                     final = (content + after).strip() if thinking and "</think>" in text else (text.strip() if not thinking else "")
-                    if not final and st["finish"] == "length":
-                        final = "(Clover ran out of thinking room before answering. Ask again, or ask for a shorter answer.)"
-                    elif not final and st["finish"] == "cancelled":
+                    if not final and st["finish"] == "cancelled":
                         final = "(Stopped.)"
                     elif not final:
-                        final = "(Clover finished without writing an answer.)"
+                        raise RuntimeError(f"The selected model returned no answer (finish: {st['finish']})")
                     break
                 else:
                     if final_on_limit and not (cancel and cancel.is_set()):
@@ -1291,7 +1269,11 @@ class LFM3Native:
                         reasoning, content, after = split_completion(text, thinking)
                         tail = (content + after) if thinking and "</think>" in text else ("" if thinking else text)
                         final = re.sub(r"<tool_call>[\s\S]*?(?:</tool_call>|$)", "", tail).strip()
-                    final = final or "(Stopped after the maximum number of tool rounds.)"
+                    if not final:
+                        if cancel and cancel.is_set():
+                            final = "(Stopped.)"
+                        else:
+                            raise RuntimeError("The selected model exhausted its tool rounds without an answer")
                 if cancel and cancel.is_set():
                     break
                 op_plan.complete_stage("execution")
@@ -1332,15 +1314,6 @@ class LFM3Native:
                             c1_first_failed = kit.c1_infer(final)[0]
                         except Exception:
                             c1_first_failed = None
-                fixed = C.direct_arithmetic_answer(query) if C.only_arithmetic(findings) else None
-                if fixed:  # a plain sum: Clover has the exact value, so it writes the answer itself
-                    emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
-                    final = fixed
-                    emit({"type": "token", "round": 1, "kind": "answer", "text": final})
-                    op_plan.complete_stage("outcome", C.outcome_label(c_meta["checks"], attempt + 1))
-                    layer_log.append({"layer": "outcome", "checks": list(c_meta["checks"]), "passed": True})
-                    emit({"type": "cycle", "cycle": attempt + 1, "stage": "verified", "cycles_used": attempt + 1})
-                    break
                 if attempt + 1 < max_clover_cycles:
                     emit({"type": "cycle", "cycle": attempt + 2, "stage": "retry", "findings": findings})
                     op_plan.retry_from_context(attempt + 2, findings[0])
@@ -1361,7 +1334,9 @@ class LFM3Native:
                     })
             op_plan.start_stage("growth", "Aligning epistemic state & recording learned knowledge…")
             rnd_n = len(stats_all) or 1
-            if kit is not None and not (cancel and cancel.is_set()):
+            if "ncm" in layers and not (cancel and cancel.is_set()):
+                if kit is None:
+                    raise RuntimeError("NCM output was requested but its model runtime is unavailable")
                 if hasattr(kit, "c1_infer"):
                     try:
                         c1_state, c1_info = kit.c1_infer(final, stats=stats_all, model=m_c1, layers_desc=l_c1)
@@ -1398,8 +1373,8 @@ class LFM3Native:
                     emit(dict(info, type="layer"))
                     emit({"type": "plan", "round": rnd_n, "stage": "ncm_done", "ms": round((info.get("s") or 0) * 1000)})
             if "ontology" in layers and kit is not None:
-                final, changed = kit.grounding_filter(query, final)
-                layer_log.append({"layer": "ontology_grounding", "changed": changed})
+                final, conflict = kit.grounding_filter(query, final)
+                layer_log.append({"layer": "ontology_grounding", "conflict": conflict, "rewritten": False})
             if not (cancel and cancel.is_set()):
                 op_plan.complete_stage("growth", "Growth preserved · context updated")
             if ("ncm" in layers or kit is not None) and not (cancel and cancel.is_set()):

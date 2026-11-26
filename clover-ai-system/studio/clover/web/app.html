@@ -873,6 +873,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
             <button type="button" class="cbtn" id="clip-btn" title="Attach files, documents, spreadsheets, code or media" aria-label="Attach files or documents"><svg class="ic" aria-hidden="true"><use href="#i-clip"/></svg></button>
           </div>
           <div class="composer__actions">
+            <button type="button" class="cbtn" id="gen-mode-btn" title="Output mode: Text only (tap for Interleaved Text + 24 kHz Speech)" aria-label="Toggle interleaved text and speech output" style="width:auto;padding:0 .5rem;font-size:.74rem;font-weight:600;gap:.28rem"><svg class="ic" aria-hidden="true"><use href="#i-speaker"/></svg><span id="gen-mode-lbl">Text</span></button>
             <button type="button" class="cbtn mic" id="mic" title="Talk to Clover" aria-label="Record a voice message" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg></button>
             <button type="button" class="send idle" id="send" title="Tap to send · Hold to speak" aria-label="Send (or hold to speak)"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></button>
           </div>
@@ -1242,14 +1243,48 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       </div>
       <div class="glabel">Runs on</div>
       <div class="group pad">
-        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="fused" class="laptop-only">C1 + C2 + C3</button></div>
+        <div class="seg full" id="s-engine"><button type="button" data-v="gpu">GPU</button><button type="button" data-v="cpu">CPU</button><button type="button" data-v="precomputed">Precomputed C1</button></div>
         <p class="fine" id="engine-d"></p>
         <div class="note" id="engine-note" hidden></div>
       </div>
       <div id="omni-settings" hidden>
-        <div class="glabel">Voice</div>
+        <div class="glabel">Model precision (LFM3-Omni-2B)</div>
+        <div class="group pad">
+          <div class="seg full" id="s-quant" style="flex-wrap:wrap">
+            <button type="button" data-v="q4_0">Q4_0 · Fast</button>
+            <button type="button" data-v="q4_k_m">Q4_K_M</button>
+            <button type="button" data-v="q8_0">Q8_0 · 8-bit</button>
+            <button type="button" data-v="bf16" class="laptop-only">BF16 · Full 16-bit</button>
+          </div>
+          <p class="fine" id="quant-d">Choose <b>Q4_0</b> / <b>Q4_K_M</b> for fastest responses, <b>Q8_0</b> for near-lossless 8-bit quality, or <b>BF16</b> for unquantized 16-bit weights + BF16 vision/audio projector. Uninstalled precisions download automatically in the background.</p>
+          <div class="note" id="quant-note" hidden></div>
+        </div>
+        <div class="glabel">Voice (24 kHz LiquidCodec Speech)</div>
         <div class="group">
           <div class="row static"><span class="row__t">Clover's voice</span><div class="seg sm" id="s-voice"><button type="button" data-v="female">Female</button><button type="button" data-v="male">Male</button></div></div>
+          <label class="row static" for="s-voice-lang"><span class="row__t">Speech language<small>Auto matches the language of the reply across all 19 supported languages.</small></span>
+            <select id="s-voice-lang" style="padding:.35rem .55rem;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit">
+              <option value="auto">Auto-detect</option>
+              <option value="en">English</option>
+              <option value="ar">Arabic</option>
+              <option value="zh">Chinese</option>
+              <option value="da">Danish</option>
+              <option value="nl">Dutch</option>
+              <option value="fi">Finnish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="el">Greek</option>
+              <option value="he">Hebrew</option>
+              <option value="it">Italian</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="pl">Polish</option>
+              <option value="pt">Portuguese</option>
+              <option value="es">Spanish</option>
+              <option value="sv">Swedish</option>
+              <option value="tr">Turkish</option>
+            </select>
+          </label>
           <label class="row static"><span class="row__t">Speak replies to voice messages</span><span class="switch"><input type="checkbox" id="s-autospeak"><span></span></span></label>
         </div>
       </div>
@@ -2201,6 +2236,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       body.appendChild(w.box);
     }
     body.appendChild(el('div', 'md' + (m.isNotice ? ' notice' : ''), markdown(m.text)));
+    if (m.replyAudio) {
+      var audWrap = el('div', ''); audWrap.style.marginTop = '.45rem';
+      var audEl = document.createElement('audio');
+      audEl.controls = true; audEl.preload = 'metadata';
+      audEl.src = apiUrl(m.replyAudio);
+      audEl.style.width = '100%'; audEl.style.maxWidth = '360px'; audEl.style.height = '36px';
+      audWrap.appendChild(audEl);
+      body.appendChild(audWrap);
+    }
     (m.images || []).forEach(function (im) {
       if (!/^(?:[0-9a-f]{32}|annotated_[0-9a-f]{16})\.(?:png|jpg|jpeg|gif|webp)$/.test(im.file || '')) return;
       var fig = el('figure', 'figure'), img = document.createElement('img');
@@ -2385,7 +2429,8 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     speech = me;
     if (b) { b.classList.add('busy'); b.title = 'Stop'; }
     function wav(part) {
-      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: part, voice: state.settings.voice }) })
+      var vLang = (state.server && state.server.settings && state.server.settings.voice_lang) || 'auto';
+      return fetch(apiUrl('/api/tts'), { method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ text: part, voice: state.settings.voice, lang: vLang }) })
         .then(function (r) { if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { throw new Error(j.error || ('HTTP ' + r.status)); }); return r.blob(); });
     }
     function synthAll(parts) {  // one request at a time; a failed part stops the ones after it
@@ -2616,6 +2661,12 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   $('s-autospeak').addEventListener('change', function () { state.settings.autospeak = this.checked; saveSettings(); });
   segClick('s-tools', function (v) { saveServer({ tools: v }); });
   if ($('s-jepa')) segClick('s-jepa', function (v) { saveServer({ jepa_arch: v }); });
+  if ($('s-quant')) segClick('s-quant', function (v) {
+    if (state.server && state.server.settings && state.server.settings.quant === v) return;
+    if (state.busy) { alert('Clover is answering; switch precision when it is done.'); return; }
+    saveServer({ quant: v });
+  });
+  if ($('s-voice-lang')) $('s-voice-lang').addEventListener('change', function () { saveServer({ voice_lang: this.value }); });
   $('s-kv').addEventListener('change', function () { saveServer({ layers: { kv_slots: this.checked } }); });
   segClick('s-engine', function (v) {
     if (state.server && state.server.settings.engine === v) return;
@@ -2899,9 +2950,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     return api('POST', '/api/settings', changes).then(function (r) {
       state.server = state.server || {};
       state.server.settings = r.settings;
+      if (r.quants_available) state.server.quants_available = r.quants_available;
+      if (r.warning !== undefined) state.server.warning = r.warning;
       if (r.model_catalog) { state.server.model_catalog = r.model_catalog; state.catalog = r.model_catalog; }
       renderServerSettings(); pollStatus();
-      if (changes.engine || changes.model) { state.health = null; loadHealth(); }
+      if (changes.engine || changes.model || changes.quant) { state.health = null; loadHealth(); }
     }).catch(function (e) { alert(e.message); loadServerSettings(); });
   }
   function toolsValue() {
@@ -2919,18 +2972,32 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
     var isRemote = info && !info.local && !WEB;
     setNote('model-note', sv.omni_available === false ? 'LFM3-Omni-2B not installed: ' + sv.omni_reason : '');
     $('engine-d').textContent = WEB
-      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B (40-layer BD-GDN/GQA MoE), Nemotron 3.5 Super VL (88-layer C engine + NCM) and Kimi K3.1 Pro 2.8T MoE (93-layer C/Rust engine + Gated DSA + NCM).'
+      ? 'Runs on the k3 server (AMD Ryzen 9 7950X3D, 124 GB RAM): LFM3-Omni-2B in llama.cpp (Zen 4 AVX-512), Clover-35B-A3B, Nemotron 3.5 Super VL and Kimi K3.1 Pro.'
       : isRemote
         ? (info.name + ' hosted on ' + (info.host || 'k3') + ' — ' + (info.desc || 'Connected remote engine.') + ' Local tools, permissions, memory and Clover Cycle run on this device.')
-        : 'GPU and CPU run LFM3-Omni-2B with 4-bit weights in llama.cpp; the GPU (' + gpuName() + ') reads your message several times faster. ' +
-          'C1 + C2 + C3 runs our trained model with its planner (HybridLink) and decoder (NCM) together on the CPU: text only, no tools, slower; being measured.';
+        : 'GPU (' + gpuName() + '), CPU (llama.cpp), or Precomputed C1 (static LFM3-Omni-2B trunks + 4-bit experts in O(1) mmap on liblfm3_cpu_engine, C2/C3 off).';
     $('s-engine').children[0].textContent = gpuName();
     Array.prototype.forEach.call($('s-engine').children, function (b) {
       var v = b.getAttribute('data-v'); b.classList.toggle('on', v === st.engine);
-      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'fused' && !sv.fused_available);
+      b.disabled = (v === 'gpu' && !sv.gpu_available) || (v === 'precomputed' && sv.precomputed_available === false);
     });
     setNote('engine-note', sv.warning || (sv.gpu_available === false && !WEB ? 'GPU engine not installed: ' + sv.gpu_reason : '') ||
-      (st.engine !== 'fused' && !sv.fused_available ? '' : '') || (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
+      (running && st.engine && running !== st.engine ? 'Switching engine…' : ''));
+    if ($('s-quant')) {
+      var qCur = st.quant || 'q4_0';
+      var qAvail = sv.quants_available || {};
+      var qRun = (state.health && state.health.engine && state.health.engine.quant) || qCur;
+      Array.prototype.forEach.call($('s-quant').children, function (b) {
+        var v = b.getAttribute('data-v');
+        b.classList.toggle('on', v === qCur);
+        var baseLbl = v === 'q4_0' ? 'Q4_0 · Fast' : v === 'q4_k_m' ? 'Q4_K_M' : v === 'q8_0' ? 'Q8_0 · 8-bit' : 'BF16 · Full 16-bit';
+        b.textContent = baseLbl + (qAvail[v] === false ? ' ↓' : '');
+      });
+      setNote('quant-note', qAvail[qCur] === false
+        ? ('Downloading ' + qCur.toUpperCase() + ' in the background; Clover stays usable on ' + qRun.toUpperCase() + ' until ready.')
+        : (qRun !== qCur ? ('Switching to ' + qCur.toUpperCase() + '…') : ''));
+    }
+    if ($('s-voice-lang')) $('s-voice-lang').value = st.voice_lang || 'auto';
     pick('s-tools', st.tools || 'ask');
     if ($('s-jepa')) pick('s-jepa', st.jepa_arch || 'auto');
     $('s-kv').checked = !!(st.layers && st.layers.kv_slots);
@@ -2961,18 +3028,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       : rec.state === 'loading' ? ' Getting ready…' : '';
     var whereDesc = (info && info.host && info.host !== 'local') ? ('hosted on ' + info.host) : ('the ' + (st.engine === 'gpu' ? gpuName() : 'CPU'));
     var fusedOk = !!sv.fused_available, c2c3Ok = sv.c2c3_available !== false || fusedOk || k3Big;
+    var ncmOn = !!(L && L.ncm) && !sv.c2c3_disabled;
     var core = [
-      { tag: 'C1', name: 'Inference', badge: 'On', on: true,
-        desc: mLabel + ' on ' + whereDesc + '. Performs model inference only (planning is C2 HybridAgent; decoding is C3 NCM).',
+      { tag: 'C1', name: 'LFM3-Omni-2B · End-to-End Omni Engine', badge: 'On', on: true,
+        desc: mLabel + ' (' + String(st.quant || 'q4_0').toUpperCase() + ') on ' + whereDesc + '. Understands text, images, 16 kHz audio, and 2 fps video + soundtrack; streams answers directly in text & 24 kHz speech across 19 languages with native tool calling.',
         links: [['model', 'Model and voice']] },
-      { tag: 'C2', name: 'Plan · HybridAgent', badge: 'On', on: true,
-        desc: c2c3Ok
-          ? ('HybridAgent (HybridLink2048 + Lfm3NativeHybridLink, plan-trunk-0) continuous latent planning & Studio tool loop for ' + mLabel + ', plus Try again verification cycle.')
-          : ('HybridAgent planner for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') },
-      { tag: 'C3', name: 'Decode · Bridges & 11-Level NCM', badge: 'On', on: true,
-        desc: c2c3Ok
-          ? ('Lfm3ComboBridge(2048\u2192384) + Lfm3ExpertBridge(2048\u2192384) (bridge-trunk-0) into 11-level multiscale VQ-VAE, 12-layer NextConceptTransformer & 3-layer LexicalPointerDecoder.')
-          : ('The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop (' + (sv.c2c3_reason || sv.fused_reason || 'downloading c2c3') + ').') }
+      { tag: 'C2', name: 'Plan · HybridAgent', badge: ncmOn ? 'On' : 'Disabled', on: ncmOn,
+        desc: !ncmOn
+          ? 'Disabled — LFM3-Omni-2B handles planning, multimodal reasoning, and tool calling natively.'
+          : (c2c3Ok ? ('HybridAgent continuous latent planning for ' + mLabel + '.') : 'HybridAgent planner for LFM3-Omni-2B is not installed on this laptop.') },
+      { tag: 'C3', name: 'Decode · Bridges & 11-Level NCM', badge: ncmOn ? 'On' : 'Disabled', on: ncmOn,
+        desc: !ncmOn
+          ? 'Disabled — LFM3-Omni-2B streams tokens and 24 kHz speech directly without intermediate NCM concept re-decoding.'
+          : (c2c3Ok ? '11-level multiscale VQ-VAE & NextConceptTransformer.' : 'The precomputed 11-level NCM concept renderer for LFM3-Omni-2B is not installed on this laptop.') }
     ];
     var support = [
       { tag: 'S1', name: 'Memory', badge: 'On', on: true,
@@ -4573,6 +4641,19 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
       }
     }
   }
+  state.genMode = 'text';
+  if ($('gen-mode-btn')) {
+    $('gen-mode-btn').addEventListener('click', function () {
+      state.genMode = state.genMode === 'interleaved' ? 'text' : 'interleaved';
+      var on = state.genMode === 'interleaved';
+      if ($('gen-mode-lbl')) $('gen-mode-lbl').textContent = on ? 'Text + Speech' : 'Text';
+      $('gen-mode-btn').style.background = on ? 'var(--accent-soft)' : '';
+      $('gen-mode-btn').style.color = on ? 'var(--accent-2)' : '';
+      $('gen-mode-btn').title = on
+        ? 'Output mode: Interleaved Text + 24 kHz Speech (<|mixed_start|>)'
+        : 'Output mode: Text only (tap for Interleaved Text + 24 kHz Speech)';
+    });
+  }
   if ($('mic')) {
     $('mic').addEventListener('click', function () {
       if (state.busy) return;
@@ -4888,7 +4969,7 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
 
   function streamSend() {
     var inp = takeInput(); if (!inp) return;
-    if (state.omni && (voice.on ? !deviceVoice() : state.speakNext && state.settings.autospeak)) api('POST', '/api/tts/warm', {}).catch(function () {});
+    if (state.omni && (voice.on || (state.speakNext && state.settings.autospeak))) api('POST', '/api/tts/warm', {}).catch(function () {});
     var c = inp.c, live = liveTurn(), body = live.body;
     var work = workEl(true, true); work.label('Understanding your message\u2026'); work.meta('0:00');
     body.insertBefore(work.box, live.wait);
@@ -5245,12 +5326,43 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         live.wait.hidden = false;
         if (ev.stage === 'retry' || ev.stage === 'rewrite') dim();
         scrollDown();
+      } else if (ev.type === 'audio_delta') {
+        playInterleavedPcmChunk(ev.pcm16_b64, ev.rate || 24000);
       } else if (ev.type === 'app_action') {
         if ((PHONE || WEB) && ev.action_link) {
           openExternalOrApp(ev.action_link, ev);
         }
       } else if (ev.type === 'done') finish(ev);
       else if (ev.type === 'error') finish({ reply: 'Clover stopped with an error: ' + ev.error, error: true });
+    }
+    var rtAudioCtx = null, rtNextTime = 0, rtStreamedAudio = false;
+    function playInterleavedPcmChunk(b64, rate) {
+      if (!b64) return;
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!rtAudioCtx) { rtAudioCtx = new AC({ sampleRate: rate }); rtNextTime = 0; }
+        if (rtAudioCtx.state === 'suspended') rtAudioCtx.resume();
+        var bin = atob(b64), nSamples = bin.length >> 1;
+        if (nSamples <= 0) return;
+        var f32 = new Float32Array(nSamples);
+        for (var i = 0; i < nSamples; i++) {
+          var lo = bin.charCodeAt(2 * i), hi = bin.charCodeAt(2 * i + 1);
+          var s = (hi << 8) | lo;
+          if (s >= 32768) s -= 65536;
+          f32[i] = s / 32768.0;
+        }
+        var abuf = rtAudioCtx.createBuffer(1, nSamples, rate);
+        abuf.getChannelData(0).set(f32);
+        var src = rtAudioCtx.createBufferSource();
+        src.buffer = abuf; src.connect(rtAudioCtx.destination);
+        var now = rtAudioCtx.currentTime;
+        if (rtNextTime < now) rtNextTime = now + 0.02;
+        src.start(rtNextTime);
+        rtNextTime += abuf.duration;
+        rtStreamedAudio = true;
+        voiceLips(answer || '…', Math.max(0.25, rtNextTime - now));
+      } catch (e) {}
     }
     function finish(ev) {
       if (finished) return; finished = true;
@@ -5273,18 +5385,24 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
           if (st.status === 'in-progress') st.status = 'completed';
         });
       }
-      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn,
+      var m = { role: 'bot', text: ev.reply || '', isNotice: !!ev.error, turn: ev.turn, replyAudio: ev.reply_audio || '',
         meta: secs + ' s' + (newTok ? ' · ' + newTok + ' tokens' : '') + (speed ? ' · ' + speed.toFixed(1) + ' tok/s' : ''),
         thinking: thinking.trim(), thinkSecs: tFirst ? Math.round((tLast - tFirst) / 1000) : 0,
         tools: tools, steps: stepsList, opCycle: lastOpCycle, used: layersUsed(ev),
         images: (ev.images || []).map(function (x) { return { file: x.file, prompt: x.prompt, model: x.model, seconds: x.seconds }; }) };
       c.messages.push(m); save();
       live.turn.replaceWith(botEl(m)); scrollDown();
+      if (rtStreamedAudio && rtAudioCtx) {
+        var remMs = Math.max(50, Math.round((rtNextTime - rtAudioCtx.currentTime) * 1000));
+        state.speakNext = false;
+        setTimeout(function () { voiceLips(null); voiceSpoken(); }, remMs);
+        return;
+      }
       var speakIt = (voice.on || (state.speakNext && state.settings.autospeak)) && !ev.error && !ev.cancelled && !!m.text;
       state.speakNext = false;
-      if (speakIt && voice.on && speakDevice(m.text)) return;  // voice mode: this device's voice, at once
-      if (speakIt && state.omni) speakOmni(m.text);
-      else voiceSpoken();
+      if (speakIt && state.omni) { speakOmni(m.text); return; }
+      if (speakIt && voice.on && speakDevice(m.text)) return;
+      voiceSpoken();
     }
     function parseSseChunk(chunk) {
       var lines = chunk.split(/\r?\n/);
@@ -5308,9 +5426,11 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
         if (!finished) finish(fallbackErr || { reply: answer || '(The engine closed the connection.)', error: !answer });
       });
     }
+    var effGenMode = (voice.on || state.genMode === 'interleaved') ? 'interleaved' : 'text';
     fetch(apiUrl('/api/chat/stream'), {
       method: 'POST', headers: hostHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ prompt: inp.prompt, session_id: c.id, model: state.settings.model, attached_files: inp.files, history: inp.hist,
+        generation_mode: effGenMode,
         media: (inp.media || []).map(function (md) { return { kind: md.kind, name: md.name, data: md.data }; }),
         documents: (inp.docs || []).map(function (d) { return { name: d.name, data: d.data }; }),
         sampling: state.settings.sampling, thinking: state.settings.thinking, max_new_tokens: state.settings.budget })

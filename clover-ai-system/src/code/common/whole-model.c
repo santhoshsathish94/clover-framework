@@ -120,6 +120,25 @@ static int prompt_ids(const char *text, long size, int *ids, int cap)
     return n;
 }
 
+/* PF_IDS_FILE=file: the prompt is exactly the token ids in the file (numbers separated by commas or spaces) instead of the tokenised words. */
+static int ids_for_run(const char *text, long size, int *ids, int cap)
+{
+    const char *path = getenv("PF_IDS_FILE");
+    if (!path || !*path) return prompt_ids(text, size, ids, cap);
+    long length; char *data = slurp(path, &length);
+    int n = 0; char *p = data;
+    while (*p) {
+        while (*p == ',' || *p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') p++;
+        if (!*p) break;
+        char *end; const long v = strtol(p, &end, 10);
+        if (end == p || v < 0) bail("PF_IDS_FILE holds something that is not a token id");
+        if (n >= cap) bail("PF_IDS_FILE has more ids than the buffer");
+        ids[n++] = (int)v; p = end;
+    }
+    free(data);
+    return n;
+}
+
 /* Follows what the model writes: the reply ends at the first closing tag (answer at once) or the second (think, then answer). */
 static void chat_feed(uint32_t id, const Text *piece)
 {
@@ -729,7 +748,7 @@ int main(int argc, char **argv)
     }
     const int cap = (int)words_size + 16 + (int)extra_n + 1024 + (chat.system ? 2 * (int)strlen(chat.system) : 0);
     int *ids = malloc((size_t)cap * sizeof *ids);
-    const int found = prompt_ids(words, words_size, ids, cap);
+    const int found = ids_for_run(words, words_size, ids, cap);
     if (found <= 0) bail("the words gave no tokens");
     for (unsigned i = 0; i < extra_n; i++) ids[found + i] = (int)extra[i];
     if (found <= 128) { printf("prompt ids:"); for (int i = 0; i < found; i++) printf(" %d", ids[i]); printf("\n"); }
@@ -881,7 +900,7 @@ int main(int argc, char **argv)
     }
     double layer_time[LAYERS + 1] = {0};
     const double a = clk();
-    const int got = prompt_ids(words, words_size, ids, cap);
+    const int got = ids_for_run(words, words_size, ids, cap);
     const double b = clk();
     if (got != (int)N0) bail("the second tokenisation gave a different token count");
     stage1_lookup((const unsigned *)ids, N, s0);
@@ -930,6 +949,19 @@ int main(int argc, char **argv)
         1000 * (f - e), kn, 1000 * kda, 1000 * kmin, 1000 * kmax, mn, 1000 * mla, 1000 * mmin, 1000 * mmax);
     printf("   tail (last position: final normalisation, head, text) %.1f ms\n", 1000 * (g - f));
     printf("   next token id %u, text \"%.*s\"\n", token, (int)word.length, (const char *)word.bytes);
+    /* PF_SAVE_PROMPT_STATES=file: the layer 92 output row of every prompt position (N x 7168 floats), before the final normalisation. Nothing else changes. */
+    if (getenv("PF_SAVE_PROMPT_STATES") && *getenv("PF_SAVE_PROMPT_STATES")) {
+        FILE *rf = fopen(getenv("PF_SAVE_PROMPT_STATES"), "wb");
+        if (!rf || fwrite(cur, W * sizeof(float), N, rf) != N) bail("cannot save the prompt states");
+        fclose(rf);
+        printf("   layer 92 output rows of the %u prompt positions saved\n", N);
+        /* the 8 snapshots the final normalisation also reads: <file>.snaps = 8 x N x 7168 floats (snapshot-major) */
+        char snap_path[4096]; snprintf(snap_path, sizeof snap_path, "%s.snaps", getenv("PF_SAVE_PROMPT_STATES"));
+        FILE *sf = fopen(snap_path, "wb");
+        if (!sf) bail("cannot save the prompt snapshots");
+        for (unsigned s = 0; s < MAX_SNAPSHOTS; s++) if (fwrite(snaps[s], W * sizeof(float), N, sf) != N) bail("cannot save the prompt snapshots");
+        fclose(sf);
+    }
     if (compare) {
         unsigned snap_ok = 0;
         for (unsigned s = 0; s < MAX_SNAPSHOTS; s++) snap_ok += same_rows(snaps[s], ref_snaps + (size_t)s * N * W, N);

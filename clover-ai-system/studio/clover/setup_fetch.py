@@ -525,7 +525,7 @@ def main(argv=None):
     global LOG
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", required=True)
-    ap.add_argument("--components", default="core,csi,pictures,c2c3")
+    ap.add_argument("--components", default="core,csi")
     ap.add_argument("--reuse", default="")
     ap.add_argument("--manifest", default=str(HERE / "launch" / "manifest.json"))
     a = ap.parse_args(argv)
@@ -542,7 +542,7 @@ def main(argv=None):
         pass
     os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
     man = json.loads(Path(a.manifest).read_text(encoding="utf-8-sig"))  # a manifest saved by Notepad starts with a BOM
-    want = {c.strip() for c in a.components.split(",") if c.strip()} | {"core", "csi", "c2c3"}
+    want = {c.strip() for c in a.components.split(",") if c.strip()} or {"core", "csi"}
     say(f"Clover AI Studio setup {man['version']}: getting {', '.join(sorted(want))} into {base}")
     status = {}
     jobs = ([(fetch_archive, x) for x in man["archives"]] + [(fetch_file, x) for x in man["files"]]
@@ -572,9 +572,9 @@ def main(argv=None):
     out.write_text(json.dumps({"version": man["version"], "time": time.strftime("%Y-%m-%d %H:%M:%S"),
                                "components": status}, indent=2), encoding="utf-8")
     bad = [c for c, s in status.items() if not s["ok"]]
-    emit(ev="done", ok="core" not in bad, problems=bad)
+    emit(ev="done", ok=not bad, problems=bad)
     say("SETUP_FETCH_DONE" + (" with problems in " + ", ".join(bad) if bad else ""))
-    return 1 if "core" in bad else 0
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":

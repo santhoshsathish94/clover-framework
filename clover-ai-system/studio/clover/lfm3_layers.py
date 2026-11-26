@@ -666,55 +666,20 @@ class LayerKit:
                     for x in e.entities
                 )
             ]
-        q_low = q.lower()
-        core_tech_notes = []
-        core_tech_ids = []
-        if ("attention sink" in q_low or "streamingllm" in q_low or ("sink" in q_low and "transformer" in q_low)):
-            core_tech_ids.append("CS_ML:STREAMINGLLM_ATTENTION_SINKS")
-            core_tech_notes.append(
-                "- Attention Sinks & StreamingLLM (Xiao et al., 2023):\n"
-                "  Key points: In autoregressive Transformers, Softmax attention requires weights to sum to 1.0 across visible tokens. "
-                "When a query token has no strong match in the context, excess attention mass is dumped onto the very first 1–4 initial tokens "
-                "because causal masking makes them visible to every subsequent token — turning initial tokens into 'attention sinks' with disproportionately HIGH attention scores. "
-                "Standard sliding-window attention collapses when those initial tokens slide out of the KV cache. "
-                "StreamingLLM fixes this by permanently retaining the KV states of the first k (e.g., 4) attention sink tokens plus a rolling sliding window of recent tokens, "
-                "Assigning positional encodings (RoPE) relative to positions within the rolling cache rather than absolute sequence positions."
-            )
-        if "sqlite" in q_low and ("postgres" in q_low or "mysql" in q_low or "compare" in q_low or "vs" in q_low):
-            core_tech_ids.append("CS_DB:SQLITE_VS_POSTGRESQL")
-            core_tech_notes.append(
-                "- SQLite vs PostgreSQL 4-Row Comparison:\n"
-                "  | Dimension | SQLite | PostgreSQL |\n"
-                "  |---|---|---|\n"
-                "  | Architecture | Embedded serverless single-file library | Client-server relational database process |\n"
-                "  | Concurrency | Multiple concurrent readers, single writer (WAL lock) | Full MVCC with high multi-writer concurrency |\n"
-                "  | Transactions & Indexing | Full ACID transactions; B-tree & FTS5 indexes | Full ACID; B-tree, GIN, GiST, BRIN & pgvector indexes |\n"
-                "  | Best Use Case | Mobile/desktop apps, local caches, CLI & edge devices | Multi-user web backends, high-write & enterprise scale |"
-            )
-        if ("monolith" in q_low and "microservice" in q_low):
-            core_tech_ids.append("CS_ARCH:STRANGLER_FIG_MIGRATION")
-            core_tech_notes.append(
-                "- Monolith to Microservices Safe Migration (Strangler Fig Pattern):\n"
-                "  Key points: (1) Place an API Gateway / reverse proxy in front of the monolith and establish observability, distributed tracing, and contract tests; "
-                "(2) Identify bounded contexts (DDD) with low coupling and select one well-bounded edge domain first; "
-                "(3) Extract the service incrementally using the Strangler Fig pattern and decouple its database (avoid shared mutable tables, use CDC/outbox events); "
-                "(4) Shift traffic gradually via canary flags, verify SLAs/rollback paths, and retire the legacy monolith module."
-            )
-        if not ev and not core_tech_notes:
+        if not ev:
             return None, None
         self.last_ontology_evidence = list(ev)
-        all_ents = [e for item in ev for e in item.entities] + core_tech_ids
-        info = {"layer": "ontology", "entities": all_ents, "n_evidence": len(ev) + len(core_tech_notes),
+        all_ents = [e for item in ev for e in item.entities]
+        info = {"layer": "ontology", "entities": all_ents, "n_evidence": len(ev),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}
         if bridged_from_mem:
             info["bridged_from_memory"] = bridged_from_mem
             info["bridged_entities"] = bridged_entities
-        rendered = self.cl.render_evidence(ev) if ev else ""
+        rendered = self.cl.render_evidence(ev)
         if self.memory_root is None:
-            extra_blk = ("\n\n" + "\n\n".join(core_tech_notes)) if core_tech_notes else ""
-            return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + extra_blk + "\n" + ONTOLOGY_INSTRUCTION, info
+            return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + "\n" + ONTOLOGY_INSTRUCTION, info
         # app: told not to, LFM3-Omni still quoted [E2]/[P5] and raw IDs, so the labels, IDs and paths are left out
-        notes = list(core_tech_notes)
+        notes = []
         for blk in rendered.split("\n\n"):
             lines = blk.strip().splitlines()
             if not lines or not re.match(r"\[E\d+\]", lines[0]):
@@ -727,11 +692,12 @@ class LayerKit:
                 + APP_ONTOLOGY_INSTRUCTION), info
 
     def grounding_filter(self, q, reply):
+        """Return the model answer unchanged and whether the grounding check found a conflict."""
         if self._verifier is None:
             self._ontology = self._ontology or self.cl.CloverOntologyRetriever()
             self._verifier = self.cl.CloverSymbolicVerifier(self._ontology)
         out = self._verifier.verify_source_grounding(q, reply)
-        return out, out != reply
+        return reply, out != reply
 
     def compiler_check(self, q, reply):
         """-> (feedback or None, info). No code in the reply -> nothing to check."""
@@ -758,13 +724,11 @@ class LayerKit:
                 mk = "nemotron-3.5-super-vl"
             elif "kimi" in raw_m or "k3" in raw_m:
                 mk = "kimi-k3"
-            elif raw_m:
+            elif "lfm3" in raw_m or "omni" in raw_m:
                 mk = "omni"
-        if mk and mk != "omni":
-            rt_m = omni_c2_c3.for_base(self.base_dir, model_key=mk)
-            if rt_m is not None:
-                return rt_m
-        return omni_c2_c3.for_base(self.base_dir)
+            elif raw_m:
+                raise RuntimeError(f"C2/C3 runtime is unavailable for the selected model: {raw_m}")
+        return omni_c2_c3.for_base(self.base_dir, model_key=mk or "omni")
 
     def c1_infer(self, raw_reply, stats=None, model=None, layers_desc=None):
         """Strictly C1: extract model-native C1 inference representations (`c1_state`, `c1_info`) without planning or decoding."""
@@ -777,15 +741,7 @@ class LayerKit:
             if l_desc:
                 info["layers_desc"] = l_desc
             return st, info
-        windows = answer_windows(raw_reply)
-        prefill_ms = sum(float(s.get("prefill_s") or 0) * 1000.0 for s in (stats or ()) if isinstance(s, dict))
-        gen_tok = sum(int(s.get("new_tokens") or 0) for s in (stats or ()) if isinstance(s, dict))
-        n_win = 1 if windows else 0
-        state = {"stage": "c1_inference", "raw_text": str(raw_reply or ""), "windows": windows, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
-        info = {"layer": "c1_inference", "model": m_name, "windows": n_win, "window_tokens": 512, "tokens": gen_tok, "ms": round(prefill_ms, 2)}
-        if l_desc:
-            info["layers_desc"] = l_desc
-        return state, info
+        raise RuntimeError("C2/C3 parts are not installed for the selected model; C1 state was not computed")
 
     def c1_infer_states(self, turn_text, states_fn, prefix_ids=(), model=None, layers_desc=None):
         """Strictly C1, without decoding: the model's own hidden states for the turn's lines (`states_fn`, one forward pass)."""
@@ -799,22 +755,15 @@ class LayerKit:
             info["layers_desc"] = l_desc
         return st, info
 
-    @staticmethod
-    def _fallback_h2048(text: str):
+    def _meaning_embeddings(self, text):
         import numpy as np
-        vec = np.zeros((4, 2048), dtype=np.float32)
-        words = re.findall(r"[a-z0-9_]+", str(text or "").lower())
-        if not words:
-            words = ["empty"]
-        for i, w in enumerate(words[:128]):
-            h = hashlib.sha256(w.encode("utf-8")).digest()
-            row = i % 4
-            for b_i in range(0, 24, 3):
-                idx = ((h[b_i] << 8) | h[b_i + 1]) % 2048
-                sgn = 1.0 if (h[b_i + 2] & 1) == 0 else -1.0
-                vec[row, idx] += np.float32(sgn)
-        norms = np.linalg.norm(vec, axis=-1, keepdims=True) + np.float32(1e-6)
-        return (vec / norms * np.float32(0.5))[None, :, :]
+        runtime = self._runtime_for()
+        if runtime is None:
+            raise RuntimeError("Model embeddings are unavailable for the meaning bridge")
+        token_ids = runtime.tok.encode(str(text or ""), allow_special=False)[:128]
+        if not token_ids:
+            raise ValueError("The meaning bridge requires nonempty text")
+        return np.asarray(runtime.token_embeddings_2048(token_ids), dtype=np.float32).reshape(1, -1, 2048)
 
     def compute_meaning_bridge(self, q):
         """Synthesize the `Memory -> Ontology -> HybridAgent/JEPA -> Action` bridge state for the current turn:
@@ -853,7 +802,7 @@ class LayerKit:
         try:
             jrt = jepa_engine.for_base(self.base_dir)
             bridge_str = "\n".join(mem_texts[:2] + ont_texts[:3])[:1600]
-            h_bridge = self._fallback_h2048(bridge_str)
+            h_bridge = self._meaning_embeddings(bridge_str)
             sem_cue_64 = jrt.encode_semantic_bridge_cue(h_bridge, configured_arch=getattr(self, "jepa_arch", "auto"))
         except Exception:
             sem_cue_64 = None
@@ -953,6 +902,9 @@ class LayerKit:
         latent trajectory optimization on `c1_state` -> (`c2_state`, `c2_info`)."""
         import numpy as np
         import omni_c2_c3
+        rt = self._runtime_for(state=c1_state)
+        if rt is None:
+            raise RuntimeError("C2/C3 parts are not installed for the selected model; no plan was generated")
         if self.enable_meaning_bridge and self.last_meaning_bridge is None and (self.last_memory_package or self.last_ontology_evidence):
             self.compute_meaning_bridge(q)
         cues = [c for c in (self.visual_cue_64, self.audio_cue_64, self.semantic_cue_64 if self.enable_meaning_bridge else None) if c is not None]
@@ -968,7 +920,6 @@ class LayerKit:
             for rt_name in self.last_meaning_bridge.get("recommended_tools") or ():
                 if rt_name not in tools_in and rt_name not in declined:
                     tools_in.append(rt_name)
-        rt = self._runtime_for(state=c1_state)
         if rt is not None:
             c2_state, c2_info = rt.c2_plan(
                 q,
@@ -987,50 +938,6 @@ class LayerKit:
                 }
             self.last_c2_jepa = c2_state.get("jepa_plan")
             return c2_state, c2_info
-        raw = str((c1_state or {}).get("raw_text") or "")
-        windows = answer_windows(raw)
-        jepa_plan = None
-        planned_tools = list(tools_in)
-        jepa_red = 0.0
-        try:
-            import jepa_engine
-            jrt = jepa_engine.for_base(self.base_dir)
-            h_p = (c1_state or {}).get("h_primary")
-            if h_p is None:
-                h_p = self._fallback_h2048(q or raw)
-            r_p = self._fallback_h2048((q or "") + "::plan::" + raw)
-            jepa_plan = jrt.plan_c2_latent(
-                h_p,
-                r_p,
-                offered_tools=planned_tools,
-                context_cue_64=cue_64,
-                action_prior_8=act_prior,
-                configured_arch=getattr(self, "jepa_arch", "auto"),
-            )
-            self.last_c2_jepa = jepa_plan
-            if jepa_plan.get("ranked_tools"):
-                planned_tools = list(jepa_plan["ranked_tools"])
-            jepa_red = float(jepa_plan.get("energy_reduction_pct") or 0.0)
-        except Exception:
-            pass
-        info = {
-            "layer": "c2_hybridagent",
-            "ran": False,
-            "reason": "C2/C3 parts not installed",
-            "planned_tools": planned_tools,
-            "jepa_energy_reduction_pct": jepa_red,
-        }
-        if jepa_plan is not None:
-            info["jepa_from"] = "hashed words"
-        if isinstance(self.last_meaning_bridge, dict):
-            info["meaning_bridge"] = {
-                "memory_entries": self.last_meaning_bridge.get("memory_entries", []),
-                "ontology_entities": self.last_meaning_bridge.get("ontology_entities", []),
-                "recommended_tools": self.last_meaning_bridge.get("recommended_tools", []),
-                "action_prior_dims": self.last_meaning_bridge.get("action_prior_dims", {}),
-            }
-        state = {"stage": "c2_plan", "raw_text": raw, "windows": windows, "planned_tools": planned_tools, "jepa_plan": jepa_plan}
-        return state, info
 
     def jepa_record_outcome(self, z_obs_64=None, c1_obs_state=None, is_baseline=False):
         """Flow 5 (`Outcome -> Growth`): update `OutcomeResidualAdapter` from the latest C2 plan and observed outcome.
@@ -1083,27 +990,20 @@ class LayerKit:
 
     def c3_decode(self, c2_state, on_window=None, full_ncm=False):
         """Strictly C3: decode `c2_state` through Bridges + 11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder."""
-        rt = self._runtime_for(state=c2_state if isinstance(c2_state, dict) else None)
-        if rt is not None and isinstance(c2_state, dict) and c2_state.get("stage") == "c2_plan" and "pids_primary" in c2_state:
-            return rt.c3_decode(c2_state, on_window=on_window, full_ncm=full_ncm)
-        raw = str(c2_state.get("raw_text") if isinstance(c2_state, dict) else (c2_state or ""))
-        return self.ncm_render(raw)
+        if not isinstance(c2_state, dict) or c2_state.get("stage") != "c2_plan" or "pids_primary" not in c2_state:
+            raise ValueError("C3 requires a real C2 plan with model token IDs")
+        rt = self._runtime_for(state=c2_state)
+        if rt is None:
+            raise RuntimeError("C2/C3 parts are not installed for the selected model; no answer was decoded")
+        return rt.c3_decode(c2_state, on_window=on_window, full_ncm=full_ncm)
 
     def ncm_render(self, reply):
         if isinstance(reply, dict) and reply.get("stage") == "c2_plan":
             return self.c3_decode(reply)
         windows = answer_windows(reply)
         if not windows:
-            return reply, {"layer": "ncm", "windows": 0}
+            raise ValueError("C3 decoding requires nonempty model input")
         rt = self._runtime_for()
-        if rt is not None:
-            return rt.render_reply(reply, windows=windows)
-        if self._ncm is None and (self.base_dir / "data" / "ncm" / "config.yaml").is_file():
-            import lfm3_clover
-            self._ncm = lfm3_clover.Lfm3NCMRenderer(self.base_dir / "data", self.base_dir / "engine")
-        if self._ncm is not None:
-            t0 = time.perf_counter()
-            text, ids, meta = self._ncm.render_plans_in_model_vocab(windows, cands=1)
-            return text, {"layer": "ncm", "windows": len(windows), "s": round(time.perf_counter() - t0, 1),
-                          "c_engine_ms": meta.get("c_engine_ms")}
-        return reply, {"layer": "ncm", "ran": False, "reason": "C2/C3 parts not installed", "windows": len(windows)}
+        if rt is None:
+            raise RuntimeError("C2/C3 parts are not installed for the selected model; no answer was rendered")
+        return rt.render_reply(reply, windows=windows)

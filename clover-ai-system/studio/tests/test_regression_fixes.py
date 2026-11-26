@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "clover"))
 import clover_cycle as C  # noqa: E402
@@ -54,10 +55,11 @@ def run_cycle(solves, program, feedback):
 
 
 ans, info = run_cycle(["... ANSWER: 30", "... ANSWER: 30"], "", "Try again")
-check("two agreeing solves overturn the answer", info.get("action") == "overturned" and "**30**" in ans)
+check("two agreeing solves overturn the answer without generated wrapper text",
+      info.get("action") == "overturned" and ans == "... ANSWER: 30")
 check("...but without the user's words or the program, nothing is learned", "lesson" not in info)
 ans, info = run_cycle(["... ANSWER: 20", "... ANSWER: 20"], "Clover ran this Python program\nANSWER: 20", "Try again")
-check("solves and program agree on 20: overturned", info.get("action") == "overturned" and "**20**" in ans)
+check("solves and program agree on 20: model answer retained", info.get("action") == "overturned" and ans == "... ANSWER: 20")
 check("...and the program backs it: a verified lesson", info.get("lesson_kind") == "verified")
 ans, info = run_cycle(["... ANSWER: 20", "... ANSWER: 20"], "", "That's wrong, 3 pens cost $2 so 30 pens cost $20")
 check("the user's own correction: a user lesson", info.get("lesson_kind") == "user")
@@ -153,10 +155,15 @@ with tempfile.TemporaryDirectory() as d:
           "NVIDIA Nemotron 3.5 Super VL" in nem.system_prompt() and "never say LFM3" in nem.system_prompt())
     check("Kimi K3.1 Pro system prompt states Kimi K3.1 Pro 2.8T MoE",
           "Kimi K3.1 Pro 2.8T MoE" in kimi.system_prompt() and "never say LFM3" in kimi.system_prompt())
-    check("Nemotron 3.5 identity fix rewrites any LFM3 self-identification",
-          "NVIDIA Nemotron 3.5 Super VL" in nem._identity_fix("I am LFM3-Omni-2B, built by Liquid AI.", "What model are you?"))
-    check("Kimi K3.1 Pro identity fix rewrites any LFM3 self-identification",
-          "Kimi K3.1 Pro 2.8T MoE" in kimi._identity_fix("I was built by Liquid AI.", "Who made you?"))
+    for hosted, text, question in (
+        (nem, "I am LFM3-Omni-2B, built by Liquid AI.", "What model are you?"),
+        (kimi, "I was built by Liquid AI.", "Who made you?"),
+    ):
+        with patch.object(hosted, "_call_worker", return_value={"reply": text}) as worker:
+            response = hosted.run_turn([], question, tools=False)
+        check("hosted identity claims remain the selected worker's text",
+              worker.call_count == 1 and response["reply"] == text
+              and response["generation"][0]["new_tokens"] is None)
 
 import semantics as M  # noqa: E402
 import lfm3_native as N  # noqa: E402
@@ -167,20 +174,21 @@ check("CLV-001: direct arithmetic 137 × 29 + 46 evaluates to 4019",
 fr_arith = M.interpret("What is 137 × 29 + 46? Return only the number.", N.RUNTIME)
 res_arith = {"reply": "4005", "tool_calls": [], "layers": []}
 M.align(fr_arith, res_arith)
-check("CLV-001: semantics.align corrects 4005 -> 4019 and marks verified",
-      res_arith["reply"] == "4019" and fr_arith.knowledge == "verified" and "verified arithmetic" in fr_arith.notes)
+check("CLV-001: semantics.align preserves the wrong model value and reports the discrepancy",
+      res_arith["reply"] == "4005" and fr_arith.knowledge == "contested"
+      and "model answer differs from the arithmetic check" in fr_arith.notes)
 
 fr_code = M.interpret("Reply with only the text file's archive code.", N.RUNTIME)
 res_code = {"reply": "The archive code is: **CLOVER-7429**", "tool_calls": [], "layers": []}
 M.align(fr_code, res_code)
-check("CLV-007: 'only the archive code' strips wrapper text to CLOVER-7429",
-      res_code["reply"] == "CLOVER-7429")
+check("CLV-007: an output-format mistake remains visible in the model answer",
+      res_code["reply"] == "The archive code is: **CLOVER-7429**")
 
 fr_yr = M.interpret("Search Wikipedia and reply with only Ada Lovelace's birth year.", N.RUNTIME)
 res_yr = {"reply": "Augusta Ada King, Countess of Lovelace — 1815", "tool_calls": [{"tool": "web_search", "ran": True, "result": "1815"}], "layers": []}
 M.align(fr_yr, res_yr)
-check("CLV-007: 'only birth year' strips wrapper text to 1815",
-      res_yr["reply"] == "1815")
+check("CLV-007: birth-year wording remains the model's own output",
+      res_yr["reply"] == "Augusta Ada King, Countess of Lovelace — 1815")
 
 # CLV-002: Prior text attachment does not contaminate a new image attachment turn
 dummy_omni = object.__new__(O.OmniNative)
@@ -257,15 +265,17 @@ check("Full system: manifest-android.json downloads core, csi, and c2c3",
 
 with tempfile.TemporaryDirectory() as td:
     st_obj = SV.Settings(str(Path(td) / "settings.json"))
-    # Even if someone sends false for S1-S3, CSI, or PPL, they stay permanently True
+    # S1-S3, CSI, and PPL stay permanently True, while C2/C3 (ncm & c1_inference_only) stay disabled (False)
     updated = st_obj.update({
         "csi": False,
         "personal": False,
-        "layers": {"memory": False, "ontology": False, "compiler": False, "ncm": False, "recall": False},
+        "c1_inference_only": True,
+        "layers": {"memory": False, "ontology": False, "compiler": False, "ncm": True, "recall": False},
     })
-    check("Full system: S1-S3, NCM, CSI, and PPL are permanently enabled",
+    check("Full Omni system: S1-S3, CSI, and PPL stay enabled while C2/C3 (ncm) stay disabled",
           updated["csi"] is True and updated["personal"] is True
-          and all(updated["layers"][k] is True for k in ("memory", "ontology", "compiler", "ncm", "recall")))
+          and updated["layers"]["ncm"] is False and updated["c1_inference_only"] is False
+          and all(updated["layers"][k] is True for k in ("memory", "ontology", "compiler", "recall")))
     check("Full system: Collective Learning remains opt-in toggleable",
           updated["collective_contribute"] is False and updated["collective_receive"] is False)
 

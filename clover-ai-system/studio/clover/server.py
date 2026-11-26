@@ -121,8 +121,10 @@ class EngineNotReady(Exception):
 LAYER_KEYS = ("memory", "ontology", "compiler", "ncm", "kv_slots", "recall")
 IMAGE_MODELS = ("sd15-lcm", "sd15")  # image_gen.presets; the default is the best measured
 JEPA_ARCHS = ("auto", "clover_rpre", "ijepa", "audio_jepa", "eb_jepa", "mjepa", "none")
-# gpu / cpu: LFM3-Omni-2B on llama.cpp; fused: C1 + C2 + C3, the phone's fused runtime on the CPU (fused_engine.py)
-ENGINES = ("gpu", "cpu", "fused")
+OMNI_QUANTS = ("q4_0", "q4_k_m", "q8_0", "bf16")
+VOICE_LANGS = ("auto", "en", "ar", "da", "de", "el", "fi", "fr", "he", "it", "ja", "ko", "nl", "pl", "pt", "es", "sv", "tr", "zh")
+# gpu / cpu: LFM3-Omni-2B on llama.cpp; precomputed: static 4-bit trunks + experts on liblfm3_cpu_engine (C2/C3 off)
+ENGINES = ("gpu", "cpu", "precomputed", "fused")
 WEB_MODELS = ("auto", "omni", "clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")
 MODELS = WEB_MODELS if paths.WEB else ("auto", "omni")
 
@@ -207,9 +209,9 @@ def model_catalog(remote_models=None, base=None):
 def engine_for(model_key=None):
     import k3_host_engine
     import vault
-    m = _norm_model(model_key or (S.settings.get().get("model") if S.settings else "omni"))
+    m = _norm_model(model_key or (S.settings.get().get("model") if S.settings else None) or "omni")
     if m in ("omni", "auto"):
-        return S.omni_engine or S.engine
+        return S.omni_engine
     if paths.WEB and m in S.k3_engines:
         return S.k3_engines[m]
     if m in S.remote_engines:
@@ -217,7 +219,7 @@ def engine_for(model_key=None):
     base_dir = Path(S.args.base) if S.args else HERE.parent
     ent = next((x for x in model_catalog(base=base_dir) if x["id"] == m or x.get("remote_model") == m), None)
     if ent is None:
-        return S.omni_engine or S.engine
+        raise ValueError(f"Unknown or unavailable model: {m}")
     key = ""
     if ent.get("host") == "k3" and k3_host_engine.is_owner_device(base_dir):
         key = k3_host_engine.k3_host_key(base_dir)
@@ -249,13 +251,14 @@ def _csi_url_ok(url):
 
 
 class Settings:
-    """config/settings.json: which model and engine run Layer 1, when tools are offered, and collective learning opt-in.
-    All Clover core stages (C1 Inference, C2 HybridAgent Plan, Bridges, C3 11-level NCM Decode), supporting layers
-    (S1 Memory, S2 Recall & Ontology, S3 Tools & Compiler), and semantic layers (CSI & PPL) are always enabled."""
-    DEFAULTS = {"model": "omni", "engine": "gpu", "tools": "ask", "image_model": "sd15-lcm",
+    """config/settings.json: which model, precision and engine run LFM3-Omni-2B, when tools are offered, voice language,
+    and collective learning opt-in. C1 (LFM3-Omni-2B) runs end-to-end with supporting layers (S1 Memory, S2 Recall &
+    Ontology, S3 Tools & Compiler) and semantic layers (CSI & PPL); C2 (HybridAgent) and C3 (NCM) are disabled."""
+    DEFAULTS = {"model": "omni", "engine": "gpu", "quant": "q4_0", "voice_lang": "auto",
+                "tools": "ask", "image_model": "sd15-lcm",
                 "jepa_arch": "auto",
                 "remote_models": [],
-                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": True, "kv_slots": False,
+                "layers": {"memory": True, "ontology": True, "compiler": True, "ncm": False, "kv_slots": False,
                            "recall": True},
                 "csi": True,
                 "csi_url": "",
@@ -263,42 +266,40 @@ class Settings:
                 "collective_contribute": False,  # opt-in candidate extraction (research/collective-learning)
                 "collective_receive": False,  # opt-in shared-core updates (research/collective-learning)
                 "tool_deferral": False,  # tool_usage: defer never-called VS Code tools (worse first steps when measured)
-                "c1_inference_only": False}  # C1 reads, C2 plans, C3 writes the reply (measured before any default)
+                "c1_inference_only": False}
 
     def __init__(self, path, engine=None):
-        """engine: what this machine supports (hardware.choose): the default, and "cpu" when no usable GPU is found
-        even if a GPU was chosen before (the same settings on another machine)."""
+        """engine supplies the default for a new installation; saved model and backend selections remain explicit."""
         self.path, self.lock = Path(path), threading.Lock()
         self.data = json.loads(json.dumps(self.DEFAULTS))
-        if engine in ("cpu", "gpu"):
+        if engine in ("cpu", "gpu", "precomputed"):
             self.data["engine"] = engine
         try:
             saved = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             saved = {}
-        if saved.get("engine") in ENGINES and not (saved["engine"] == "gpu" and engine == "cpu"):
+        if saved.get("engine") in ("gpu", "cpu", "precomputed"):
             self.data["engine"] = saved["engine"]
+        if saved.get("quant") in OMNI_QUANTS:
+            self.data["quant"] = saved["quant"]
+        if saved.get("voice_lang") in VOICE_LANGS:
+            self.data["voice_lang"] = saved["voice_lang"]
         self.data["remote_models"] = _clean_remote_models(saved.get("remote_models"))
         saved_m = _norm_model(saved.get("model"))
-        if paths.WEB and saved_m in WEB_MODELS:
-            self.data["model"] = saved_m
-        elif not paths.WEB and saved_m and (
-            saved_m in ("auto", "omni", "k3:omni", "k3:clover-35b-a3b", "k3:nemotron-3.5-super-vl", "k3:kimi-k3")
-            or any(x.get("id") == saved_m for x in self.data["remote_models"])
-        ):
-            self.data["model"] = saved_m
-        else:
-            self.data["model"] = "omni"
+        self.data["model"] = saved_m or "omni"
         if saved.get("tools") in ("ask", "always"):
             self.data["tools"] = saved["tools"]
         if saved.get("image_model") in IMAGE_MODELS:
             self.data["image_model"] = saved["image_model"]
         if saved.get("jepa_arch") in JEPA_ARCHS:
             self.data["jepa_arch"] = saved["jepa_arch"]
-        if isinstance((saved.get("layers") or {}).get("kv_slots"), bool):
-            self.data["layers"]["kv_slots"] = saved["layers"]["kv_slots"]
-        for k in ("memory", "ontology", "compiler", "ncm", "recall"):
+        saved_layers = saved.get("layers") or {}
+        if isinstance(saved_layers.get("kv_slots"), bool):
+            self.data["layers"]["kv_slots"] = saved_layers["kv_slots"]
+        for k in ("memory", "ontology", "compiler", "recall"):
             self.data["layers"][k] = True
+        # C2 (HybridAgent) and C3 (NCM) stay disabled so LFM3-Omni-2B runs directly end-to-end
+        self.data["layers"]["ncm"] = False
         if isinstance(saved.get("csi_url"), str) and _csi_url_ok(saved["csi_url"]):
             self.data["csi_url"] = saved["csi_url"].strip()
         self.data["csi"] = True
@@ -309,8 +310,7 @@ class Settings:
             self.data["collective_receive"] = saved["collective_receive"]
         if isinstance(saved.get("tool_deferral"), bool):
             self.data["tool_deferral"] = saved["tool_deferral"]
-        if isinstance(saved.get("c1_inference_only"), bool):
-            self.data["c1_inference_only"] = saved["c1_inference_only"]
+        self.data["c1_inference_only"] = False
 
     def get(self):
         with self.lock:
@@ -328,8 +328,18 @@ class Settings:
                 self.data["model"] = m
             if "engine" in changes:
                 if changes["engine"] not in ENGINES:
-                    raise ValueError("engine must be gpu, cpu or fused")
+                    raise ValueError("engine must be gpu, cpu, precomputed or fused")
+                if changes["engine"] == "fused":
+                    raise ValueError("C2 HybridAgent and C3 NCM (fused mode) are currently disabled; use gpu, cpu or precomputed")
                 self.data["engine"] = changes["engine"]
+            if "quant" in changes:
+                if changes["quant"] not in OMNI_QUANTS:
+                    raise ValueError(f"quant must be one of {', '.join(OMNI_QUANTS)}")
+                self.data["quant"] = changes["quant"]
+            if "voice_lang" in changes:
+                if changes["voice_lang"] not in VOICE_LANGS:
+                    raise ValueError(f"voice_lang must be one of {', '.join(VOICE_LANGS)}")
+                self.data["voice_lang"] = changes["voice_lang"]
             if "tools" in changes:
                 if changes["tools"] not in ("ask", "always"):
                     raise ValueError("tools must be ask or always")
@@ -345,7 +355,12 @@ class Settings:
             for k, v in (changes.get("layers") or {}).items():
                 if k not in LAYER_KEYS or not isinstance(v, bool):
                     raise ValueError(f"unknown layer setting {k!r}")
-                self.data["layers"][k] = v if k == "kv_slots" else True
+                if k == "ncm":
+                    self.data["layers"]["ncm"] = False
+                elif k == "kv_slots":
+                    self.data["layers"]["kv_slots"] = v
+                else:
+                    self.data["layers"][k] = True
             if "csi_url" in changes:
                 if not isinstance(changes["csi_url"], str) or not _csi_url_ok(changes["csi_url"]):
                     raise ValueError("csi_url must be empty (off) or a CSI service on this laptop (http://127.0.0.1:<port>)")
@@ -373,7 +388,7 @@ class Settings:
             if "c1_inference_only" in changes:
                 if not isinstance(changes["c1_inference_only"], bool):
                     raise ValueError("c1_inference_only must be true or false")
-                self.data["c1_inference_only"] = changes["c1_inference_only"]
+                self.data["c1_inference_only"] = False
             self.path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self.path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self.data, indent=2), encoding="utf-8")
@@ -389,9 +404,14 @@ def gpu_available(base):
     return exe.is_file(), "" if exe.is_file() else "missing " + exe.name
 
 
-def omni_available(base):
+def omni_available(base, quant=None):
     import omni_native
-    _, missing = omni_native.omni_files(base)
+    q = quant or ((S.settings.get().get("quant") if S.settings else None) or "q4_0")
+    _, missing = omni_native.omni_files(base, q)
+    if missing and q != "q4_0":
+        _, missing_q4 = omni_native.omni_files(base, "q4_0")
+        if not missing_q4:
+            return True, ""
     return (not missing), ("missing " + ", ".join(missing)) if missing else ""
 
 
@@ -497,11 +517,6 @@ class Setup:
                 S.csi.start()
             if S.memidx is not None:
                 S.memidx.wake()
-            try:
-                import omni_c2_c3
-                omni_c2_c3.for_base(self.base)
-            except Exception:
-                pass
         with self.lock:
             if rc == 0 and not _walkthrough_flag(self.base).is_file() and omni_available(self.base)[0]:
                 self.state = "done"
@@ -513,7 +528,16 @@ class Setup:
                 S.setup_hook("Setup paused" if self.state == "stopped" else "Setup stopped", -1)
             except Exception:  # noqa: BLE001
                 traceback.print_exc()
-        if self.state == "done" and S.load.get("status") != "ready":
+        want_q = (S.settings.get().get("quant") if S.settings else "q4_0") or "q4_0"
+        cur_q = getattr(S.omni_engine, "quant", None)
+        need_reload = (S.load.get("status") != "ready") or (cur_q is not None and cur_q != want_q and f"omni_{want_q}" in self.components)
+        if self.state == "done" and need_reload:
+            old_e, S.engine, S.omni_engine = S.omni_engine or S.engine, None, None
+            if old_e is not None and hasattr(old_e, "close"):
+                try:
+                    old_e.close()
+                except Exception:
+                    pass
             S.load.update(status="loading", step="starting", since=time.time(), error=None)
             threading.Thread(target=load_engine, args=(S.args,), daemon=True, name="engine-load").start()
 
@@ -583,7 +607,7 @@ def tool_inventory():
     else:
         unavailable_cond.extend(vs_names)
     base_dir = Path(S.args.base) if S.args else None
-    if base_dir and (base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
+    if base_dir and ((base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file() or paths.ANDROID or paths.WEB):
         installed_cond.append("generate_image")
     else:
         unavailable_cond.append("generate_image")
@@ -636,7 +660,15 @@ def save_media(items):
             src = media_dir() / f"{stem}.{ext}"
             src.write_bytes(data)
             try:
-                _ffmpeg(["-i", str(src)] + (["-ac", "1", "-ar", "16000"] if kind == "audio" else []) + [str(path)])
+                converted_android = False
+                if paths.ANDROID and kind == "audio":
+                    try:
+                        import android_media
+                        converted_android = android_media.decode_audio_to_wav16k(src, path)
+                    except Exception:
+                        converted_android = False
+                if not converted_android:
+                    _ffmpeg(["-i", str(src)] + (["-ac", "1", "-ar", "16000"] if kind == "audio" else []) + [str(path)])
             finally:
                 src.unlink(missing_ok=True)
         else:
@@ -1510,49 +1542,51 @@ def load_engine(args):
 
     if S.mode == "lfm3":
         try:
-            want = S.settings.get()["engine"]
+            st_cfg = S.settings.get()
+            want = st_cfg["engine"]
+            want_q = st_cfg.get("quant") or "q4_0"
+            S.engine = S.omni_engine = None
             S.load["warning"] = None
-            ok, why = omni_available(args.base)
+            ok, why = omni_available(args.base, want_q)
             if not ok:
                 raise FileNotFoundError(f"LFM3-Omni-2B is not installed ({why}): run Clover AI Studio setup again")
             import omni_native
+            eff_q = want_q if not omni_native.omni_files(args.base, want_q)[1] else "q4_0"
+            if eff_q != want_q and S.setup is not None and S.setup.state != "running":
+                S.load["warning"] = f"Running {eff_q.upper()} while downloading {want_q.upper()} precision in the background…"
+                S.setup.start(components=f"omni_{want_q}")
             hw = (S.hardware or {}).get("chosen") or {}
-            if want == "fused":
-                try:
-                    import fused_engine
-                    S.engine = fused_engine.FusedEngine(Path(args.base), S.perms, progress=progress)
-                except Exception as exc:  # noqa: BLE001 - the GPU or CPU engine instead of a dead Studio
-                    traceback.print_exc()
-                    S.load["warning"] = f"C1 + C2 + C3 could not start ({type(exc).__name__}: {exc})"
-                    want = hw.get("engine") or "cpu"
-            for kind in ([] if S.engine is not None else [want, "cpu"] if want == "gpu" else ["cpu"]):
-                try:
-                    S.engine = omni_native.OmniNative(Path(args.base), S.perms, progress=progress, engine=kind,
-                                                      max_tokens=hw.get("ctx") or 65536,
-                                                      voice_threads=hw.get("voice_threads") or omni_native.VOICE_THREADS,
-                                                      gpu_name=hw.get("gpu") or "GPU", threads=hw.get("threads"))
-                    break
-                except Exception as exc:  # noqa: BLE001 - try the next engine instead of leaving the Studio dead
-                    traceback.print_exc()
-                    S.load["warning"] = f"LFM3-Omni-2B on the {kind.upper()} failed ({type(exc).__name__}: {exc})"
-            if S.engine is None:
-                raise RuntimeError(S.load["warning"])
-            if S.engine.engine_kind != want:
-                S.load["warning"] = (S.load.get("warning") or "") + f"; running on the {S.engine.engine_kind.upper()}"
+            eff_eng = want
+            if want == "precomputed":
+                import omni_precomputed
+                pre_ok, pre_why = omni_precomputed.precomputed_available(args.base)
+                if not pre_ok:
+                    S.load["warning"] = f"Precomputed Omni trunks not found ({pre_why}); falling back to {'GPU' if gpu_available(args.base)[0] else 'CPU'}."
+                    eff_eng = "gpu" if gpu_available(args.base)[0] else "cpu"
+            if eff_eng in ("gpu", "cpu", "precomputed"):
+                S.engine = omni_native.OmniNative(Path(args.base), S.perms, progress=progress, engine=eff_eng,
+                                                  quant=eff_q, max_tokens=hw.get("ctx") or 32768,
+                                                  voice_threads=hw.get("voice_threads") or omni_native.VOICE_THREADS,
+                                                  gpu_name=hw.get("gpu") or "GPU", threads=hw.get("threads"))
+            else:
+                raise ValueError(f"Unknown execution engine: {want}")
             S.omni_engine = S.engine
             if paths.WEB:
                 import k3_host_engine
                 S.k3_engines = {k: k3_host_engine.K3HostEngine(k, S.omni_engine, Path(args.base), S.perms)
                                 for k in ("clover-35b-a3b", "nemotron-3.5-super-vl", "kimi-k3")}
             S.remote_engines.clear()
-            try:
-                import jepa_engine
+            import jepa_engine
+            if st_cfg.get("layers", {}).get("ncm") or st_cfg.get("c1_inference_only"):
                 import omni_c2_c3
                 progress("C2 HybridAgent, Bridges & C3 11-Level NCM")
-                omni_c2_c3.for_base(Path(args.base))
-                jepa_engine.for_base(Path(args.base))
-            except Exception:
-                traceback.print_exc()
+                if omni_c2_c3.for_base(Path(args.base)) is None:
+                    raise FileNotFoundError("C2/C3 model parts are not installed")
+            if st_cfg.get("jepa_arch", "auto") != "none":
+                try:
+                    jepa_engine.for_base(Path(args.base))
+                except FileNotFoundError:
+                    pass
             S.engine = engine_for(S.settings.get().get("model"))
             S.kv_sid = None
             S.load.update(status="ready", step="ready", ready_s=round(time.time() - S.load["since"], 1))
@@ -1561,6 +1595,13 @@ def load_engine(args):
         except BaseException as exc:  # noqa: BLE001 - report any load failure to the UI
             S.load.update(status="error", error=f"{type(exc).__name__}: {exc}")
             traceback.print_exc()
+            failed_engine = S.omni_engine or S.engine
+            S.engine = S.omni_engine = None
+            if failed_engine is not None:
+                try:
+                    failed_engine.close()
+                except Exception:
+                    traceback.print_exc()
             _tell_phone("Clover could not load its model", -1)
         return
     try:
@@ -1736,13 +1777,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     attached = bool((body.get("attached_files") if isinstance(body, dict) else None) or docs)
     settings = S.settings.get()
     smart_routed = None
-    is_live_omni = type(S.omni_engine).__name__ == "OmniNative" and not bool(settings.get("c1_inference_only"))
-    if req_model == "auto" or (
-        req_model == "omni"
-        and is_live_omni
-        and bool(body.get("smart_switch", True) if isinstance(body, dict) else True)
-        and k3_host_engine.is_owner_device(Path(S.args.base) if S.args else None)
-    ):
+    if req_model == "auto":
         sm_id, sm_name, sm_reason = k3_host_engine.select_smart_model_for_turn(
             typed, media=media, docs=docs, attached=attached, web_mode=paths.WEB
         )
@@ -1806,9 +1841,11 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             open_t["permission"] = None
         extra.append(open_t)
     made = []
-    eng.turn_images = made  # pictures and charts made in this turn (image tool, Python's PNG files)
+    eng.turn_images = made  # pictures and charts made in this turn (Python's PNG files, local image tool if installed)
     eng.c1_inference_only = bool(settings.get("c1_inference_only"))
-    extra.append(image_tool(sid, cancel, made))
+    import image_gen
+    if not omni and image_gen.ImageGen(S.args.base, settings.get("image_model", "sd15-lcm")).available()[0]:
+        extra.append(image_tool(sid, cancel, made))
     t0 = time.perf_counter()
     if S.turn_lock.locked() and on_event:
         on_event({"type": "plan", "round": 1, "stage": "queued"})
@@ -1872,9 +1909,13 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 re.I,
             ):
                 retry_tools = ["generate_image"]
+            gen_mode_req = str(body.get("generation_mode") or "text").strip().lower()
+            if gen_mode_req not in ("text", "interleaved", "audio"):
+                gen_mode_req = "text"
             if tools_on and settings["tools"] == "ask":
                 said = typed
-                if not typed.strip() and any(m["kind"] == "audio" for m in media) and hasattr(eng, "transcribe"):
+                if (gen_mode_req == "text" and not typed.strip()
+                        and any(m["kind"] == "audio" for m in media) and hasattr(eng, "transcribe")):
                     said = (said + " " + eng.transcribe(media)).strip()
             only, tools_on = semantics.route(
                 frame, settings["tools"], tools_on, said=said, retry_tools=retry_tools,
@@ -1882,13 +1923,8 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
             if kit is not None:
                 kit.meaning = frame
             max_new = int(min(8192, max(64, int(body.get("max_new_tokens") or 4096))))
-            kv = kv_switch(sid) if frame.act != "social" else None
-            if frame.act == "social":
-                # only pleasantries ("hi", "thanks", "bye"): semantics answers and the model is not called
-                emit(dict(frame.layer(), type="semantics"))
-                emit({"type": "token", "round": 1, "kind": "answer", "text": frame.reply})
-                res = {"reply": frame.reply, "tool_calls": [], "rounds": 0, "generation": [], "layers": []}
-            elif retry and not retry_tools:
+            kv = kv_switch(sid)
+            if retry and not retry_tools:
                 frame.route, frame.offered = "try again", []
                 emit(dict(frame.layer(), type="semantics"))
                 emit({"type": "tools", "offered": [], "mode": settings["tools"]})
@@ -1972,12 +2008,12 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                     except Exception:
                         pass
                 eff_prompt = (retry["question"] if (retry and retry.get("question") and retry.get("how") == "said") else prompt)
-                res = eng.run_turn(list(hist), eff_prompt, tools=tools_on, sampling=sampling,
-                                   thinking=bool(body.get("thinking", True)), max_new=max_new,
+                res = eng.run_turn(list(hist), eff_prompt, tools=(False if gen_mode_req in ("interleaved", "audio") else tools_on),
+                                   sampling=sampling, thinking=bool(body.get("thinking", True)), max_new=max_new,
                                    on_event=emit, ask=ask, cancel=cancel, final_on_limit=True, force_answer=True,
                                    allow=[str(x) for x in body.get("allow_once") or []],
                                    layers=turn_layers, kit=kit, layer_query=eff_prompt, extra_tools=extra, only_tools=only,
-                                   **({"media": list(media), "meaning": frame} if omni else {}))
+                                   **({"media": list(media), "meaning": frame, "generation_mode": gen_mode_req} if omni else {}))
                 for tc in res.get("tool_calls") or ():
                     if tc.get("tool") == "vscode_open" and tc.get("ran"):
                         try:
@@ -2580,6 +2616,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(data)
+        self.wfile.flush()
 
     def do_OPTIONS(self):
         if not self._host_ok():
@@ -2969,23 +3006,33 @@ class Handler(BaseHTTPRequestHandler):
             import jepa_engine
             import k3_host_engine
             import omni_c2_c3
+            import omni_native
+            import omni_precomputed
             f_need = fused_engine.missing(S.args.base)
             c2c3_need = omni_c2_c3.missing_c2_c3_files(S.args.base)
+            pre_ok, pre_why = omni_precomputed.precomputed_available(S.args.base)
             cat = model_catalog()
             owner = k3_host_engine.is_owner_device(S.args.base)
             st_cur = S.settings.get()
-            jepa_desc = jepa_engine.for_base(S.args.base).describe(st_cur.get("jepa_arch", "auto"))
+            try:
+                jepa_desc = jepa_engine.for_base(S.args.base).describe(st_cur.get("jepa_arch", "auto"))
+            except Exception:
+                jepa_desc = {"configured_arch": st_cur.get("jepa_arch", "auto"), "enabled": False}
             return self._send(200, {"settings": st_cur, "version": STUDIO_VERSION, "channel": RELEASE_CHANNEL,
                                     "privacy_policy_url": PRIVACY_URL, "support_url": SUPPORT_URL,
                                     "models": [x["id"] for x in cat], "model_catalog": cat,
                                     "owner": owner,
                                     **({"k3_key": k3_host_engine.k3_host_key()} if (owner and not paths.WEB and k3_host_engine.k3_host_key()) else {}),
                                     "gpu_available": ok, "gpu_reason": why,
+                                    "precomputed_available": pre_ok, "precomputed_reason": pre_why,
                                     "omni_available": o_ok, "omni_reason": o_why, "warning": S.load.get("warning"),
-                                    "c2c3_available": not c2c3_need,
-                                    "c2c3_reason": ("missing " + ", ".join(c2c3_need)) if c2c3_need else "",
-                                    "fused_available": not f_need,
-                                    "fused_reason": ("missing " + ", ".join(f_need)) if f_need else "",
+                                    "quants_available": omni_native.available_quants(S.args.base),
+                                    "speech_languages": list(VOICE_LANGS),
+                                    "c2c3_disabled": True,
+                                    "c2c3_available": False,
+                                    "c2c3_reason": "Disabled (LFM3-Omni-2B runs directly end-to-end)",
+                                    "fused_available": False,
+                                    "fused_reason": "Disabled while C2 HybridAgent and C3 NCM are off",
                                     "csi_status": S.csi.describe() if S.csi is not None else None,
                                     "jepa_status": jepa_desc,
                                     "hardware": S.hardware})
@@ -3497,6 +3544,17 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 with urllib.request.urlopen(req, timeout=240) as resp:
                     return self._send(200, resp.read(), "application/json")
+            if path == "/api/worker/image":
+                import image_gen
+                preset_w = str(body.get("preset") or "sd15-lcm").strip() or "sd15-lcm"
+                prompt_w = str(body.get("prompt") or "").strip()
+                size_w = int(body.get("size") or 512)
+                seed_w = body.get("seed")
+                gen_w = image_gen.ImageGen(S.args.base, preset_w)
+                res_w = gen_w.generate(prompt_w, media_dir(), size=size_w, seed=seed_w)
+                img_path = media_dir() / res_w["file"]
+                img_b64 = base64.b64encode(img_path.read_bytes()).decode("ascii")
+                return self._send(200, {"ok": True, "image_base64": img_b64, **res_w})
             if path in ("/api/worker/csi", "/api/worker/csi/analyze"):
                 if S.csi is None or not S.csi.alive() or not S.csi.url.startswith("http://127.0.0.1:"):
                     return self._send(503, {"error": "CSI service is not ready"})
@@ -3576,7 +3634,8 @@ class Handler(BaseHTTPRequestHandler):
                 if eng is None or not hasattr(eng, "tts"):
                     return self._send(400, {"error": "speech needs LFM3-Omni-2B (Settings -> Model)"})
                 voice = "male" if body.get("voice") == "male" else "female"
-                return self._send(200, eng.tts(str(body.get("text") or ""), voice=voice), "audio/wav")
+                lang = str(body.get("lang") or (S.settings.get().get("voice_lang") if S.settings else "auto") or "auto").strip().lower()
+                return self._send(200, eng.tts(str(body.get("text") or ""), voice=voice, lang=lang), "audio/wav")
             if path == "/api/decision":
                 turn = S.active.get(str(body.get("turn_id") or ""))
                 pend = turn and turn["pending"].get(str(body.get("request_id") or ""))
@@ -3850,15 +3909,22 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError("Sign in with GitHub first to contribute to collective learning.")
                 before = S.settings.get()
                 new = S.settings.update(body if isinstance(body, dict) else {})
-                if S.mode == "lfm3" and new["engine"] != before["engine"]:
+                if S.mode == "lfm3" and (new["engine"] != before["engine"] or new.get("quant") != before.get("quant")):
                     if S.busy:
-                        S.settings.update({"engine": before["engine"], "model": before["model"]})
+                        S.settings.update({"engine": before["engine"], "quant": before.get("quant", "q4_0"), "model": before["model"]})
                         return self._send(409, {"error": "Clover is answering; switch when it is done"})
-                    old, S.engine, S.omni_engine = S.omni_engine or S.engine, None, None
-                    S.load = {"status": "loading", "step": "switching", "since": time.time(), "error": None}
-                    if old is not None and hasattr(old, "close"):
-                        old.close()
-                    threading.Thread(target=load_engine, args=(S.args,), daemon=True, name="engine-switch").start()
+                    import omni_native
+                    want_q = new.get("quant") or "q4_0"
+                    need_q_dl = bool(want_q != "q4_0" and omni_native.omni_files(S.args.base, want_q)[1])
+                    if need_q_dl and S.setup is not None:
+                        S.load["warning"] = f"Downloading LFM3-Omni-2B ({want_q.upper()}) in the background; Clover will switch automatically when ready."
+                        S.setup.start(components=f"omni_{want_q}")
+                    else:
+                        old, S.engine, S.omni_engine = S.omni_engine or S.engine, None, None
+                        S.load = {"status": "loading", "step": "switching", "since": time.time(), "error": None}
+                        if old is not None and hasattr(old, "close"):
+                            old.close()
+                        threading.Thread(target=load_engine, args=(S.args,), daemon=True, name="engine-switch").start()
                 elif S.mode == "lfm3" and ("model" in (body or {}) or new["model"] != before["model"]):
                     S.engine = engine_for(new["model"])
                 changed = {k: v for k, v in new.items() if before.get(k) != v}
@@ -3882,8 +3948,20 @@ class Handler(BaseHTTPRequestHandler):
                     S.memidx.set_recall(new["layers"]["recall"])
                 cat = model_catalog()
                 import jepa_engine
-                jepa_desc = jepa_engine.for_base(S.args.base).describe(new.get("jepa_arch", "auto"))
-                return self._send(200, {"settings": new, "jepa_status": jepa_desc, "models": [x["id"] for x in cat], "model_catalog": cat})
+                import omni_native
+                try:
+                    jepa_desc = jepa_engine.for_base(S.args.base).describe(new.get("jepa_arch", "auto"))
+                except Exception:
+                    jepa_desc = {"configured_arch": new.get("jepa_arch", "auto"), "enabled": False}
+                return self._send(200, {
+                    "settings": new,
+                    "jepa_status": jepa_desc,
+                    "quants_available": omni_native.available_quants(S.args.base),
+                    "speech_languages": list(VOICE_LANGS),
+                    "warning": S.load.get("warning"),
+                    "models": [x["id"] for x in cat],
+                    "model_catalog": cat,
+                })
             if path == "/api/memory/forget":
                 eid = str(body.get("id") or "")
                 ok = layer_kit().forget(eid)
@@ -4398,10 +4476,8 @@ def main():
         print("SETUP_NEEDED", flush=True)
     else:
         threading.Thread(target=load_engine, args=(a,), daemon=True, name="engine-load").start()
-        if S.setup is not None:
-            import omni_c2_c3
-            if omni_c2_c3.missing_c2_c3_files(base) or csi_child.missing(base):
-                S.setup.start(components="core,csi,c2c3")
+        if S.setup is not None and not paths.ANDROID and csi_child.missing(base):
+            S.setup.start(components="core,csi")
     if a.idle_exit_min > 0:
         threading.Thread(target=idle_watch, args=(a.idle_exit_min,), daemon=True, name="idle-watch").start()
     print(f"SERVING http://127.0.0.1:{a.port}/ (pid {os.getpid()})", flush=True)
