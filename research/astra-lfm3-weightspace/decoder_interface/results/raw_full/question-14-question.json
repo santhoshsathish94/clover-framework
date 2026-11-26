@@ -1,0 +1,46 @@
+{
+  "canonical_gold_missing_tokens": {
+    "0": [
+      24
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 47,
+    "fallbacks": [
+      false
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "647a6fc2a7f2f073067fb243724b479562c1350f11e543ec042b51a26077b91b",
+    "zero_ncm": false
+  },
+  "gold": [
+    "0"
+  ],
+  "id": "question-14",
+  "input": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 47,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 5,
+    "s": 0.24,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_full",
+  "raw_trace": [
+    {
+      "allowed_ids": 128000,
+      "policy": "raw_full",
+      "positions": 18,
+      "token_ids": []
+    }
+  ],
+  "seconds": 0.24423948000185192,
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,43 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_states": 28,
+      "changed_outputs": 0,
+      "questions_correct": 0
+    },
+    "c2_identity": {
+      "changed_ncm_states": 23,
+      "changed_outputs": 0,
+      "questions_correct": 0
+    },
+    "c3_zero": {
+      "changed_ncm_states": 29,
+      "changed_outputs": 0,
+      "questions_correct": 0
+    }
+  },
+  "active_windows": 29,
+  "composite_correct": 0,
+  "fallback_windows": 0,
+  "max_ncm_levels": 11,
+  "native_activation_arrays_exact": 296,
+  "native_cases_exact": 16,
+  "native_correct": 24,
+  "native_modalities": {
+    "audio": 2,
+    "audio_asr": 2,
+    "speech": 4,
+    "text": 4,
+    "video": 2,
+    "vision": 2
+  },
+  "pipeline_cases_exact": 30,
+  "pipeline_echoes": 30,
+  "pipeline_state_arrays_exact": 177,
+  "quality_claim": "Diagnostic comparison only, not a held-out improvement claim.",
+  "question_echoes": 24,
+  "questions": 24,
+  "runtime_scope": "Native BF16 CPU Omni; frozen C2/C3 NumPy computation; JEPA/tools/memory excluded equally from both arms.",
+  "source_and_copy_hashes_unchanged": true,
+  "tensor_roundtrip_exact": true
+}

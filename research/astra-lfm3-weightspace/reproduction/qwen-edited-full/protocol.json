@@ -1,0 +1,39 @@
+{
+  "arm": "edited",
+  "selected_cases": [
+    {
+      "id": "gsm8k_train_2805",
+      "source": "gsm8k",
+      "problem": "Brittany has 3 gerbils: Puffy, Muffy, and Scruffy. Puffy weighs 5 ounces more than Muffy. Muffy weighs 3 ounces less than Scruffy.  If Scruffy weighs 12 ounces, how much would the scale indicate, in ounces, if Brittany put Puffy and Muffy on the scale?",
+      "answer": "23",
+      "solution": "Muffy weighs 12 - 3 = <<12-3=9>>9 ounces\nPuffy weighs 5 + 9 = <<5+9=14>>14 ounces.\nIf Brittany weighs both Puffy and Muffy, the scale would read 9 + 14 = <<9+14=23>>23 ounces"
+    }
+  ],
+  "max_new_tokens": 32768,
+  "thinking": true,
+  "temperature": 0.6,
+  "top_p": 0.95,
+  "top_k": 20,
+  "presence_penalty": 1.5,
+  "seed": 0,
+  "batch_size": 1,
+  "backend": "Transformers CPU SDPA; not the published GPU/vLLM backend",
+  "grader_source_sha256": "f0d576a1adc625dede7bff749b3bf8c9a5a8f6bae43d51e2d0ee36d694e89843",
+  "grader_selected_ast_sha256": "879f9d75c183f56c5320243762c66b2a4d4946e10fe5c5589de28ec6e2de3919",
+  "grading": "Unchanged selected prompt/extraction/equivalence functions from the released mathqa.py, math-verify 0.9.0",
+  "model": {
+    "loading": {
+      "missing_keys": "set()",
+      "unexpected_keys": "set()",
+      "mismatched_keys": "set()",
+      "error_msgs": []
+    },
+    "chat_template_sha256": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80",
+    "parameter_count": 852985920,
+    "dtype": "torch.bfloat16",
+    "class": "Qwen3_5ForConditionalGeneration"
+  },
+  "torch": "2.11.0+cpu",
+  "transformers": "5.20.2",
+  "qualification": "Short runs are timing/debug probes, not paper benchmark scores; full-cap runs are a small independent paired diagnostic."
+}

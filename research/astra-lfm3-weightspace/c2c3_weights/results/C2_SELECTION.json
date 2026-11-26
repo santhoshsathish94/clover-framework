@@ -1,0 +1,8 @@
+{
+  "gains": {
+    "least_squares": 0.00836701995998099,
+    "norm_match": 0.023507801815867424,
+    "original": 1.0
+  },
+  "selected": "norm_match"
+}

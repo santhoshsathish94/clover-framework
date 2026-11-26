@@ -1,0 +1,164 @@
+{
+  "activation_arrays": 20,
+  "composite": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "correct": false,
+    "generated_slots": 23,
+    "generation_s": 2.9078667359426618,
+    "gold": "MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL",
+    "hit_token_limit": false,
+    "id": "asr-000",
+    "input_sha256": "d2287d38c027f4082f80785478bbb611145f8ef858e7059680c91b0aa3de6072",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        97
+      ],
+      "feature_attention_mask": [
+        1,
+        584
+      ],
+      "input_features": [
+        1,
+        128,
+        584
+      ],
+      "input_ids": [
+        1,
+        97
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "audio_asr",
+    "split": "regression",
+    "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.",
+    "tokens": [
+      22054,
+      22,
+      2767,
+      7162,
+      355,
+      278,
+      22539,
+      298,
+      302,
+      278,
+      6232,
+      7549,
+      20,
+      309,
+      522,
+      437,
+      26007,
+      310,
+      18902,
+      709,
+      37526,
+      22,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "asr-000",
+  "modality": "audio_asr",
+  "reference": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "correct": false,
+    "generated_slots": 23,
+    "generation_s": 2.8669703979976475,
+    "gold": "MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL",
+    "hit_token_limit": false,
+    "id": "asr-000",
+    "input_sha256": "d2287d38c027f4082f80785478bbb611145f8ef858e7059680c91b0aa3de6072",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        97
+      ],
+      "feature_attention_mask": [
+        1,
+        584
+      ],
+      "input_features": [
+        1,
+        128,
+        584
+      ],
+      "input_ids": [
+        1,
+        97
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "audio_asr",
+    "split": "regression",
+    "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.",
+    "tokens": [
+      22054,
+      22,
+      2767,
+      7162,
+      355,
+      278,
+      22539,
+      298,
+      302,
+      278,
+      6232,
+      7549,
+      20,
+      309,
+      522,
+      437,
+      26007,
+      310,
+      18902,
+      709,
+      37526,
+      22,
+      124900
+    ]
+  }
+}

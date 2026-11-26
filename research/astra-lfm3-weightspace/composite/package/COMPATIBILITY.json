@@ -1,0 +1,16 @@
+{
+  "backbone_substitution_tested": false,
+  "embedding_identical": false,
+  "original_embedding_sha256": "9a35def5280a640adbbf7f3d123435293e3be2a65ab588e3d959ca055301029e",
+  "qualification": "Nonidentical embeddings preclude a claim of lossless whole-backbone deduplication.",
+  "tokenizer": {
+    "original_only_tokens": [],
+    "shared_token_count": 125033,
+    "shared_token_ids_agree": true,
+    "trained_only_tokens": [
+      "</latent>",
+      "<latent>"
+    ]
+  },
+  "trained_embedding_sha256": "11b90ab1a047d0061c79695d07503dda24f7bcb716b9828e22b7dcdcbf59bb68"
+}

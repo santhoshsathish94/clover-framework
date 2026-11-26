@@ -1,0 +1,171 @@
+[
+  {
+    "gold": [
+      "41"
+    ],
+    "id": "question-00",
+    "text": "What is 14 plus 27?"
+  },
+  {
+    "gold": [
+      "54"
+    ],
+    "id": "question-01",
+    "text": "What is 83 minus 29?"
+  },
+  {
+    "gold": [
+      "156"
+    ],
+    "id": "question-02",
+    "text": "What is 12 multiplied by 13?"
+  },
+  {
+    "gold": [
+      "9"
+    ],
+    "id": "question-03",
+    "text": "What is 81 divided by 9?"
+  },
+  {
+    "gold": [
+      "15"
+    ],
+    "id": "question-04",
+    "text": "What is three quarters of 20?"
+  },
+  {
+    "gold": [
+      "2.5"
+    ],
+    "id": "question-05",
+    "text": "Convert 250 centimeters to meters. Give only the number."
+  },
+  {
+    "gold": [
+      "24"
+    ],
+    "id": "question-06",
+    "text": "A box holds 6 pens. How many pens do 4 boxes hold?"
+  },
+  {
+    "gold": [
+      "23"
+    ],
+    "id": "question-07",
+    "text": "I had 31 tickets and gave away 8. How many remain?"
+  },
+  {
+    "gold": [
+      "Paris"
+    ],
+    "id": "question-08",
+    "text": "What is the capital of France?"
+  },
+  {
+    "gold": [
+      "Tokyo"
+    ],
+    "id": "question-09",
+    "text": "What is the capital of Japan?"
+  },
+  {
+    "gold": [
+      "Canberra"
+    ],
+    "id": "question-10",
+    "text": "What is the capital of Australia?"
+  },
+  {
+    "gold": [
+      "O"
+    ],
+    "id": "question-11",
+    "text": "What is the chemical symbol for oxygen?"
+  },
+  {
+    "gold": [
+      "6",
+      "six"
+    ],
+    "id": "question-12",
+    "text": "How many sides does a hexagon have?"
+  },
+  {
+    "gold": [
+      "Jupiter"
+    ],
+    "id": "question-13",
+    "text": "Which is the largest planet in the Solar System?"
+  },
+  {
+    "gold": [
+      "0"
+    ],
+    "id": "question-14",
+    "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number."
+  },
+  {
+    "gold": [
+      "120"
+    ],
+    "id": "question-15",
+    "text": "How many minutes are in two hours?"
+  },
+  {
+    "gold": [
+      "children"
+    ],
+    "id": "question-16",
+    "text": "Write the plural of child."
+  },
+  {
+    "gold": [
+      "cold"
+    ],
+    "id": "question-17",
+    "text": "Write the opposite of hot."
+  },
+  {
+    "gold": [
+      "cba"
+    ],
+    "id": "question-18",
+    "text": "Reverse the letters in abc."
+  },
+  {
+    "gold": [
+      "2, 5, 9"
+    ],
+    "id": "question-19",
+    "text": "Sort these numbers from smallest to largest: 9, 2, 5."
+  },
+  {
+    "gold": [
+      "B"
+    ],
+    "id": "question-20",
+    "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter."
+  },
+  {
+    "gold": [
+      "HELLO"
+    ],
+    "id": "question-21",
+    "text": "Convert the word hello to uppercase."
+  },
+  {
+    "gold": [
+      "blue"
+    ],
+    "id": "question-22",
+    "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?"
+  },
+  {
+    "gold": [
+      "true"
+    ],
+    "id": "question-23",
+    "text": "In JSON, which lowercase literal represents Boolean truth?"
+  }
+]

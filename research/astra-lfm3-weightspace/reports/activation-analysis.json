@@ -1,0 +1,197 @@
+{
+  "baseline_results_sha256": "215984b766fb336eeabdb8c0e3c50da9131a64fbbc8fe5c7e96cf0384fe23cea",
+  "baseline_activations_sha256": "cf8cbe5af6bf7224982c2ecc418012389b55673542062326f670ea18b7124247",
+  "selection_source_sha256": "e62bc4be57df4a0feb6528e85365d5611139d3c9d7b3cf3a35f1322d16435eb4",
+  "discovery_ids": [
+    "discovery-000",
+    "discovery-001",
+    "discovery-002",
+    "discovery-003",
+    "discovery-004",
+    "discovery-005",
+    "discovery-006",
+    "discovery-007",
+    "discovery-008",
+    "discovery-009",
+    "discovery-010",
+    "discovery-011",
+    "discovery-012",
+    "discovery-013",
+    "discovery-014",
+    "discovery-015",
+    "discovery-016",
+    "discovery-017",
+    "discovery-018",
+    "discovery-019",
+    "discovery-020",
+    "discovery-021",
+    "discovery-022",
+    "discovery-023",
+    "discovery-024",
+    "discovery-025",
+    "discovery-026",
+    "discovery-027",
+    "discovery-028",
+    "discovery-029",
+    "discovery-030",
+    "discovery-031"
+  ],
+  "success_count": 15,
+  "failure_count": 17,
+  "validation_used_for_selection": false,
+  "layers": [
+    {
+      "layer": "layer_0",
+      "contrast_norm": 0.0,
+      "max_absolute_standardized_contrast": 0.0,
+      "leave_one_out_auc": 0.5
+    },
+    {
+      "layer": "layer_2",
+      "contrast_norm": 0.015793951414102902,
+      "max_absolute_standardized_contrast": 1.528841861255203,
+      "leave_one_out_auc": 0.5607843137254902
+    },
+    {
+      "layer": "layer_4",
+      "contrast_norm": 0.021216660723840774,
+      "max_absolute_standardized_contrast": 1.821655569913777,
+      "leave_one_out_auc": 0.5803921568627451
+    },
+    {
+      "layer": "layer_11",
+      "contrast_norm": 0.09796556531006949,
+      "max_absolute_standardized_contrast": 1.6854218525633506,
+      "leave_one_out_auc": 0.5882352941176471
+    },
+    {
+      "layer": "layer_17",
+      "contrast_norm": 0.6142509007451898,
+      "max_absolute_standardized_contrast": 1.1350386055229773,
+      "leave_one_out_auc": 0.6196078431372549
+    },
+    {
+      "layer": "layer_23",
+      "contrast_norm": 1.4597076734384713,
+      "max_absolute_standardized_contrast": 1.2171868909900576,
+      "leave_one_out_auc": 0.6509803921568628
+    },
+    {
+      "layer": "final_hidden",
+      "contrast_norm": 12.13375681253084,
+      "max_absolute_standardized_contrast": 1.352108979664317,
+      "leave_one_out_auc": 0.611764705882353
+    }
+  ],
+  "confounds": {
+    "family": {
+      "addition": {
+        "success": 3,
+        "failure": 5
+      },
+      "subtraction": {
+        "success": 2,
+        "failure": 6
+      },
+      "multiplication": {
+        "success": 6,
+        "failure": 2
+      },
+      "division": {
+        "success": 4,
+        "failure": 4
+      }
+    },
+    "gold_letter": {
+      "A": {
+        "success": 8,
+        "failure": 0
+      },
+      "B": {
+        "success": 2,
+        "failure": 6
+      },
+      "C": {
+        "success": 1,
+        "failure": 7
+      },
+      "D": {
+        "success": 4,
+        "failure": 4
+      }
+    }
+  },
+  "float64_margin_vs_bf16_logged_max_abs_error": 0.05788041092455387,
+  "ranked_channels": [
+    {
+      "index": 36,
+      "score": 0.07076147490856695,
+      "failure_mean_margin_contribution": -0.08359538807588465,
+      "success_mean_margin_contribution": 0.0064169565836588545,
+      "original_gain": 3.03125
+    },
+    {
+      "index": 916,
+      "score": 0.06269698797487744,
+      "failure_mean_margin_contribution": -0.25846369126263785,
+      "success_mean_margin_contribution": 0.0978833516438802,
+      "original_gain": 2.96875
+    },
+    {
+      "index": 248,
+      "score": 0.05387898426429898,
+      "failure_mean_margin_contribution": -0.07099549910601448,
+      "success_mean_margin_contribution": 0.008558257420857748,
+      "original_gain": 2.90625
+    },
+    {
+      "index": 1824,
+      "score": 0.05319870219511144,
+      "failure_mean_margin_contribution": -0.05319870219511144,
+      "success_mean_margin_contribution": -0.006957880655924479,
+      "original_gain": 2.875
+    },
+    {
+      "index": 556,
+      "score": 0.052183921664368874,
+      "failure_mean_margin_contribution": -0.07871908300063189,
+      "success_mean_margin_contribution": 0.013267580668131511,
+      "original_gain": 3.03125
+    },
+    {
+      "index": 1497,
+      "score": 0.04530267621956619,
+      "failure_mean_margin_contribution": -0.08526242480558507,
+      "success_mean_margin_contribution": 0.01997987429300944,
+      "original_gain": 2.359375
+    },
+    {
+      "index": 680,
+      "score": 0.04037821246128456,
+      "failure_mean_margin_contribution": -0.04384750478407916,
+      "success_mean_margin_contribution": 0.0017346461613972981,
+      "original_gain": 2.828125
+    },
+    {
+      "index": 1562,
+      "score": 0.04036561180563534,
+      "failure_mean_margin_contribution": -0.052744304432588464,
+      "success_mean_margin_contribution": 0.0061893463134765625,
+      "original_gain": 3.203125
+    },
+    {
+      "index": 994,
+      "score": 0.03905618868622125,
+      "failure_mean_margin_contribution": -0.0459707168971791,
+      "success_mean_margin_contribution": 0.0034572641054789227,
+      "original_gain": 2.96875
+    },
+    {
+      "index": 899,
+      "score": 0.038732472588034236,
+      "failure_mean_margin_contribution": -0.038732472588034236,
+      "success_mean_margin_contribution": -0.00036398569742838543,
+      "original_gain": 2.78125
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Convert 250 centimeters to meters. Give only the number.",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "801d5f04fae711163d7d53632711449beec463ca3148cde3237b564334023275",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Convert 250 centimeters to meters. Give only the number.",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "862314df69caa88879ed8a28d44e916b0d2c1fddfe548b90df7795f2d17b7f20",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Convert 250 centimeters to meters. Give only the number.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Convert 250 centimeters to meters. Give only the number.",
+  "composite_correct": false,
+  "composite_s": 1.1091105790110305,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "2.5"
+  ],
+  "id": "question-05",
+  "input": "Convert 250 centimeters to meters. Give only the number.",
+  "native_correct": true,
+  "native_text": "2.5",
+  "reference": "Convert 250 centimeters to meters. Give only the number.",
+  "reference_s": 0.9376795900752768,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 27,
+    "fallbacks": [
+      false
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "d0216f111fcd781a628bf3f62d8dd8b7b9d98cfd7dc837dfb650bcea2d2caf3d",
+    "zero_ncm": false
+  }
+}

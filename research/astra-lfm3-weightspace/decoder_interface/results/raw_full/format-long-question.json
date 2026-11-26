@@ -1,0 +1,37 @@
+{
+  "decoder_trace": {
+    "codes": 313,
+    "fallbacks": [
+      false
+    ],
+    "levels": 11,
+    "ncm_z_sha256": "6ccae71447d6673b772f7b2634a9d92f231425391ee2bf84da0ab921fa4599bc",
+    "zero_ncm": false
+  },
+  "id": "format-long",
+  "input": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 313,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 11,
+    "s": 0.68,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_full",
+  "raw_trace": [
+    {
+      "allowed_ids": 128000,
+      "policy": "raw_full",
+      "positions": 85,
+      "token_ids": []
+    }
+  ],
+  "seconds": 0.6819924820447341,
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

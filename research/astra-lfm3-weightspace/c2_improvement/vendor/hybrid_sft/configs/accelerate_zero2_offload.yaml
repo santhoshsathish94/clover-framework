@@ -1,0 +1,14 @@
+# 8 GPUs, DeepSpeed ZeRO-2 with CPU optimizer offload (self-conditioned stage of 14B).
+# Precision and gradient accumulation are set in deepspeed_zero2_offload.json.
+compute_environment: LOCAL_MACHINE
+distributed_type: DEEPSPEED
+deepspeed_config:
+  deepspeed_config_file: hybrid_sft/configs/deepspeed_zero2_offload.json
+  zero3_init_flag: false
+num_machines: 1
+num_processes: 8
+machine_rank: 0
+main_training_function: main
+rdzv_backend: static
+same_network: true
+use_cpu: false

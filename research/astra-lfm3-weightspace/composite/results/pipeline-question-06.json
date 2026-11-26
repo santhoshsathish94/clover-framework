@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "A box holds 6 pens. How many pens do 4 boxes hold?",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "266aabf0e71eb171b457dd8cbae2443957b3e779a186e28fdab35eeceaf38646",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "A box holds 6 pens. How many pens do 4 boxes hold?",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "e4443fe269d349d2fa150b3b0bf299b15bc1403cef70e49d9147f6ca7c53ed01",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "A box holds 6 pens. How many pens do 4 boxes hold?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "A box holds 6 pens. How many pens do 4 boxes hold?",
+  "composite_correct": false,
+  "composite_s": 1.1468843340408057,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "24"
+  ],
+  "id": "question-06",
+  "input": "A box holds 6 pens. How many pens do 4 boxes hold?",
+  "native_correct": true,
+  "native_text": "24",
+  "reference": "A box holds 6 pens. How many pens do 4 boxes hold?",
+  "reference_s": 1.3287658840417862,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 47,
+    "fallbacks": [
+      false
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "f786a42b36c399af4240b983c0399d62e1dc35a372dad06a759747d75b5dfede",
+    "zero_ncm": false
+  }
+}

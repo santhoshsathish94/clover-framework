@@ -1,0 +1,11 @@
+{
+  "composite/INPUTS.json": "086f0ac19ca75fd7a9789088081a5507f99ae2a49d10155802d1ebe77859dd74",
+  "composite/evaluate.py": "02308d3d8223178659d1123b3d9688b71d59699fbb1e7d561d11317a856cfa78",
+  "composite/frozen/cases.json": "07b1fabd8b17ab7fea66e0547314c29503f43b81e2f8bbf24be3c9ec289c24fb",
+  "composite/model.py": "223799f787a15a196dc5a5afcd2d167cfe0db93afaeda29c8eede4469cdca568",
+  "composite/package/MANIFEST.json": "d99efa3823f294979a0171c17ae9a92d59d4d0e3b7d2da32e5de046c6adb939d",
+  "composite/package/TENSORS.json": "0eab5c91d5a4be79ac62da677a36edee39a4b88a852ad66433dee788d38bb4e5",
+  "composite/prepare.py": "f663e138eab746f8fbba3e839ad5d51afe70be9cc9ab01eb7f71e06755c56587",
+  "composite/reference_c2c3.py": "16ceec3bb0d0951363fb0a05bc4c593baa84373c45aa9dae4c893f1515a37dad",
+  "runtime.py": "3732194cba4f0154b22e25038e1ebbde5155b444b1c997f1f5dcf2ec97d2f049"
+}

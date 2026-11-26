@@ -1,0 +1,77 @@
+{
+  "with_hooks": {
+    "id": "pilot-addition",
+    "modality": "text",
+    "split": "pilot",
+    "input_sha256": "d84b01050121568f45d7aa697c446334f80f3b54558c4bd10bf753b3397b9143",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        25
+      ],
+      "input_ids": [
+        1,
+        25
+      ]
+    },
+    "text": "15",
+    "tokens": [
+      885,
+      124900
+    ],
+    "generated_slots": 2,
+    "max_new_tokens": 16,
+    "hit_token_limit": false,
+    "generation_s": 0.2545830080052838,
+    "correct": true,
+    "gold": "15",
+    "activation_keys": [
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ]
+  },
+  "without_hooks": {
+    "id": "pilot-addition",
+    "modality": "text",
+    "split": "pilot",
+    "input_sha256": "d84b01050121568f45d7aa697c446334f80f3b54558c4bd10bf753b3397b9143",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        25
+      ],
+      "input_ids": [
+        1,
+        25
+      ]
+    },
+    "text": "15",
+    "tokens": [
+      885,
+      124900
+    ],
+    "generated_slots": 2,
+    "max_new_tokens": 16,
+    "hit_token_limit": false,
+    "generation_s": 0.22129011410288513,
+    "correct": true,
+    "gold": "15",
+    "activation_keys": []
+  },
+  "hooks_preserve_token_ids": true,
+  "source_hashes_verified_after": true
+}

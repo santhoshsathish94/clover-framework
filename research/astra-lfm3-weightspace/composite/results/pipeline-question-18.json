@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Reverse the letters in abc.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "64854bcb2fb01511311156331af7ba05a390c4be4c64543d71e0061981e4f0eb",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Reverse the letters in abc.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "64854bcb2fb01511311156331af7ba05a390c4be4c64543d71e0061981e4f0eb",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Reverse the letters in abc.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Reverse the letters in abc.",
+  "composite_correct": false,
+  "composite_s": 0.49787506903521717,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "cba"
+  ],
+  "id": "question-18",
+  "input": "Reverse the letters in abc.",
+  "native_correct": true,
+  "native_text": "cba",
+  "reference": "Reverse the letters in abc.",
+  "reference_s": 0.5371329410700127,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "de73d34aafee658f9de6cb5d7efb809b71c2ad7438c0b47325fd1fb5d75061e8",
+    "zero_ncm": false
+  }
+}

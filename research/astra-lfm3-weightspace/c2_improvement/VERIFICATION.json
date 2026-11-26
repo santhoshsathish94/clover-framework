@@ -1,0 +1,68 @@
+{
+  "all_sources_unchanged": true,
+  "g0.92_natural_qa_bit_identical": true,
+  "noop_control_bit_identical": true,
+  "qa_across_arms": {
+    "anchor1.5_only": {
+      "latent4_broken": 1,
+      "latent4_correct": 22,
+      "latent4_fixed": 1,
+      "mean_exit_anchor_logit": 10.488606770833334,
+      "median_exit_anchor_rank": 6621,
+      "natural_broken": 0,
+      "natural_correct": 19,
+      "natural_fixed": 0
+    },
+    "combined_anchor1.5_g0.92": {
+      "latent4_broken": 2,
+      "latent4_correct": 21,
+      "latent4_fixed": 1,
+      "mean_exit_anchor_logit": 8.074747721354166,
+      "median_exit_anchor_rank": 16804,
+      "natural_broken": 0,
+      "natural_correct": 19,
+      "natural_fixed": 0
+    },
+    "g0.92_only": {
+      "latent4_broken": 0,
+      "latent4_correct": 22,
+      "latent4_fixed": 0,
+      "mean_exit_anchor_logit": 9.965494791666666,
+      "median_exit_anchor_rank": 9605,
+      "natural_broken": 0,
+      "natural_correct": 19,
+      "natural_fixed": 0
+    },
+    "original": {
+      "latent4_broken": 0,
+      "latent4_correct": 22,
+      "latent4_fixed": 0,
+      "mean_exit_anchor_logit": 12.479166666666666,
+      "median_exit_anchor_rank": 3565,
+      "natural_broken": 0,
+      "natural_correct": 19,
+      "natural_fixed": 0
+    }
+  },
+  "reversals": {
+    "anchor1.5_backbone": {
+      "edited_sha256": "2ef457966491caee8fa04e7b11da7eaefd2edf716c3eaf1c97d1dd69576f6a58",
+      "restored": true,
+      "restored_sha256": "581239236b5966bc5f3883d28d81a061dca3718dfbdba5e11738fdefb97e9ad2",
+      "source_sha256": "581239236b5966bc5f3883d28d81a061dca3718dfbdba5e11738fdefb97e9ad2"
+    },
+    "g0.92_adapter": {
+      "edited_sha256": "30e2cdb549f24a05ee7baba237d1311d8f946221311acce7026fcb8f09ae2536",
+      "restored": true,
+      "restored_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+      "source_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05"
+    },
+    "noop_adapter": {
+      "edited_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+      "restored": true,
+      "restored_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+      "source_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05"
+    }
+  },
+  "verified": true
+}

@@ -1,0 +1,509 @@
+{
+  "tensor_count": 868,
+  "elapsed_s": 33.397147728013806,
+  "original_revision": "21d75123f86c1f7ffb4bef1ea202710c4e7ebe67",
+  "source_hashes_verified_before_and_after": true,
+  "same_shape_correlations_top50": [
+    {
+      "tensor_a": "audio_tokenizer/encoder.lfm.layers.2.self_attn.gate_proj.weight",
+      "tensor_b": "audio_tokenizer/encoder.lfm.layers.6.self_attn.gate_proj.weight",
+      "component": "speech_waveform_codec",
+      "shape": [
+        8,
+        512
+      ],
+      "sampled_pearson": 0.45912003775929894
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.2569232494775125
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.20812165441142505
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.1.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.19800258881401828
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.model.layers.1.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.depth_decoder.model.layers.2.self_attn.gate_proj.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        32,
+        1024
+      ],
+      "sampled_pearson": 0.18799069990966544
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.1788350510216971
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.16984159087993017
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.16044711440199905
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.14714498530313708
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.3.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.14127457532101967
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.13135401205455594
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.13106696792638173
+    },
+    {
+      "tensor_a": "audio_tokenizer/decoder.lfm.layers.4.self_attn.gate_proj.weight",
+      "tensor_b": "audio_tokenizer/decoder.lfm.layers.6.self_attn.gate_proj.weight",
+      "component": "speech_waveform_codec",
+      "shape": [
+        8,
+        512
+      ],
+      "sampled_pearson": 0.12875389628782358
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.12645886888868274
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.3.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.12367808934054374
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.11899323203068735
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.11736967196898569
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.11579781854338034
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.1.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.11562204210832965
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.11472369812441931
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.10837626222481718
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.1069753225196362
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.10637607371548166
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.3.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.10584474966221213
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.1.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.10446715667290395
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.3.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.10304279750270214
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.1027686897248948
+    },
+    {
+      "tensor_a": "main/model.language_model.layers.12.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.language_model.layers.8.self_attn.gate_proj.weight",
+      "component": "shared_backbone",
+      "shape": [
+        16,
+        2048
+      ],
+      "sampled_pearson": 0.1007248932529744
+    },
+    {
+      "tensor_a": "audio_tokenizer/encoder.lfm.layers.2.self_attn.gate_proj.weight",
+      "tensor_b": "audio_tokenizer/encoder.lfm.layers.4.self_attn.gate_proj.weight",
+      "component": "speech_waveform_codec",
+      "shape": [
+        8,
+        512
+      ],
+      "sampled_pearson": 0.09855851256115372
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.6.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.09218152865269229
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.09207642413857846
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.1.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.09027386129042543
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.1.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.08511999823828892
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.07546904071094288
+    },
+    {
+      "tensor_a": "audio_tokenizer/encoder.lfm.layers.4.self_attn.gate_proj.weight",
+      "tensor_b": "audio_tokenizer/encoder.lfm.layers.6.self_attn.gate_proj.weight",
+      "component": "speech_waveform_codec",
+      "shape": [
+        8,
+        512
+      ],
+      "sampled_pearson": 0.07188647580202957
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.model.layers.0.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.depth_decoder.model.layers.2.self_attn.gate_proj.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        32,
+        1024
+      ],
+      "sampled_pearson": 0.07002944467038452
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.2.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.06925625945228064
+    },
+    {
+      "tensor_a": "main/model.language_model.layers.16.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.language_model.layers.20.self_attn.gate_proj.weight",
+      "component": "shared_backbone",
+      "shape": [
+        16,
+        2048
+      ],
+      "sampled_pearson": 0.06870152721531125
+    },
+    {
+      "tensor_a": "main/model.language_model.layers.10.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.language_model.layers.4.self_attn.gate_proj.weight",
+      "component": "shared_backbone",
+      "shape": [
+        16,
+        2048
+      ],
+      "sampled_pearson": 0.06849508947271543
+    },
+    {
+      "tensor_a": "audio_tokenizer/decoder.lfm.layers.2.self_attn.gate_proj.weight",
+      "tensor_b": "audio_tokenizer/decoder.lfm.layers.6.self_attn.gate_proj.weight",
+      "component": "speech_waveform_codec",
+      "shape": [
+        8,
+        512
+      ],
+      "sampled_pearson": 0.06847866407937507
+    },
+    {
+      "tensor_a": "main/model.language_model.layers.10.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.language_model.layers.8.self_attn.gate_proj.weight",
+      "component": "shared_backbone",
+      "shape": [
+        16,
+        2048
+      ],
+      "sampled_pearson": 0.06651384646858764
+    },
+    {
+      "tensor_a": "main/model.language_model.layers.16.self_attn.gate_proj.weight",
+      "tensor_b": "main/model.language_model.layers.22.self_attn.gate_proj.weight",
+      "component": "shared_backbone",
+      "shape": [
+        16,
+        2048
+      ],
+      "sampled_pearson": 0.0652683456037404
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.4.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.06468950742084043
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.3.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.060949955879506655
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.11.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.9.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.0595578568804665
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.5.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.05860653980725756
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.7.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": -0.05847734449469906
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.10.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.8.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.05746433118201366
+    },
+    {
+      "tensor_a": "main/model.audio_encoder.lfm.layers.4.conv.in_proj.weight",
+      "tensor_b": "main/model.audio_encoder.lfm.layers.6.conv.in_proj.weight",
+      "component": "audio_input_encoder",
+      "shape": [
+        2304,
+        768
+      ],
+      "sampled_pearson": 0.05676346631462069
+    },
+    {
+      "tensor_a": "main/model.depth_decoder.depth_embeddings.0.embedding.weight",
+      "tensor_b": "main/model.depth_decoder.depth_embeddings.6.embedding.weight",
+      "component": "speech_output_depth_decoder",
+      "shape": [
+        2017,
+        1024
+      ],
+      "sampled_pearson": 0.05637454399462778
+    }
+  ],
+  "correlation_method": "4096 aligned evenly spaced elements, same shape/component; exploratory multiple comparisons"
+}

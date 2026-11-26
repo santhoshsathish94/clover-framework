@@ -1,0 +1,74 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many sides does a hexagon have?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "05f91e1b27c77ac8765df824d4fa79db8c64f16a0dfb95ccc75cd68edac7de3d",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many sides does a hexagon have?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "f073579a458d16a9439f9eb47e3cc7dfc0f6c8cc92203a77dff5c36788b39af7",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many sides does a hexagon have?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "How many sides does a hexagon have?",
+  "composite_correct": false,
+  "composite_s": 0.5966258619446307,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "6",
+    "six"
+  ],
+  "id": "question-12",
+  "input": "How many sides does a hexagon have?",
+  "native_correct": true,
+  "native_text": "6",
+  "reference": "How many sides does a hexagon have?",
+  "reference_s": 0.6278231960022822,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "59b20020ebc3be68d15501820aff2b4eb4f9a1fed8120487db5eebe9acb74317",
+    "zero_ncm": false
+  }
+}

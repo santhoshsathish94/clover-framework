@@ -1,0 +1,148 @@
+{
+  "activation_arrays": 18,
+  "composite": {
+    "activation_keys": [
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "speech_depth",
+      "speech_depth.mean",
+      "letter_logits"
+    ],
+    "generated_slots": 16,
+    "generation_s": 2.035192677984014,
+    "hit_token_limit": false,
+    "id": "tts-000",
+    "input_sha256": "6b825757fa0ee74435ce4ef2c89e2e446e65643999c99c1c8044924e5f78733a",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        30
+      ],
+      "input_ids": [
+        1,
+        30
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "speech",
+    "speech": {
+      "clipped_fraction": 0.0,
+      "codes_sha256": "b3bdb9b795528653bd699ec84cdf1c71c489827df6874ebcc99a47bafa470bc8",
+      "duration_s": 1.12,
+      "frames": 14,
+      "peak_abs": 0.5255966186523438,
+      "qualification": "Waveform integrity only; intelligibility requires an independent check.",
+      "rms": 0.10209841444277638,
+      "sample_rate": 24000,
+      "samples": 26880,
+      "waveform_sha256": "ba54e7c520fadcab505ba57520e25d1b8cfe3815f9d89d619a3dd3d6f51f17ed"
+    },
+    "split": "regression",
+    "text": "",
+    "tokens": [
+      125012,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "tts-000",
+  "modality": "speech",
+  "reference": {
+    "activation_keys": [
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "speech_depth",
+      "speech_depth.mean",
+      "letter_logits"
+    ],
+    "generated_slots": 16,
+    "generation_s": 2.008301658090204,
+    "hit_token_limit": false,
+    "id": "tts-000",
+    "input_sha256": "6b825757fa0ee74435ce4ef2c89e2e446e65643999c99c1c8044924e5f78733a",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        30
+      ],
+      "input_ids": [
+        1,
+        30
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "speech",
+    "speech": {
+      "clipped_fraction": 0.0,
+      "codes_sha256": "b3bdb9b795528653bd699ec84cdf1c71c489827df6874ebcc99a47bafa470bc8",
+      "duration_s": 1.12,
+      "frames": 14,
+      "peak_abs": 0.5255966186523438,
+      "qualification": "Waveform integrity only; intelligibility requires an independent check.",
+      "rms": 0.10209841444277638,
+      "sample_rate": 24000,
+      "samples": 26880,
+      "waveform_sha256": "ba54e7c520fadcab505ba57520e25d1b8cfe3815f9d89d619a3dd3d6f51f17ed"
+    },
+    "split": "regression",
+    "text": "",
+    "tokens": [
+      125012,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      125032,
+      124900
+    ]
+  }
+}

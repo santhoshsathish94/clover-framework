@@ -1,0 +1,110 @@
+[
+  {
+    "name": "n64-fixed",
+    "width": 64,
+    "track": "fixed",
+    "strength": 4.0,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "bd405e92eb1ae89beab7f9922f89371167459698d020c3acb7e0f9dc59e1001c",
+    "changed_entries": 129166,
+    "actual_delta_frobenius": 1.9963551759719849,
+    "relative_delta_frobenius": 0.02575533278286457
+  },
+  {
+    "name": "n128-fixed",
+    "width": 128,
+    "track": "fixed",
+    "strength": 4.0,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "42c06370e30629596bd88eae4472f7b9b9b3cdc1c652a1fbb00249d22aa3f01d",
+    "changed_entries": 257877,
+    "actual_delta_frobenius": 2.2834811210632324,
+    "relative_delta_frobenius": 0.029459593817591667
+  },
+  {
+    "name": "n128-norm_matched",
+    "width": 128,
+    "track": "norm_matched",
+    "strength": 3.496988597389297,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "9cc909666883695a8f8b15719c8aeca6d61561ba4b03d6b74e841e893a56f593",
+    "changed_entries": 257257,
+    "actual_delta_frobenius": 1.9961999654769897,
+    "relative_delta_frobenius": 0.025753330439329147
+  },
+  {
+    "name": "n256-fixed",
+    "width": 256,
+    "track": "fixed",
+    "strength": 4.0,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "3a814bb9c38aae489e5302fa8a4a97a22a52ac602a1f594d6757e3e9253a39e8",
+    "changed_entries": 514058,
+    "actual_delta_frobenius": 2.639010429382324,
+    "relative_delta_frobenius": 0.034046340733766556
+  },
+  {
+    "name": "n256-norm_matched",
+    "width": 256,
+    "track": "norm_matched",
+    "strength": 3.0258455423373953,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "131cf0c6b334cf05dc23672410c5e939bd24f86606addc70d5e60e36e897bb56",
+    "changed_entries": 510811,
+    "actual_delta_frobenius": 1.996146559715271,
+    "relative_delta_frobenius": 0.025752641260623932
+  },
+  {
+    "name": "n512-fixed",
+    "width": 512,
+    "track": "fixed",
+    "strength": 4.0,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "24cc1758d96d682b34b89cf45412f98238a495cf9aa6f5b3008bf01b9af7bd6e",
+    "changed_entries": 1024404,
+    "actual_delta_frobenius": 3.096139669418335,
+    "relative_delta_frobenius": 0.03994384780526161
+  },
+  {
+    "name": "n512-norm_matched",
+    "width": 512,
+    "track": "norm_matched",
+    "strength": 2.579033188781437,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "1e19805dbff6e8539393f3c0209fbf9cb36fae37b05da2e32721aa28018af415",
+    "changed_entries": 1011991,
+    "actual_delta_frobenius": 1.9961286783218384,
+    "relative_delta_frobenius": 0.025752410292625427
+  },
+  {
+    "name": "n1024-fixed",
+    "width": 1024,
+    "track": "fixed",
+    "strength": 4.0,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "fcd60b1b9e3ecf3aaaf498608f7a3689e23423b66eb3f02314b8b4e17fdd27b9",
+    "changed_entries": 2034627,
+    "actual_delta_frobenius": 3.6236042976379395,
+    "relative_delta_frobenius": 0.04674876108765602
+  },
+  {
+    "name": "n1024-norm_matched",
+    "width": 1024,
+    "track": "norm_matched",
+    "strength": 2.2034844538873273,
+    "target": "model.language_model.layers.22.feed_forward.w2.weight",
+    "base_tensor_sha256": "776ece62fab9fff60cd58da533582f76901ba5ceffb0d9eca800b8ad29216c6e",
+    "edited_tensor_sha256": "3fe75028903365486dffb88563b1f7d51c34e4b7342dea1ef2a56bead5e732e0",
+    "changed_entries": 1988614,
+    "actual_delta_frobenius": 1.9960988759994507,
+    "relative_delta_frobenius": 0.025752024725079536
+  }
+]

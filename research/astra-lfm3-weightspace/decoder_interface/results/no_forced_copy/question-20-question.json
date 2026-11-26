@@ -1,0 +1,37 @@
+{
+  "canonical_gold_missing_tokens": {
+    "B": []
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 105,
+    "fallbacks": [
+      true
+    ],
+    "levels": 7,
+    "ncm_z_sha256": "ba146cb5f7114d938301d43161c5ab7d0de57bee16e74da1e942499fbed036b5",
+    "zero_ncm": false
+  },
+  "gold": [
+    "B"
+  ],
+  "id": "question-20",
+  "input": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 105,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 7,
+    "s": 0.29,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_forced_copy",
+  "raw_trace": [],
+  "seconds": 0.28666981600690633,
+  "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,46 @@
+{
+  "canonical_gold_missing_tokens": {
+    "15": [
+      885
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "6fb24aae05eda872689a0912643405c032e26ee2e14cab6577b7df8d9c69067a",
+    "zero_ncm": false
+  },
+  "gold": [
+    "15"
+  ],
+  "id": "question-04",
+  "input": "What is three quarters of 20?",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.09,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_restricted",
+  "raw_trace": [
+    {
+      "allowed_ids": 204,
+      "policy": "raw_restricted",
+      "positions": 8,
+      "token_ids": []
+    }
+  ],
+  "seconds": 0.08644333004485816,
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

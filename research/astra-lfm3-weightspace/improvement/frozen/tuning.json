@@ -1,0 +1,3854 @@
+[
+  {
+    "id": "tuning-0-000-r0",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 48 plus 42?\nA. 90\nB. 89\nC. 91\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 90,
+    "choices": [
+      90,
+      89,
+      91,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-000-r1",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 48 plus 42?\nA. 132\nB. 90\nC. 89\nD. 91\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 90,
+    "choices": [
+      132,
+      90,
+      89,
+      91
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-000-r2",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 48 plus 42?\nA. 91\nB. 132\nC. 90\nD. 89\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 90,
+    "choices": [
+      91,
+      132,
+      90,
+      89
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-000-r3",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 48 plus 42?\nA. 89\nB. 91\nC. 132\nD. 90\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 90,
+    "choices": [
+      89,
+      91,
+      132,
+      90
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-000-free",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 48 plus 42? Reply with just the number.",
+    "gold_value": 90,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-001-r0",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 546 minus 33?\nA. 513\nB. 512\nC. 514\nD. 546\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 513,
+    "choices": [
+      513,
+      512,
+      514,
+      546
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-001-r1",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 546 minus 33?\nA. 546\nB. 513\nC. 512\nD. 514\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 513,
+    "choices": [
+      546,
+      513,
+      512,
+      514
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-001-r2",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 546 minus 33?\nA. 514\nB. 546\nC. 513\nD. 512\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 513,
+    "choices": [
+      514,
+      546,
+      513,
+      512
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-001-r3",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 546 minus 33?\nA. 512\nB. 514\nC. 546\nD. 513\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 513,
+    "choices": [
+      512,
+      514,
+      546,
+      513
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-001-free",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 546 minus 33? Reply with just the number.",
+    "gold_value": 513,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-002-r0",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 61?\nA. 1464\nB. 1463\nC. 1465\nD. 1525\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1464,
+    "choices": [
+      1464,
+      1463,
+      1465,
+      1525
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-002-r1",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 61?\nA. 1525\nB. 1464\nC. 1463\nD. 1465\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1464,
+    "choices": [
+      1525,
+      1464,
+      1463,
+      1465
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-002-r2",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 61?\nA. 1465\nB. 1525\nC. 1464\nD. 1463\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1464,
+    "choices": [
+      1465,
+      1525,
+      1464,
+      1463
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-002-r3",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 61?\nA. 1463\nB. 1465\nC. 1525\nD. 1464\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1464,
+    "choices": [
+      1463,
+      1465,
+      1525,
+      1464
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-002-free",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 61? Reply with just the number.",
+    "gold_value": 1464,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-003-r0",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 19?\nA. 19\nB. 18\nC. 20\nD. 43\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 19,
+    "choices": [
+      19,
+      18,
+      20,
+      43
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-003-r1",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 19?\nA. 43\nB. 19\nC. 18\nD. 20\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 19,
+    "choices": [
+      43,
+      19,
+      18,
+      20
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-003-r2",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 19?\nA. 20\nB. 43\nC. 19\nD. 18\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 19,
+    "choices": [
+      20,
+      43,
+      19,
+      18
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-003-r3",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 19?\nA. 18\nB. 20\nC. 43\nD. 19\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 19,
+    "choices": [
+      18,
+      20,
+      43,
+      19
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-004-r0",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 55 plus 29?\nA. 84\nB. 83\nC. 85\nD. 113\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 84,
+    "choices": [
+      84,
+      83,
+      85,
+      113
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-004-r1",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 55 plus 29?\nA. 113\nB. 84\nC. 83\nD. 85\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 84,
+    "choices": [
+      113,
+      84,
+      83,
+      85
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-004-r2",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 55 plus 29?\nA. 85\nB. 113\nC. 84\nD. 83\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 84,
+    "choices": [
+      85,
+      113,
+      84,
+      83
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-004-r3",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 55 plus 29?\nA. 83\nB. 85\nC. 113\nD. 84\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 84,
+    "choices": [
+      83,
+      85,
+      113,
+      84
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-004-free",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 55 plus 29? Reply with just the number.",
+    "gold_value": 84,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-005-r0",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 385 minus 52?\nA. 333\nB. 332\nC. 334\nD. 385\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 333,
+    "choices": [
+      333,
+      332,
+      334,
+      385
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-005-r1",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 385 minus 52?\nA. 385\nB. 333\nC. 332\nD. 334\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 333,
+    "choices": [
+      385,
+      333,
+      332,
+      334
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-005-r2",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 385 minus 52?\nA. 334\nB. 385\nC. 333\nD. 332\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 333,
+    "choices": [
+      334,
+      385,
+      333,
+      332
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-005-r3",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 385 minus 52?\nA. 332\nB. 334\nC. 385\nD. 333\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 333,
+    "choices": [
+      332,
+      334,
+      385,
+      333
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-005-free",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 385 minus 52? Reply with just the number.",
+    "gold_value": 333,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-006-r0",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 23 times 41?\nA. 943\nB. 942\nC. 944\nD. 984\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 943,
+    "choices": [
+      943,
+      942,
+      944,
+      984
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-006-r1",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 23 times 41?\nA. 984\nB. 943\nC. 942\nD. 944\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 943,
+    "choices": [
+      984,
+      943,
+      942,
+      944
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-006-r2",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 23 times 41?\nA. 944\nB. 984\nC. 943\nD. 942\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 943,
+    "choices": [
+      944,
+      984,
+      943,
+      942
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-006-r3",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 23 times 41?\nA. 942\nB. 944\nC. 984\nD. 943\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 943,
+    "choices": [
+      942,
+      944,
+      984,
+      943
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-006-free",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 23 times 41? Reply with just the number.",
+    "gold_value": 943,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-007-r0",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 48?\nA. 48\nB. 47\nC. 49\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 48,
+    "choices": [
+      48,
+      47,
+      49,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-007-r1",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 48?\nA. 105\nB. 48\nC. 47\nD. 49\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 48,
+    "choices": [
+      105,
+      48,
+      47,
+      49
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-007-r2",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 48?\nA. 49\nB. 105\nC. 48\nD. 47\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 48,
+    "choices": [
+      49,
+      105,
+      48,
+      47
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-007-r3",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 48?\nA. 47\nB. 49\nC. 105\nD. 48\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 48,
+    "choices": [
+      47,
+      49,
+      105,
+      48
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-008-r0",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 29 plus 11?\nA. 40\nB. 39\nC. 41\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 40,
+    "choices": [
+      40,
+      39,
+      41,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-008-r1",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 29 plus 11?\nA. 51\nB. 40\nC. 39\nD. 41\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 40,
+    "choices": [
+      51,
+      40,
+      39,
+      41
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-008-r2",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 29 plus 11?\nA. 41\nB. 51\nC. 40\nD. 39\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 40,
+    "choices": [
+      41,
+      51,
+      40,
+      39
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-008-r3",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 29 plus 11?\nA. 39\nB. 41\nC. 51\nD. 40\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 40,
+    "choices": [
+      39,
+      41,
+      51,
+      40
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-008-free",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 29 plus 11? Reply with just the number.",
+    "gold_value": 40,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-009-r0",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 24?\nA. 263\nB. 262\nC. 264\nD. 287\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 263,
+    "choices": [
+      263,
+      262,
+      264,
+      287
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-009-r1",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 24?\nA. 287\nB. 263\nC. 262\nD. 264\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 263,
+    "choices": [
+      287,
+      263,
+      262,
+      264
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-009-r2",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 24?\nA. 264\nB. 287\nC. 263\nD. 262\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 263,
+    "choices": [
+      264,
+      287,
+      263,
+      262
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-009-r3",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 24?\nA. 262\nB. 264\nC. 287\nD. 263\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 263,
+    "choices": [
+      262,
+      264,
+      287,
+      263
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-009-free",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 24? Reply with just the number.",
+    "gold_value": 263,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-010-r0",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 73 times 34?\nA. 2482\nB. 2481\nC. 2483\nD. 2516\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2482,
+    "choices": [
+      2482,
+      2481,
+      2483,
+      2516
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-010-r1",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 73 times 34?\nA. 2516\nB. 2482\nC. 2481\nD. 2483\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2482,
+    "choices": [
+      2516,
+      2482,
+      2481,
+      2483
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-010-r2",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 73 times 34?\nA. 2483\nB. 2516\nC. 2482\nD. 2481\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2482,
+    "choices": [
+      2483,
+      2516,
+      2482,
+      2481
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-010-r3",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 73 times 34?\nA. 2481\nB. 2483\nC. 2516\nD. 2482\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2482,
+    "choices": [
+      2481,
+      2483,
+      2516,
+      2482
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-010-free",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 73 times 34? Reply with just the number.",
+    "gold_value": 2482,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-011-r0",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 49?\nA. 49\nB. 48\nC. 50\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 49,
+    "choices": [
+      49,
+      48,
+      50,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-011-r1",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 49?\nA. 63\nB. 49\nC. 48\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 49,
+    "choices": [
+      63,
+      49,
+      48,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-011-r2",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 49?\nA. 50\nB. 63\nC. 49\nD. 48\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 49,
+    "choices": [
+      50,
+      63,
+      49,
+      48
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-011-r3",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 49?\nA. 48\nB. 50\nC. 63\nD. 49\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 49,
+    "choices": [
+      48,
+      50,
+      63,
+      49
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-012-r0",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 79 plus 54?\nA. 133\nB. 132\nC. 134\nD. 187\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 133,
+    "choices": [
+      133,
+      132,
+      134,
+      187
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-012-r1",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 79 plus 54?\nA. 187\nB. 133\nC. 132\nD. 134\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 133,
+    "choices": [
+      187,
+      133,
+      132,
+      134
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-012-r2",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 79 plus 54?\nA. 134\nB. 187\nC. 133\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 133,
+    "choices": [
+      134,
+      187,
+      133,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-012-r3",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 79 plus 54?\nA. 132\nB. 134\nC. 187\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 133,
+    "choices": [
+      132,
+      134,
+      187,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-012-free",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 79 plus 54? Reply with just the number.",
+    "gold_value": 133,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-013-r0",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 25?\nA. 150\nB. 149\nC. 151\nD. 175\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 150,
+    "choices": [
+      150,
+      149,
+      151,
+      175
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-013-r1",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 25?\nA. 175\nB. 150\nC. 149\nD. 151\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 150,
+    "choices": [
+      175,
+      150,
+      149,
+      151
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-013-r2",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 25?\nA. 151\nB. 175\nC. 150\nD. 149\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 150,
+    "choices": [
+      151,
+      175,
+      150,
+      149
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-013-r3",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 25?\nA. 149\nB. 151\nC. 175\nD. 150\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 150,
+    "choices": [
+      149,
+      151,
+      175,
+      150
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-013-free",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 25? Reply with just the number.",
+    "gold_value": 150,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-014-r0",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 77 times 44?\nA. 3388\nB. 3387\nC. 3389\nD. 3432\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3388,
+    "choices": [
+      3388,
+      3387,
+      3389,
+      3432
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-014-r1",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 77 times 44?\nA. 3432\nB. 3388\nC. 3387\nD. 3389\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3388,
+    "choices": [
+      3432,
+      3388,
+      3387,
+      3389
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-014-r2",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 77 times 44?\nA. 3389\nB. 3432\nC. 3388\nD. 3387\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3388,
+    "choices": [
+      3389,
+      3432,
+      3388,
+      3387
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-014-r3",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 77 times 44?\nA. 3387\nB. 3389\nC. 3432\nD. 3388\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3388,
+    "choices": [
+      3387,
+      3389,
+      3432,
+      3388
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-014-free",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 77 times 44? Reply with just the number.",
+    "gold_value": 3388,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-015-r0",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 64?\nA. 64\nB. 63\nC. 65\nD. 119\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 64,
+    "choices": [
+      64,
+      63,
+      65,
+      119
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-015-r1",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 64?\nA. 119\nB. 64\nC. 63\nD. 65\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 64,
+    "choices": [
+      119,
+      64,
+      63,
+      65
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-015-r2",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 64?\nA. 65\nB. 119\nC. 64\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 64,
+    "choices": [
+      65,
+      119,
+      64,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-015-r3",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 64?\nA. 63\nB. 65\nC. 119\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 64,
+    "choices": [
+      63,
+      65,
+      119,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-016-r0",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 49 plus 42?\nA. 91\nB. 90\nC. 92\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 91,
+    "choices": [
+      91,
+      90,
+      92,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-016-r1",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 49 plus 42?\nA. 133\nB. 91\nC. 90\nD. 92\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 91,
+    "choices": [
+      133,
+      91,
+      90,
+      92
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-016-r2",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 49 plus 42?\nA. 92\nB. 133\nC. 91\nD. 90\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 91,
+    "choices": [
+      92,
+      133,
+      91,
+      90
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-016-r3",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 49 plus 42?\nA. 90\nB. 92\nC. 133\nD. 91\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 91,
+    "choices": [
+      90,
+      92,
+      133,
+      91
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-016-free",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 49 plus 42? Reply with just the number.",
+    "gold_value": 91,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-017-r0",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 231 minus 62?\nA. 169\nB. 168\nC. 170\nD. 231\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 169,
+    "choices": [
+      169,
+      168,
+      170,
+      231
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-017-r1",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 231 minus 62?\nA. 231\nB. 169\nC. 168\nD. 170\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 169,
+    "choices": [
+      231,
+      169,
+      168,
+      170
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-017-r2",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 231 minus 62?\nA. 170\nB. 231\nC. 169\nD. 168\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 169,
+    "choices": [
+      170,
+      231,
+      169,
+      168
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-017-r3",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 231 minus 62?\nA. 168\nB. 170\nC. 231\nD. 169\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 169,
+    "choices": [
+      168,
+      170,
+      231,
+      169
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-017-free",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 231 minus 62? Reply with just the number.",
+    "gold_value": 169,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-018-r0",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 25 times 11?\nA. 275\nB. 274\nC. 276\nD. 286\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 275,
+    "choices": [
+      275,
+      274,
+      276,
+      286
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-018-r1",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 25 times 11?\nA. 286\nB. 275\nC. 274\nD. 276\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 275,
+    "choices": [
+      286,
+      275,
+      274,
+      276
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-018-r2",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 25 times 11?\nA. 276\nB. 286\nC. 275\nD. 274\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 275,
+    "choices": [
+      276,
+      286,
+      275,
+      274
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-018-r3",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 25 times 11?\nA. 274\nB. 276\nC. 286\nD. 275\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 275,
+    "choices": [
+      274,
+      276,
+      286,
+      275
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-018-free",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 25 times 11? Reply with just the number.",
+    "gold_value": 275,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-019-r0",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 66?\nA. 66\nB. 65\nC. 67\nD. 109\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 66,
+    "choices": [
+      66,
+      65,
+      67,
+      109
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-019-r1",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 66?\nA. 109\nB. 66\nC. 65\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 66,
+    "choices": [
+      109,
+      66,
+      65,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-019-r2",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 66?\nA. 67\nB. 109\nC. 66\nD. 65\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 66,
+    "choices": [
+      67,
+      109,
+      66,
+      65
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-019-r3",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 66?\nA. 65\nB. 67\nC. 109\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 66,
+    "choices": [
+      65,
+      67,
+      109,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-020-r0",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 plus 51?\nA. 105\nB. 104\nC. 106\nD. 156\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 105,
+    "choices": [
+      105,
+      104,
+      106,
+      156
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-020-r1",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 plus 51?\nA. 156\nB. 105\nC. 104\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 105,
+    "choices": [
+      156,
+      105,
+      104,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-020-r2",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 plus 51?\nA. 106\nB. 156\nC. 105\nD. 104\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 105,
+    "choices": [
+      106,
+      156,
+      105,
+      104
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-020-r3",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 plus 51?\nA. 104\nB. 106\nC. 156\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 105,
+    "choices": [
+      104,
+      106,
+      156,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-020-free",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 plus 51? Reply with just the number.",
+    "gold_value": 105,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-021-r0",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 23?\nA. 152\nB. 151\nC. 153\nD. 175\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 152,
+    "choices": [
+      152,
+      151,
+      153,
+      175
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-021-r1",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 23?\nA. 175\nB. 152\nC. 151\nD. 153\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 152,
+    "choices": [
+      175,
+      152,
+      151,
+      153
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-021-r2",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 23?\nA. 153\nB. 175\nC. 152\nD. 151\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 152,
+    "choices": [
+      153,
+      175,
+      152,
+      151
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-021-r3",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 23?\nA. 151\nB. 153\nC. 175\nD. 152\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 152,
+    "choices": [
+      151,
+      153,
+      175,
+      152
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-021-free",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 175 minus 23? Reply with just the number.",
+    "gold_value": 152,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-022-r0",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 82 times 29?\nA. 2378\nB. 2377\nC. 2379\nD. 2407\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2378,
+    "choices": [
+      2378,
+      2377,
+      2379,
+      2407
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-022-r1",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 82 times 29?\nA. 2407\nB. 2378\nC. 2377\nD. 2379\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2378,
+    "choices": [
+      2407,
+      2378,
+      2377,
+      2379
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-022-r2",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 82 times 29?\nA. 2379\nB. 2407\nC. 2378\nD. 2377\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2378,
+    "choices": [
+      2379,
+      2407,
+      2378,
+      2377
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-022-r3",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 82 times 29?\nA. 2377\nB. 2379\nC. 2407\nD. 2378\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2378,
+    "choices": [
+      2377,
+      2379,
+      2407,
+      2378
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-022-free",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 82 times 29? Reply with just the number.",
+    "gold_value": 2378,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-0-023-r0",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 39?\nA. 39\nB. 38\nC. 40\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 39,
+    "choices": [
+      39,
+      38,
+      40,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-023-r1",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 39?\nA. 79\nB. 39\nC. 38\nD. 40\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 39,
+    "choices": [
+      79,
+      39,
+      38,
+      40
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-023-r2",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 39?\nA. 40\nB. 79\nC. 39\nD. 38\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 39,
+    "choices": [
+      40,
+      79,
+      39,
+      38
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-0-023-r3",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 39?\nA. 38\nB. 40\nC. 79\nD. 39\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 39,
+    "choices": [
+      38,
+      40,
+      79,
+      39
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-000-r0",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 28 plus 35?\nA. 63\nB. 62\nC. 64\nD. 98\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 63,
+    "choices": [
+      63,
+      62,
+      64,
+      98
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-000-r1",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 28 plus 35?\nA. 98\nB. 63\nC. 62\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 63,
+    "choices": [
+      98,
+      63,
+      62,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-000-r2",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 28 plus 35?\nA. 64\nB. 98\nC. 63\nD. 62\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 63,
+    "choices": [
+      64,
+      98,
+      63,
+      62
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-000-r3",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 28 plus 35?\nA. 62\nB. 64\nC. 98\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 63,
+    "choices": [
+      62,
+      64,
+      98,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-000-free",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 28 plus 35? Reply with just the number.",
+    "gold_value": 63,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-001-r0",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 371 minus 43?\nA. 328\nB. 327\nC. 329\nD. 371\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 328,
+    "choices": [
+      328,
+      327,
+      329,
+      371
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-001-r1",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 371 minus 43?\nA. 371\nB. 328\nC. 327\nD. 329\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 328,
+    "choices": [
+      371,
+      328,
+      327,
+      329
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-001-r2",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 371 minus 43?\nA. 329\nB. 371\nC. 328\nD. 327\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 328,
+    "choices": [
+      329,
+      371,
+      328,
+      327
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-001-r3",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 371 minus 43?\nA. 327\nB. 329\nC. 371\nD. 328\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 328,
+    "choices": [
+      327,
+      329,
+      371,
+      328
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-001-free",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 371 minus 43? Reply with just the number.",
+    "gold_value": 328,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-002-r0",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 times 14?\nA. 560\nB. 559\nC. 561\nD. 574\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 560,
+    "choices": [
+      560,
+      559,
+      561,
+      574
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-002-r1",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 times 14?\nA. 574\nB. 560\nC. 559\nD. 561\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 560,
+    "choices": [
+      574,
+      560,
+      559,
+      561
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-002-r2",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 times 14?\nA. 561\nB. 574\nC. 560\nD. 559\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 560,
+    "choices": [
+      561,
+      574,
+      560,
+      559
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-002-r3",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 times 14?\nA. 559\nB. 561\nC. 574\nD. 560\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 560,
+    "choices": [
+      559,
+      561,
+      574,
+      560
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-002-free",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 times 14? Reply with just the number.",
+    "gold_value": 560,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-003-r0",
+    "group": 27,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 14?\nA. 14\nB. 13\nC. 15\nD. 40\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 14,
+    "choices": [
+      14,
+      13,
+      15,
+      40
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-003-r1",
+    "group": 27,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 14?\nA. 40\nB. 14\nC. 13\nD. 15\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 14,
+    "choices": [
+      40,
+      14,
+      13,
+      15
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-003-r2",
+    "group": 27,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 14?\nA. 15\nB. 40\nC. 14\nD. 13\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 14,
+    "choices": [
+      15,
+      40,
+      14,
+      13
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-003-r3",
+    "group": 27,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 14?\nA. 13\nB. 15\nC. 40\nD. 14\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 14,
+    "choices": [
+      13,
+      15,
+      40,
+      14
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-004-r0",
+    "group": 28,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 57 plus 25?\nA. 82\nB. 81\nC. 83\nD. 107\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 82,
+    "choices": [
+      82,
+      81,
+      83,
+      107
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-004-r1",
+    "group": 28,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 57 plus 25?\nA. 107\nB. 82\nC. 81\nD. 83\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 82,
+    "choices": [
+      107,
+      82,
+      81,
+      83
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-004-r2",
+    "group": 28,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 57 plus 25?\nA. 83\nB. 107\nC. 82\nD. 81\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 82,
+    "choices": [
+      83,
+      107,
+      82,
+      81
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-004-r3",
+    "group": 28,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 57 plus 25?\nA. 81\nB. 83\nC. 107\nD. 82\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 82,
+    "choices": [
+      81,
+      83,
+      107,
+      82
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-004-free",
+    "group": 28,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 57 plus 25? Reply with just the number.",
+    "gold_value": 82,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-005-r0",
+    "group": 29,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 560 minus 24?\nA. 536\nB. 535\nC. 537\nD. 560\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 536,
+    "choices": [
+      536,
+      535,
+      537,
+      560
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-005-r1",
+    "group": 29,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 560 minus 24?\nA. 560\nB. 536\nC. 535\nD. 537\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 536,
+    "choices": [
+      560,
+      536,
+      535,
+      537
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-005-r2",
+    "group": 29,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 560 minus 24?\nA. 537\nB. 560\nC. 536\nD. 535\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 536,
+    "choices": [
+      537,
+      560,
+      536,
+      535
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-005-r3",
+    "group": 29,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 560 minus 24?\nA. 535\nB. 537\nC. 560\nD. 536\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 536,
+    "choices": [
+      535,
+      537,
+      560,
+      536
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-005-free",
+    "group": 29,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 560 minus 24? Reply with just the number.",
+    "gold_value": 536,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-006-r0",
+    "group": 30,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 times 43?\nA. 2322\nB. 2321\nC. 2323\nD. 2365\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2322,
+    "choices": [
+      2322,
+      2321,
+      2323,
+      2365
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-006-r1",
+    "group": 30,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 times 43?\nA. 2365\nB. 2322\nC. 2321\nD. 2323\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2322,
+    "choices": [
+      2365,
+      2322,
+      2321,
+      2323
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-006-r2",
+    "group": 30,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 times 43?\nA. 2323\nB. 2365\nC. 2322\nD. 2321\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2322,
+    "choices": [
+      2323,
+      2365,
+      2322,
+      2321
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-006-r3",
+    "group": 30,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 times 43?\nA. 2321\nB. 2323\nC. 2365\nD. 2322\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2322,
+    "choices": [
+      2321,
+      2323,
+      2365,
+      2322
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-006-free",
+    "group": 30,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 54 times 43? Reply with just the number.",
+    "gold_value": 2322,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-007-r0",
+    "group": 31,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 24?\nA. 24\nB. 23\nC. 25\nD. 76\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 24,
+    "choices": [
+      24,
+      23,
+      25,
+      76
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-007-r1",
+    "group": 31,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 24?\nA. 76\nB. 24\nC. 23\nD. 25\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 24,
+    "choices": [
+      76,
+      24,
+      23,
+      25
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-007-r2",
+    "group": 31,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 24?\nA. 25\nB. 76\nC. 24\nD. 23\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 24,
+    "choices": [
+      25,
+      76,
+      24,
+      23
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-007-r3",
+    "group": 31,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 24?\nA. 23\nB. 25\nC. 76\nD. 24\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 24,
+    "choices": [
+      23,
+      25,
+      76,
+      24
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-008-r0",
+    "group": 32,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 88 plus 57?\nA. 145\nB. 144\nC. 146\nD. 202\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 145,
+    "choices": [
+      145,
+      144,
+      146,
+      202
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-008-r1",
+    "group": 32,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 88 plus 57?\nA. 202\nB. 145\nC. 144\nD. 146\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 145,
+    "choices": [
+      202,
+      145,
+      144,
+      146
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-008-r2",
+    "group": 32,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 88 plus 57?\nA. 146\nB. 202\nC. 145\nD. 144\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 145,
+    "choices": [
+      146,
+      202,
+      145,
+      144
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-008-r3",
+    "group": 32,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 88 plus 57?\nA. 144\nB. 146\nC. 202\nD. 145\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 145,
+    "choices": [
+      144,
+      146,
+      202,
+      145
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-008-free",
+    "group": 32,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 88 plus 57? Reply with just the number.",
+    "gold_value": 145,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-009-r0",
+    "group": 33,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 238 minus 21?\nA. 217\nB. 216\nC. 218\nD. 238\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 217,
+    "choices": [
+      217,
+      216,
+      218,
+      238
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-009-r1",
+    "group": 33,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 238 minus 21?\nA. 238\nB. 217\nC. 216\nD. 218\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 217,
+    "choices": [
+      238,
+      217,
+      216,
+      218
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-009-r2",
+    "group": 33,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 238 minus 21?\nA. 218\nB. 238\nC. 217\nD. 216\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 217,
+    "choices": [
+      218,
+      238,
+      217,
+      216
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-009-r3",
+    "group": 33,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 238 minus 21?\nA. 216\nB. 218\nC. 238\nD. 217\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 217,
+    "choices": [
+      216,
+      218,
+      238,
+      217
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-009-free",
+    "group": 33,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 238 minus 21? Reply with just the number.",
+    "gold_value": 217,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-010-r0",
+    "group": 34,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 56?\nA. 1344\nB. 1343\nC. 1345\nD. 1400\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1344,
+    "choices": [
+      1344,
+      1343,
+      1345,
+      1400
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-010-r1",
+    "group": 34,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 56?\nA. 1400\nB. 1344\nC. 1343\nD. 1345\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1344,
+    "choices": [
+      1400,
+      1344,
+      1343,
+      1345
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-010-r2",
+    "group": 34,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 56?\nA. 1345\nB. 1400\nC. 1344\nD. 1343\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1344,
+    "choices": [
+      1345,
+      1400,
+      1344,
+      1343
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-010-r3",
+    "group": 34,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 56?\nA. 1343\nB. 1345\nC. 1400\nD. 1344\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1344,
+    "choices": [
+      1343,
+      1345,
+      1400,
+      1344
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-010-free",
+    "group": 34,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 24 times 56? Reply with just the number.",
+    "gold_value": 1344,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-011-r0",
+    "group": 35,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 47?\nA. 47\nB. 46\nC. 48\nD. 83\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 47,
+    "choices": [
+      47,
+      46,
+      48,
+      83
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-011-r1",
+    "group": 35,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 47?\nA. 83\nB. 47\nC. 46\nD. 48\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 47,
+    "choices": [
+      83,
+      47,
+      46,
+      48
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-011-r2",
+    "group": 35,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 47?\nA. 48\nB. 83\nC. 47\nD. 46\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 47,
+    "choices": [
+      48,
+      83,
+      47,
+      46
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-011-r3",
+    "group": 35,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 47?\nA. 46\nB. 48\nC. 83\nD. 47\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 47,
+    "choices": [
+      46,
+      48,
+      83,
+      47
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-012-r0",
+    "group": 36,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 42 plus 64?\nA. 106\nB. 105\nC. 107\nD. 170\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 106,
+    "choices": [
+      106,
+      105,
+      107,
+      170
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-012-r1",
+    "group": 36,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 42 plus 64?\nA. 170\nB. 106\nC. 105\nD. 107\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 106,
+    "choices": [
+      170,
+      106,
+      105,
+      107
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-012-r2",
+    "group": 36,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 42 plus 64?\nA. 107\nB. 170\nC. 106\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 106,
+    "choices": [
+      107,
+      170,
+      106,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-012-r3",
+    "group": 36,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 42 plus 64?\nA. 105\nB. 107\nC. 170\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 106,
+    "choices": [
+      105,
+      107,
+      170,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-012-free",
+    "group": 36,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 42 plus 64? Reply with just the number.",
+    "gold_value": 106,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-013-r0",
+    "group": 37,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 25?\nA. 262\nB. 261\nC. 263\nD. 287\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 262,
+    "choices": [
+      262,
+      261,
+      263,
+      287
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-013-r1",
+    "group": 37,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 25?\nA. 287\nB. 262\nC. 261\nD. 263\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 262,
+    "choices": [
+      287,
+      262,
+      261,
+      263
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-013-r2",
+    "group": 37,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 25?\nA. 263\nB. 287\nC. 262\nD. 261\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 262,
+    "choices": [
+      263,
+      287,
+      262,
+      261
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-013-r3",
+    "group": 37,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 25?\nA. 261\nB. 263\nC. 287\nD. 262\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 262,
+    "choices": [
+      261,
+      263,
+      287,
+      262
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-013-free",
+    "group": 37,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 287 minus 25? Reply with just the number.",
+    "gold_value": 262,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-014-r0",
+    "group": 38,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 64 times 48?\nA. 3072\nB. 3071\nC. 3073\nD. 3120\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3072,
+    "choices": [
+      3072,
+      3071,
+      3073,
+      3120
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-014-r1",
+    "group": 38,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 64 times 48?\nA. 3120\nB. 3072\nC. 3071\nD. 3073\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3072,
+    "choices": [
+      3120,
+      3072,
+      3071,
+      3073
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-014-r2",
+    "group": 38,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 64 times 48?\nA. 3073\nB. 3120\nC. 3072\nD. 3071\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3072,
+    "choices": [
+      3073,
+      3120,
+      3072,
+      3071
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-014-r3",
+    "group": 38,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 64 times 48?\nA. 3071\nB. 3073\nC. 3120\nD. 3072\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3072,
+    "choices": [
+      3071,
+      3073,
+      3120,
+      3072
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-014-free",
+    "group": 38,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 64 times 48? Reply with just the number.",
+    "gold_value": 3072,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-015-r0",
+    "group": 39,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 74?\nA. 74\nB. 73\nC. 75\nD. 95\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 74,
+    "choices": [
+      74,
+      73,
+      75,
+      95
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-015-r1",
+    "group": 39,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 74?\nA. 95\nB. 74\nC. 73\nD. 75\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 74,
+    "choices": [
+      95,
+      74,
+      73,
+      75
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-015-r2",
+    "group": 39,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 74?\nA. 75\nB. 95\nC. 74\nD. 73\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 74,
+    "choices": [
+      75,
+      95,
+      74,
+      73
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-015-r3",
+    "group": 39,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 74?\nA. 73\nB. 75\nC. 95\nD. 74\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 74,
+    "choices": [
+      73,
+      75,
+      95,
+      74
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-016-r0",
+    "group": 40,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 plus 28?\nA. 68\nB. 67\nC. 69\nD. 96\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 68,
+    "choices": [
+      68,
+      67,
+      69,
+      96
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-016-r1",
+    "group": 40,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 plus 28?\nA. 96\nB. 68\nC. 67\nD. 69\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 68,
+    "choices": [
+      96,
+      68,
+      67,
+      69
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-016-r2",
+    "group": 40,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 plus 28?\nA. 69\nB. 96\nC. 68\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 68,
+    "choices": [
+      69,
+      96,
+      68,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-016-r3",
+    "group": 40,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 plus 28?\nA. 67\nB. 69\nC. 96\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 68,
+    "choices": [
+      67,
+      69,
+      96,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-016-free",
+    "group": 40,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 40 plus 28? Reply with just the number.",
+    "gold_value": 68,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-017-r0",
+    "group": 41,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 329 minus 49?\nA. 280\nB. 279\nC. 281\nD. 329\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 280,
+    "choices": [
+      280,
+      279,
+      281,
+      329
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-017-r1",
+    "group": 41,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 329 minus 49?\nA. 329\nB. 280\nC. 279\nD. 281\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 280,
+    "choices": [
+      329,
+      280,
+      279,
+      281
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-017-r2",
+    "group": 41,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 329 minus 49?\nA. 281\nB. 329\nC. 280\nD. 279\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 280,
+    "choices": [
+      281,
+      329,
+      280,
+      279
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-017-r3",
+    "group": 41,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 329 minus 49?\nA. 279\nB. 281\nC. 329\nD. 280\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 280,
+    "choices": [
+      279,
+      281,
+      329,
+      280
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-017-free",
+    "group": 41,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 329 minus 49? Reply with just the number.",
+    "gold_value": 280,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-018-r0",
+    "group": 42,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 84 times 39?\nA. 3276\nB. 3275\nC. 3277\nD. 3315\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3276,
+    "choices": [
+      3276,
+      3275,
+      3277,
+      3315
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-018-r1",
+    "group": 42,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 84 times 39?\nA. 3315\nB. 3276\nC. 3275\nD. 3277\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3276,
+    "choices": [
+      3315,
+      3276,
+      3275,
+      3277
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-018-r2",
+    "group": 42,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 84 times 39?\nA. 3277\nB. 3315\nC. 3276\nD. 3275\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3276,
+    "choices": [
+      3277,
+      3315,
+      3276,
+      3275
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-018-r3",
+    "group": 42,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 84 times 39?\nA. 3275\nB. 3277\nC. 3315\nD. 3276\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3276,
+    "choices": [
+      3275,
+      3277,
+      3315,
+      3276
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-018-free",
+    "group": 42,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 84 times 39? Reply with just the number.",
+    "gold_value": 3276,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-019-r0",
+    "group": 43,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 26?\nA. 26\nB. 25\nC. 27\nD. 75\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 26,
+    "choices": [
+      26,
+      25,
+      27,
+      75
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-019-r1",
+    "group": 43,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 26?\nA. 75\nB. 26\nC. 25\nD. 27\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 26,
+    "choices": [
+      75,
+      26,
+      25,
+      27
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-019-r2",
+    "group": 43,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 26?\nA. 27\nB. 75\nC. 26\nD. 25\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 26,
+    "choices": [
+      27,
+      75,
+      26,
+      25
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-019-r3",
+    "group": 43,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 26?\nA. 25\nB. 27\nC. 75\nD. 26\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 26,
+    "choices": [
+      25,
+      27,
+      75,
+      26
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-020-r0",
+    "group": 44,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 78 plus 33?\nA. 111\nB. 110\nC. 112\nD. 144\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 111,
+    "choices": [
+      111,
+      110,
+      112,
+      144
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-020-r1",
+    "group": 44,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 78 plus 33?\nA. 144\nB. 111\nC. 110\nD. 112\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 111,
+    "choices": [
+      144,
+      111,
+      110,
+      112
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-020-r2",
+    "group": 44,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 78 plus 33?\nA. 112\nB. 144\nC. 111\nD. 110\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 111,
+    "choices": [
+      112,
+      144,
+      111,
+      110
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-020-r3",
+    "group": 44,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 78 plus 33?\nA. 110\nB. 112\nC. 144\nD. 111\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 111,
+    "choices": [
+      110,
+      112,
+      144,
+      111
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-020-free",
+    "group": 44,
+    "family": "addition",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 78 plus 33? Reply with just the number.",
+    "gold_value": 111,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-021-r0",
+    "group": 45,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 140 minus 27?\nA. 113\nB. 112\nC. 114\nD. 140\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 113,
+    "choices": [
+      113,
+      112,
+      114,
+      140
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-021-r1",
+    "group": 45,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 140 minus 27?\nA. 140\nB. 113\nC. 112\nD. 114\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 113,
+    "choices": [
+      140,
+      113,
+      112,
+      114
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-021-r2",
+    "group": 45,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 140 minus 27?\nA. 114\nB. 140\nC. 113\nD. 112\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 113,
+    "choices": [
+      114,
+      140,
+      113,
+      112
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-021-r3",
+    "group": 45,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 140 minus 27?\nA. 112\nB. 114\nC. 140\nD. 113\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 113,
+    "choices": [
+      112,
+      114,
+      140,
+      113
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-021-free",
+    "group": 45,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 140 minus 27? Reply with just the number.",
+    "gold_value": 113,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-022-r0",
+    "group": 46,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 53 times 17?\nA. 901\nB. 900\nC. 902\nD. 918\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 901,
+    "choices": [
+      901,
+      900,
+      902,
+      918
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-022-r1",
+    "group": 46,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 53 times 17?\nA. 918\nB. 901\nC. 900\nD. 902\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 901,
+    "choices": [
+      918,
+      901,
+      900,
+      902
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-022-r2",
+    "group": 46,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 53 times 17?\nA. 902\nB. 918\nC. 901\nD. 900\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 901,
+    "choices": [
+      902,
+      918,
+      901,
+      900
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-022-r3",
+    "group": 46,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 53 times 17?\nA. 900\nB. 902\nC. 918\nD. 901\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 901,
+    "choices": [
+      900,
+      902,
+      918,
+      901
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-022-free",
+    "group": 46,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "What is 53 times 17? Reply with just the number.",
+    "gold_value": 901,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "tuning-1-023-r0",
+    "group": 47,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 23?\nA. 23\nB. 22\nC. 24\nD. 73\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 23,
+    "choices": [
+      23,
+      22,
+      24,
+      73
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-023-r1",
+    "group": 47,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 23?\nA. 73\nB. 23\nC. 22\nD. 24\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 23,
+    "choices": [
+      73,
+      23,
+      22,
+      24
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-023-r2",
+    "group": 47,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 23?\nA. 24\nB. 73\nC. 23\nD. 22\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 23,
+    "choices": [
+      24,
+      73,
+      23,
+      22
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "tuning-1-023-r3",
+    "group": 47,
+    "family": "selection",
+    "modality": "text",
+    "split": "tuning",
+    "prompt": "Which option is the number 23?\nA. 22\nB. 24\nC. 73\nD. 23\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 23,
+    "choices": [
+      22,
+      24,
+      73,
+      23
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  }
+]

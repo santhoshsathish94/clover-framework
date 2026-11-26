@@ -1,0 +1,24 @@
+{
+  "c2_controls": [
+    "true_token",
+    "zero_input"
+  ],
+  "c2_gains": [
+    "original",
+    "least_squares",
+    "norm_match"
+  ],
+  "c2_gate": "lower held-out per-text feedback NLL than original and zero; one-sided paired sign p<=0.05 against both",
+  "c2_objective": "predict token t+2 after one HybridLink feedback input for token t+1",
+  "c3_gate": "lower held-out per-text code NLL with paired sign p<=0.05, plus no loss in generated nonpad token accuracy",
+  "c3_objective": "teacher code NLL and free NCM/VQ reconstruction of the supplied text without pointer copy bonuses",
+  "c3_scales": [
+    0.5,
+    1.0,
+    2.0
+  ],
+  "data_fitting": "closed-form scalar C2 calibration using discovery texts only",
+  "gradient_training": false,
+  "selection": "discovery only; do not retune using heldout outcomes",
+  "split_limit": "held out from this calibration only; no claim of disjointness from original pretraining"
+}

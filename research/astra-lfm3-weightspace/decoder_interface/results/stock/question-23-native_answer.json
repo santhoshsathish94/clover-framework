@@ -1,0 +1,37 @@
+{
+  "canonical_gold_missing_tokens": {
+    "true": []
+  },
+  "correct": true,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "d1cdfa70b239d9fe17d6eddfae63b4f40102f65313954df44f2f772cf24bd74a",
+    "zero_ncm": false
+  },
+  "gold": [
+    "true"
+  ],
+  "id": "question-23",
+  "input": "true",
+  "input_mode": "native_answer",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.07,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "stock",
+  "raw_trace": [],
+  "seconds": 0.07500731304753572,
+  "text": "true",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,472 @@
+{
+  "evidence_mode": "stored seven-tap coefficients only; analytical transfer function, no sequence inputs or model execution",
+  "boundary": {
+    "known_behavior_and_tokenizer_inputs_inaccessible": true,
+    "checkpoint_readonly": true
+  },
+  "tensor": "model.language_model.layers.0.conv.conv.weight",
+  "shape": [
+    2048,
+    1,
+    7
+  ],
+  "dtype": "torch.bfloat16",
+  "tensor_sha256": "467b2148e7ebe82d480605f1f46add83c07c352a074d29e2f676aa4d68fe6bfd",
+  "parameter_count": 14336,
+  "method": {
+    "dc": "sum of coefficients",
+    "alternating": "sum of coefficients times alternating +/-1 signs",
+    "frequency": "absolute rFFT of coefficient vector, zero-padded to2048",
+    "frequency_units": "cycles per discrete step, 0..0.5; no sample-rate or token identity assumed",
+    "frequency_rms_gain": "coefficient L2 norm by Parseval",
+    "strong_dc_cancellation_cutoff": 0.1,
+    "flat_ripple_cutoff": 1e-06
+  },
+  "metrics": {
+    "filters": 2048,
+    "tap_count": 7,
+    "zero_filters": 0,
+    "flat_magnitude_filters": 0,
+    "nonflat_filters": 2048,
+    "positive_dc": 1001,
+    "negative_dc": 1047,
+    "exact_zero_dc": 0,
+    "dc_signed_gain": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        -0.3070812225341797,
+        -0.18282196044921875,
+        -0.15462288856506348,
+        -0.12934958934783936,
+        -0.05005455017089844,
+        0.12667059898376465,
+        0.15251331329345702,
+        0.18653015136718726,
+        0.39599609375
+      ]
+    },
+    "dc_absolute_gain": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        4.3728389850589095e-36,
+        0.02681332767009735,
+        0.0663966029882431,
+        0.10476839542388916,
+        0.12790346145629883,
+        0.14280039072036743,
+        0.16162071228027344,
+        0.22535339355468748,
+        0.39599609375
+      ]
+    },
+    "coefficient_l1": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        3.0609872895412367e-35,
+        0.06703922271728516,
+        0.08415415287017822,
+        0.11694645881652832,
+        0.13669633865356445,
+        0.14853954315185547,
+        0.169932746887207,
+        0.24646606445312497,
+        0.39599609375
+      ]
+    },
+    "coefficient_l2": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        1.1569444477793964e-35,
+        0.042480396367686954,
+        0.0566196028625589,
+        0.08607848897501773,
+        0.11067623270986347,
+        0.1232340366942887,
+        0.13349020544931217,
+        0.1411433001875855,
+        0.17743203914103028
+      ]
+    },
+    "dc_to_l1_active": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        0.004361626818295997,
+        0.2804578544459791,
+        0.7072847740318294,
+        0.9011413470045955,
+        0.9570106502349538,
+        0.9877074247664557,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "dc_to_frequency_rms_active": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        0.006501697979879067,
+        0.4594559979469633,
+        0.9252034884571692,
+        1.0605601746965312,
+        1.1273352114774928,
+        1.2185337038813941,
+        2.0782013013572804,
+        2.3250116314021256,
+        2.560824149208211
+      ]
+    },
+    "alternating_to_frequency_rms_active": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        0.0038591198123625603,
+        0.045002597007753664,
+        0.2353877586198441,
+        0.8002279507576421,
+        0.8893549380295445,
+        0.9515477169726159,
+        1.0566605556031021,
+        1.1912020925273898,
+        1.5154720193380118
+      ]
+    },
+    "dc_to_grid_peak_active": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        0.0046577413612310095,
+        0.34393919885822766,
+        0.846062404832959,
+        0.9868629242601775,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "strong_dc_cancellation_filters": 8,
+    "dc_below_frequency_rms": 236,
+    "alternating_gain_exceeds_dc": 211,
+    "dc_at_least_99pct_of_grid_peak_nonflat": 1497,
+    "grid_peak_frequency_nonflat": {
+      "count": 2048,
+      "probabilities": [
+        0,
+        0.01,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        0.99,
+        1
+      ],
+      "quantiles": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0821533203125,
+        0.4487060546874998,
+        0.5,
+        0.5
+      ]
+    },
+    "grid_peak_bands_nonflat": {
+      "0_to_0.125": 1763,
+      "0.125_to_0.25": 93,
+      "0.25_to_0.375": 41,
+      "0.375_to_0.5_inclusive": 151
+    },
+    "fraction_bank_squared_weight_norm_by_stored_tap": [
+      0.0034830626914506796,
+      0.003626247702230472,
+      0.004407016155135266,
+      0.007787028682458934,
+      0.04764153095714682,
+      0.9129734331480807,
+      0.020081680663497144
+    ],
+    "mean_absolute_share_by_stored_tap_active": [
+      0.019705846734000904,
+      0.02001712904028202,
+      0.023573973463594116,
+      0.035191921613372916,
+      0.11402617165964879,
+      0.7281228269972948,
+      0.05936213049180717
+    ],
+    "dominant_absolute_tap_counts_active": [
+      18,
+      8,
+      2,
+      6,
+      110,
+      1850,
+      54
+    ],
+    "parseval_max_absolute_error": 6.938893903907228e-18,
+    "tap_reversal_max_magnitude_error": 1.6653345369377348e-16
+  },
+  "numeric_examples_not_defect_candidates": [
+    {
+      "filter_index": 172,
+      "coefficients_in_stored_order": [
+        0.0009765625,
+        0.0002574920654296875,
+        -7.009506225585938e-05,
+        -0.00019168853759765625,
+        -0.0023193359375,
+        0.0093994140625,
+        0.16796875
+      ],
+      "dc_signed_gain": 0.17602109909057617,
+      "alternating_signed_gain": 0.1570906639099121,
+      "dc_to_l1": 0.9715082019848987,
+      "grid_peak_frequency": 0.0
+    },
+    {
+      "filter_index": 953,
+      "coefficients_in_stored_order": [
+        5.984306335449219e-05,
+        -0.000232696533203125,
+        -0.000431060791015625,
+        -0.00127410888671875,
+        -0.0081787109375,
+        -0.034912109375,
+        0.042236328125
+      ],
+      "dc_signed_gain": -0.002732515335083008,
+      "alternating_signed_gain": 0.07010531425476074,
+      "dc_to_l1": 0.03129138033183443,
+      "grid_peak_frequency": 0.5
+    },
+    {
+      "filter_index": 1135,
+      "coefficients_in_stored_order": [
+        -0.0311279296875,
+        -0.037841796875,
+        -0.01806640625,
+        -0.01544189453125,
+        -0.02001953125,
+        -0.037841796875,
+        -0.024169921875
+      ],
+      "dc_signed_gain": -0.18450927734375,
+      "alternating_signed_gain": -0.00225830078125,
+      "dc_to_l1": 1.0,
+      "grid_peak_frequency": 0.0
+    },
+    {
+      "filter_index": 1173,
+      "coefficients_in_stored_order": [
+        -0.007110595703125,
+        -0.01190185546875,
+        -0.01287841796875,
+        -0.017822265625,
+        -0.0196533203125,
+        -0.0224609375,
+        -0.0113525390625
+      ],
+      "dc_signed_gain": -0.103179931640625,
+      "alternating_signed_gain": 0.001190185546875,
+      "dc_to_l1": 1.0,
+      "grid_peak_frequency": 0.0
+    },
+    {
+      "filter_index": 1183,
+      "coefficients_in_stored_order": [
+        0.000904083251953125,
+        0.002105712890625,
+        0.00107574462890625,
+        0.000652313232421875,
+        -0.0079345703125,
+        -0.01300048828125,
+        -0.1767578125
+      ],
+      "dc_signed_gain": -0.19295501708984375,
+      "alternating_signed_gain": -0.1724700927734375,
+      "dc_to_l1": 0.9531903667131497,
+      "grid_peak_frequency": 0.0712890625
+    },
+    {
+      "filter_index": 1231,
+      "coefficients_in_stored_order": [
+        -0.009033203125,
+        -0.00897216796875,
+        -0.00927734375,
+        -0.00946044921875,
+        -0.0027313232421875,
+        0.052978515625,
+        -0.017822265625
+      ],
+      "dc_signed_gain": -0.0043182373046875,
+      "alternating_signed_gain": -0.0734100341796875,
+      "dc_to_l1": 0.0391587103915871,
+      "grid_peak_frequency": 0.5
+    },
+    {
+      "filter_index": 1540,
+      "coefficients_in_stored_order": [
+        -0.00341796875,
+        -0.003021240234375,
+        0.00102996826171875,
+        -0.0019073486328125,
+        -0.008056640625,
+        -0.048583984375,
+        0.06787109375
+      ],
+      "dc_signed_gain": 0.00391387939453125,
+      "alternating_signed_gain": 0.11093902587890625,
+      "dc_to_l1": 0.029232434896575305,
+      "grid_peak_frequency": 0.470703125
+    },
+    {
+      "filter_index": 1720,
+      "coefficients_in_stored_order": [
+        -0.000591278076171875,
+        0.0006256103515625,
+        -0.0017547607421875,
+        0.0005645751953125,
+        0.00531005859375,
+        0.07666015625,
+        -0.08154296875
+      ],
+      "dc_signed_gain": -0.000728607177734375,
+      "alternating_signed_gain": -0.15642929077148438,
+      "dc_to_l1": 0.004361626818295997,
+      "grid_peak_frequency": 0.5
+    },
+    {
+      "filter_index": 1799,
+      "coefficients_in_stored_order": [
+        -0.0191650390625,
+        -0.018310546875,
+        -0.0223388671875,
+        -0.0264892578125,
+        -0.03125,
+        -0.03271484375,
+        -0.0155029296875
+      ],
+      "dc_signed_gain": -0.165771484375,
+      "alternating_signed_gain": -0.0107421875,
+      "dc_to_l1": 1.0,
+      "grid_peak_frequency": 0.0
+    },
+    {
+      "filter_index": 2047,
+      "coefficients_in_stored_order": [
+        0.017333984375,
+        0.0205078125,
+        0.0245361328125,
+        0.0322265625,
+        0.0390625,
+        0.023681640625,
+        0.01312255859375
+      ],
+      "dc_signed_gain": 0.17047119140625,
+      "alternating_signed_gain": 0.01763916015625,
+      "dc_to_l1": 1.0,
+      "grid_peak_frequency": 0.0
+    }
+  ],
+  "elapsed_s": 0.4222896620631218,
+  "checkpoint_sha256_before": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "checkpoint_sha256_after": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "arrays_sha256": "1034ee201920c49d81cce1f7cf22a299ad62863125cd449349693b1d80dc4165",
+  "limits": [
+    "Tap time orientation is not inferred; reversing real taps preserves magnitude response",
+    "Per-filter response does not identify which preceding projection block is its input",
+    "Gates, nonlinearities, normalization, boundary padding, residuals and actual sequences were not evaluated",
+    "No claim that the embedding-family component is constant in real use, or that repetition is removed",
+    "Numeric thresholds are descriptive, not criteria for defects or weight edits"
+  ]
+}

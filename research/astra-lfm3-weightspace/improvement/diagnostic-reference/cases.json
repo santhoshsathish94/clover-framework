@@ -1,0 +1,1826 @@
+[
+  {
+    "id": "discovery-000-r0",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 67\nB. 66\nC. 68\nD. 92\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 67,
+    "choices": [
+      67,
+      66,
+      68,
+      92
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-000-r1",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 92\nB. 67\nC. 66\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 67,
+    "choices": [
+      92,
+      67,
+      66,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-000-r2",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 68\nB. 92\nC. 67\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 67,
+    "choices": [
+      68,
+      92,
+      67,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-000-r3",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 66\nB. 68\nC. 92\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 67,
+    "choices": [
+      66,
+      68,
+      92,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-001-r0",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 431?\nA. 431\nB. 430\nC. 432\nD. 455\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 431,
+    "choices": [
+      431,
+      430,
+      432,
+      455
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-001-r1",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 431?\nA. 455\nB. 431\nC. 430\nD. 432\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 431,
+    "choices": [
+      455,
+      431,
+      430,
+      432
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-001-r2",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 431?\nA. 432\nB. 455\nC. 431\nD. 430\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 431,
+    "choices": [
+      432,
+      455,
+      431,
+      430
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-001-r3",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 431?\nA. 430\nB. 432\nC. 455\nD. 431\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 431,
+    "choices": [
+      430,
+      432,
+      455,
+      431
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-002-r0",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1566?\nA. 1566\nB. 1565\nC. 1567\nD. 1624\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1566,
+    "choices": [
+      1566,
+      1565,
+      1567,
+      1624
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-002-r1",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1566?\nA. 1624\nB. 1566\nC. 1565\nD. 1567\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1566,
+    "choices": [
+      1624,
+      1566,
+      1565,
+      1567
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-002-r2",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1566?\nA. 1567\nB. 1624\nC. 1566\nD. 1565\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1566,
+    "choices": [
+      1567,
+      1624,
+      1566,
+      1565
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-002-r3",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1566?\nA. 1565\nB. 1567\nC. 1624\nD. 1566\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1566,
+    "choices": [
+      1565,
+      1567,
+      1624,
+      1566
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-003-r0",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 32?\nA. 32\nB. 31\nC. 33\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 32,
+    "choices": [
+      32,
+      31,
+      33,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-003-r1",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 32?\nA. 51\nB. 32\nC. 31\nD. 33\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 32,
+    "choices": [
+      51,
+      32,
+      31,
+      33
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-003-r2",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 32?\nA. 33\nB. 51\nC. 32\nD. 31\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 32,
+    "choices": [
+      33,
+      51,
+      32,
+      31
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-003-r3",
+    "group": 3,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 32?\nA. 31\nB. 33\nC. 51\nD. 32\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 32,
+    "choices": [
+      31,
+      33,
+      51,
+      32
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-004-r0",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 138?\nA. 138\nB. 137\nC. 139\nD. 190\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 138,
+    "choices": [
+      138,
+      137,
+      139,
+      190
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-004-r1",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 138?\nA. 190\nB. 138\nC. 137\nD. 139\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 138,
+    "choices": [
+      190,
+      138,
+      137,
+      139
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-004-r2",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 138?\nA. 139\nB. 190\nC. 138\nD. 137\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 138,
+    "choices": [
+      139,
+      190,
+      138,
+      137
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-004-r3",
+    "group": 4,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 138?\nA. 137\nB. 139\nC. 190\nD. 138\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 138,
+    "choices": [
+      137,
+      139,
+      190,
+      138
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-005-r0",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 445?\nA. 445\nB. 444\nC. 446\nD. 462\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 445,
+    "choices": [
+      445,
+      444,
+      446,
+      462
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-005-r1",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 445?\nA. 462\nB. 445\nC. 444\nD. 446\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 445,
+    "choices": [
+      462,
+      445,
+      444,
+      446
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-005-r2",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 445?\nA. 446\nB. 462\nC. 445\nD. 444\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 445,
+    "choices": [
+      446,
+      462,
+      445,
+      444
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-005-r3",
+    "group": 5,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 445?\nA. 444\nB. 446\nC. 462\nD. 445\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 445,
+    "choices": [
+      444,
+      446,
+      462,
+      445
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-006-r0",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1428?\nA. 1428\nB. 1427\nC. 1429\nD. 1445\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1428,
+    "choices": [
+      1428,
+      1427,
+      1429,
+      1445
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-006-r1",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1428?\nA. 1445\nB. 1428\nC. 1427\nD. 1429\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1428,
+    "choices": [
+      1445,
+      1428,
+      1427,
+      1429
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-006-r2",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1428?\nA. 1429\nB. 1445\nC. 1428\nD. 1427\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1428,
+    "choices": [
+      1429,
+      1445,
+      1428,
+      1427
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-006-r3",
+    "group": 6,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1428?\nA. 1427\nB. 1429\nC. 1445\nD. 1428\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1428,
+    "choices": [
+      1427,
+      1429,
+      1445,
+      1428
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-007-r0",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 67\nB. 66\nC. 68\nD. 125\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 67,
+    "choices": [
+      67,
+      66,
+      68,
+      125
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-007-r1",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 125\nB. 67\nC. 66\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 67,
+    "choices": [
+      125,
+      67,
+      66,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-007-r2",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 68\nB. 125\nC. 67\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 67,
+    "choices": [
+      68,
+      125,
+      67,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-007-r3",
+    "group": 7,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 67?\nA. 66\nB. 68\nC. 125\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 67,
+    "choices": [
+      66,
+      68,
+      125,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-008-r0",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 70?\nA. 70\nB. 69\nC. 71\nD. 101\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 70,
+    "choices": [
+      70,
+      69,
+      71,
+      101
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-008-r1",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 70?\nA. 101\nB. 70\nC. 69\nD. 71\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 70,
+    "choices": [
+      101,
+      70,
+      69,
+      71
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-008-r2",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 70?\nA. 71\nB. 101\nC. 70\nD. 69\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 70,
+    "choices": [
+      71,
+      101,
+      70,
+      69
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-008-r3",
+    "group": 8,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 70?\nA. 69\nB. 71\nC. 101\nD. 70\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 70,
+    "choices": [
+      69,
+      71,
+      101,
+      70
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-009-r0",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 490?\nA. 490\nB. 489\nC. 491\nD. 504\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 490,
+    "choices": [
+      490,
+      489,
+      491,
+      504
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-009-r1",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 490?\nA. 504\nB. 490\nC. 489\nD. 491\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 490,
+    "choices": [
+      504,
+      490,
+      489,
+      491
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-009-r2",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 490?\nA. 491\nB. 504\nC. 490\nD. 489\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 490,
+    "choices": [
+      491,
+      504,
+      490,
+      489
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-009-r3",
+    "group": 9,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 490?\nA. 489\nB. 491\nC. 504\nD. 490\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 490,
+    "choices": [
+      489,
+      491,
+      504,
+      490
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-010-r0",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1848?\nA. 1848\nB. 1847\nC. 1849\nD. 1881\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1848,
+    "choices": [
+      1848,
+      1847,
+      1849,
+      1881
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-010-r1",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1848?\nA. 1881\nB. 1848\nC. 1847\nD. 1849\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1848,
+    "choices": [
+      1881,
+      1848,
+      1847,
+      1849
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-010-r2",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1848?\nA. 1849\nB. 1881\nC. 1848\nD. 1847\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1848,
+    "choices": [
+      1849,
+      1881,
+      1848,
+      1847
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-010-r3",
+    "group": 10,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 1848?\nA. 1847\nB. 1849\nC. 1881\nD. 1848\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1848,
+    "choices": [
+      1847,
+      1849,
+      1881,
+      1848
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-011-r0",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 68?\nA. 68\nB. 67\nC. 69\nD. 109\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 68,
+    "choices": [
+      68,
+      67,
+      69,
+      109
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-011-r1",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 68?\nA. 109\nB. 68\nC. 67\nD. 69\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 68,
+    "choices": [
+      109,
+      68,
+      67,
+      69
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-011-r2",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 68?\nA. 69\nB. 109\nC. 68\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 68,
+    "choices": [
+      69,
+      109,
+      68,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-011-r3",
+    "group": 11,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 68?\nA. 67\nB. 69\nC. 109\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 68,
+    "choices": [
+      67,
+      69,
+      109,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-012-r0",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 132?\nA. 132\nB. 131\nC. 133\nD. 180\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 132,
+    "choices": [
+      132,
+      131,
+      133,
+      180
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-012-r1",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 132?\nA. 180\nB. 132\nC. 131\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 132,
+    "choices": [
+      180,
+      132,
+      131,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-012-r2",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 132?\nA. 133\nB. 180\nC. 132\nD. 131\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 132,
+    "choices": [
+      133,
+      180,
+      132,
+      131
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-012-r3",
+    "group": 12,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 132?\nA. 131\nB. 133\nC. 180\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 132,
+    "choices": [
+      131,
+      133,
+      180,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-013-r0",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 234?\nA. 234\nB. 233\nC. 235\nD. 301\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 234,
+    "choices": [
+      234,
+      233,
+      235,
+      301
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-013-r1",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 234?\nA. 301\nB. 234\nC. 233\nD. 235\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 234,
+    "choices": [
+      301,
+      234,
+      233,
+      235
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-013-r2",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 234?\nA. 235\nB. 301\nC. 234\nD. 233\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 234,
+    "choices": [
+      235,
+      301,
+      234,
+      233
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-013-r3",
+    "group": 13,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 234?\nA. 233\nB. 235\nC. 301\nD. 234\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 234,
+    "choices": [
+      233,
+      235,
+      301,
+      234
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-014-r0",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 2294?\nA. 2294\nB. 2293\nC. 2295\nD. 2325\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2294,
+    "choices": [
+      2294,
+      2293,
+      2295,
+      2325
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-014-r1",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 2294?\nA. 2325\nB. 2294\nC. 2293\nD. 2295\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2294,
+    "choices": [
+      2325,
+      2294,
+      2293,
+      2295
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-014-r2",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 2294?\nA. 2295\nB. 2325\nC. 2294\nD. 2293\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2294,
+    "choices": [
+      2295,
+      2325,
+      2294,
+      2293
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-014-r3",
+    "group": 14,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 2294?\nA. 2293\nB. 2295\nC. 2325\nD. 2294\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2294,
+    "choices": [
+      2293,
+      2295,
+      2325,
+      2294
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-015-r0",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 44?\nA. 44\nB. 43\nC. 45\nD. 107\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 44,
+    "choices": [
+      44,
+      43,
+      45,
+      107
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-015-r1",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 44?\nA. 107\nB. 44\nC. 43\nD. 45\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 44,
+    "choices": [
+      107,
+      44,
+      43,
+      45
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-015-r2",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 44?\nA. 45\nB. 107\nC. 44\nD. 43\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 44,
+    "choices": [
+      45,
+      107,
+      44,
+      43
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-015-r3",
+    "group": 15,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 44?\nA. 43\nB. 45\nC. 107\nD. 44\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 44,
+    "choices": [
+      43,
+      45,
+      107,
+      44
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-016-r0",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 106?\nA. 106\nB. 105\nC. 107\nD. 164\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 106,
+    "choices": [
+      106,
+      105,
+      107,
+      164
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-016-r1",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 106?\nA. 164\nB. 106\nC. 105\nD. 107\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 106,
+    "choices": [
+      164,
+      106,
+      105,
+      107
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-016-r2",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 106?\nA. 107\nB. 164\nC. 106\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 106,
+    "choices": [
+      107,
+      164,
+      106,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-016-r3",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 106?\nA. 105\nB. 107\nC. 164\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 106,
+    "choices": [
+      105,
+      107,
+      164,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-017-r0",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 321?\nA. 321\nB. 320\nC. 322\nD. 371\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 321,
+    "choices": [
+      321,
+      320,
+      322,
+      371
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-017-r1",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 321?\nA. 371\nB. 321\nC. 320\nD. 322\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 321,
+    "choices": [
+      371,
+      321,
+      320,
+      322
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-017-r2",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 321?\nA. 322\nB. 371\nC. 321\nD. 320\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 321,
+    "choices": [
+      322,
+      371,
+      321,
+      320
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-017-r3",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 321?\nA. 320\nB. 322\nC. 371\nD. 321\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 321,
+    "choices": [
+      320,
+      322,
+      371,
+      321
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-018-r0",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3240?\nA. 3240\nB. 3239\nC. 3241\nD. 3294\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3240,
+    "choices": [
+      3240,
+      3239,
+      3241,
+      3294
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-018-r1",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3240?\nA. 3294\nB. 3240\nC. 3239\nD. 3241\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3240,
+    "choices": [
+      3294,
+      3240,
+      3239,
+      3241
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-018-r2",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3240?\nA. 3241\nB. 3294\nC. 3240\nD. 3239\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3240,
+    "choices": [
+      3241,
+      3294,
+      3240,
+      3239
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-018-r3",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3240?\nA. 3239\nB. 3241\nC. 3294\nD. 3240\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3240,
+    "choices": [
+      3239,
+      3241,
+      3294,
+      3240
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-019-r0",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 43?\nA. 43\nB. 42\nC. 44\nD. 65\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 43,
+    "choices": [
+      43,
+      42,
+      44,
+      65
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-019-r1",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 43?\nA. 65\nB. 43\nC. 42\nD. 44\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 43,
+    "choices": [
+      65,
+      43,
+      42,
+      44
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-019-r2",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 43?\nA. 44\nB. 65\nC. 43\nD. 42\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 43,
+    "choices": [
+      44,
+      65,
+      43,
+      42
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-019-r3",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 43?\nA. 42\nB. 44\nC. 65\nD. 43\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 43,
+    "choices": [
+      42,
+      44,
+      65,
+      43
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-020-r0",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 92?\nA. 92\nB. 91\nC. 93\nD. 139\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 92,
+    "choices": [
+      92,
+      91,
+      93,
+      139
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-020-r1",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 92?\nA. 139\nB. 92\nC. 91\nD. 93\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 92,
+    "choices": [
+      139,
+      92,
+      91,
+      93
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-020-r2",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 92?\nA. 93\nB. 139\nC. 92\nD. 91\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 92,
+    "choices": [
+      93,
+      139,
+      92,
+      91
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-020-r3",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 92?\nA. 91\nB. 93\nC. 139\nD. 92\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 92,
+    "choices": [
+      91,
+      93,
+      139,
+      92
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-021-r0",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 353?\nA. 353\nB. 352\nC. 354\nD. 378\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 353,
+    "choices": [
+      353,
+      352,
+      354,
+      378
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-021-r1",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 353?\nA. 378\nB. 353\nC. 352\nD. 354\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 353,
+    "choices": [
+      378,
+      353,
+      352,
+      354
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-021-r2",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 353?\nA. 354\nB. 378\nC. 353\nD. 352\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 353,
+    "choices": [
+      354,
+      378,
+      353,
+      352
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-021-r3",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 353?\nA. 352\nB. 354\nC. 378\nD. 353\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 353,
+    "choices": [
+      352,
+      354,
+      378,
+      353
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-022-r0",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3315?\nA. 3315\nB. 3314\nC. 3316\nD. 3354\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3315,
+    "choices": [
+      3315,
+      3314,
+      3316,
+      3354
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-022-r1",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3315?\nA. 3354\nB. 3315\nC. 3314\nD. 3316\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3315,
+    "choices": [
+      3354,
+      3315,
+      3314,
+      3316
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-022-r2",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3315?\nA. 3316\nB. 3354\nC. 3315\nD. 3314\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3315,
+    "choices": [
+      3316,
+      3354,
+      3315,
+      3314
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-022-r3",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 3315?\nA. 3314\nB. 3316\nC. 3354\nD. 3315\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3315,
+    "choices": [
+      3314,
+      3316,
+      3354,
+      3315
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-023-r0",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 54?\nA. 54\nB. 53\nC. 55\nD. 95\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 54,
+    "choices": [
+      54,
+      53,
+      55,
+      95
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-023-r1",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 54?\nA. 95\nB. 54\nC. 53\nD. 55\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 54,
+    "choices": [
+      95,
+      54,
+      53,
+      55
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-023-r2",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 54?\nA. 55\nB. 95\nC. 54\nD. 53\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 54,
+    "choices": [
+      55,
+      95,
+      54,
+      53
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  },
+  {
+    "id": "discovery-023-r3",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "Which option is the number 54?\nA. 53\nB. 55\nC. 95\nD. 54\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 54,
+    "choices": [
+      53,
+      55,
+      95,
+      54
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq",
+    "condition": "diagnostic_number_binding_reference"
+  }
+]

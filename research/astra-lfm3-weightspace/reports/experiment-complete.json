@@ -1,0 +1,254 @@
+{
+  "no_op": {
+    "cases_exact": 112,
+    "text_tokens_logits_and_speech_identical": true,
+    "unchanged_required_arrays": 1912,
+    "changed_downstream_arrays": 0,
+    "upstream_identical": true
+  },
+  "arms": [
+    {
+      "name": "H1-alpha-05",
+      "primary": false,
+      "groups": {
+        "discovery:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.94346226810012
+        },
+        "regression:audio": {
+          "cases": 2,
+          "scored_cases": 2,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 0.68953426706139
+        },
+        "regression:audio_asr": {
+          "cases": 6,
+          "scored_cases": 6,
+          "correct": 1,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 14.272761435015127,
+          "corpus_word_error_rate": 0.07,
+          "asr_exact": 1
+        },
+        "regression:speech": {
+          "cases": 4,
+          "scored_cases": 0,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 10.246814948040992,
+          "speech_waveforms_nonempty": 4,
+          "speech_intelligibility": "not independently evaluated"
+        },
+        "regression:text": {
+          "cases": 16,
+          "scored_cases": 16,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 3.9607582960743457
+        },
+        "regression:video": {
+          "cases": 8,
+          "scored_cases": 8,
+          "correct": 8,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.532576435012743
+        },
+        "regression:vision": {
+          "cases": 12,
+          "scored_cases": 12,
+          "correct": 12,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 4.522871168795973
+        },
+        "validation:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 13,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.839311940013431
+        }
+      },
+      "isolation": {
+        "unchanged_required_arrays": 1680,
+        "changed_downstream_arrays": 211,
+        "upstream_identical": true
+      },
+      "results_sha256": "843da439b765693d1a5690912f4e47a36015175f22a534f03c73ec082309c8bb"
+    },
+    {
+      "name": "H1-alpha-10",
+      "primary": true,
+      "groups": {
+        "discovery:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.990138663793914
+        },
+        "regression:audio": {
+          "cases": 2,
+          "scored_cases": 2,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 0.6999873159220442
+        },
+        "regression:audio_asr": {
+          "cases": 6,
+          "scored_cases": 6,
+          "correct": 1,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 14.470311716780998,
+          "corpus_word_error_rate": 0.07,
+          "asr_exact": 1
+        },
+        "regression:speech": {
+          "cases": 4,
+          "scored_cases": 0,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 10.794201392796822,
+          "speech_waveforms_nonempty": 4,
+          "speech_intelligibility": "not independently evaluated"
+        },
+        "regression:text": {
+          "cases": 16,
+          "scored_cases": 16,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 4.032700665993616
+        },
+        "regression:video": {
+          "cases": 8,
+          "scored_cases": 8,
+          "correct": 8,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.555172016029246
+        },
+        "regression:vision": {
+          "cases": 12,
+          "scored_cases": 12,
+          "correct": 12,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 4.590151142212562
+        },
+        "validation:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 13,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.970367978909053
+        }
+      },
+      "isolation": {
+        "unchanged_required_arrays": 1680,
+        "changed_downstream_arrays": 227,
+        "upstream_identical": true
+      },
+      "results_sha256": "65b65694987adc349134896c5dc44b56c89ddc187ac41a225a4947aa7fc12cd5"
+    },
+    {
+      "name": "H1-alpha-20",
+      "primary": false,
+      "groups": {
+        "discovery:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.942089039832354
+        },
+        "regression:audio": {
+          "cases": 2,
+          "scored_cases": 2,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 0.6924196149921045
+        },
+        "regression:audio_asr": {
+          "cases": 6,
+          "scored_cases": 6,
+          "correct": 1,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 14.417193238041364,
+          "corpus_word_error_rate": 0.07,
+          "asr_exact": 1
+        },
+        "regression:speech": {
+          "cases": 4,
+          "scored_cases": 0,
+          "correct": 0,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 10.60784195002634,
+          "speech_waveforms_nonempty": 4,
+          "speech_intelligibility": "not independently evaluated"
+        },
+        "regression:text": {
+          "cases": 16,
+          "scored_cases": 16,
+          "correct": 15,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 3.9529817199800164
+        },
+        "regression:video": {
+          "cases": 8,
+          "scored_cases": 8,
+          "correct": 8,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.538325501140207
+        },
+        "regression:vision": {
+          "cases": 12,
+          "scored_cases": 12,
+          "correct": 12,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 4.574224329786375
+        },
+        "validation:text": {
+          "cases": 32,
+          "scored_cases": 32,
+          "correct": 13,
+          "errors": 0,
+          "limit_hits": 0,
+          "generation_s": 7.834007497993298
+        }
+      },
+      "isolation": {
+        "unchanged_required_arrays": 1680,
+        "changed_downstream_arrays": 231,
+        "upstream_identical": true
+      },
+      "results_sha256": "6e47a83689f555fdfd78789db70e64138ea853b4e4b83fe3db68d57069639166"
+    }
+  ],
+  "elapsed_s": 385.25004332198296,
+  "one_intervention_at_a_time": true,
+  "all_experimental_copies_reverted": true
+}

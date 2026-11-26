@@ -1,0 +1,17 @@
+{
+  "anchor_exits": 0,
+  "checkpoint_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+  "end_reason": "eos",
+  "forced_exits": 0,
+  "generation_steps": 15,
+  "latent_spans": 0,
+  "latent_steps": 0,
+  "output": "</think>The capital of Italy is Rome.\n\n**Final Answer: Rome**<|im_end|>",
+  "python_calls": 0,
+  "question": "Which city is the capital of Italy?",
+  "search_calls": 0,
+  "seconds": 3.0201256275177,
+  "tool_requests": 0,
+  "turns": 1,
+  "variant": "original"
+}

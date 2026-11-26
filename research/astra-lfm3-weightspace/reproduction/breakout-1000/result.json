@@ -1,0 +1,51 @@
+{
+  "measured": {
+    "episodes": 1000,
+    "mean": 502.88,
+    "se": 7.747379136423071,
+    "max": 821.0,
+    "min": 1.0,
+    "mean_length": 7188.392,
+    "hit_cap": 517
+  },
+  "zero_weight_control": {
+    "episodes": 100,
+    "mean": 0.41,
+    "se": 0.06210938542262158,
+    "max": 3.0,
+    "min": 0.0,
+    "mean_length": 10.16,
+    "hit_cap": 0
+  },
+  "published_hand": {
+    "mean": 517.411,
+    "se": 7.416952829044303,
+    "episodes": 1000,
+    "max": 800.0,
+    "mean_length": 7417.202
+  },
+  "published_ppo100_best_not_reproduced": {
+    "mean": 15.779,
+    "se": 0.09258904757978523,
+    "episodes": 1000,
+    "max": 17.0,
+    "mean_length": 178.42
+  },
+  "published_ppo500_best_not_reproduced": {
+    "mean": 25.344,
+    "se": 0.12106329055630498,
+    "episodes": 1000,
+    "max": 29.0,
+    "mean_length": 281.852
+  },
+  "elapsed_s": 133.0038173670182,
+  "reference_unchanged": true,
+  "engine": {
+    "version": "1.0.15",
+    "source_ast_matches_published_prompt": true,
+    "installed_source_sha256": "35fd842751f4314a427623da24c3ca36dc07dfcbbd979e9c72c1079b933bcf5d",
+    "prompt_sha256": "766ee251d59a7893ed86d5eaea99ddb847529ab2092afc69f90f55fb0a22e876"
+  },
+  "scope": "Independent behavioral evaluation of an exactly reconstructed published weight program, not replay of the original editor or PPO training.",
+  "difference_in_combined_standard_errors": -1.3548279339547618
+}

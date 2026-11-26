@@ -1,0 +1,29 @@
+{
+  "comparisons": [
+    {
+      "end_reasons": [
+        "eos",
+        "eos"
+      ],
+      "latent_steps": [
+        0,
+        0
+      ],
+      "outputs_equal": true,
+      "question": "What is 17 plus 26?"
+    },
+    {
+      "end_reasons": [
+        "eos",
+        "eos"
+      ],
+      "latent_steps": [
+        0,
+        0
+      ],
+      "outputs_equal": true,
+      "question": "Which city is the capital of Italy?"
+    }
+  ],
+  "gate_reopened": false
+}

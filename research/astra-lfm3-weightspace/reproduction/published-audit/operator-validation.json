@@ -1,0 +1,24 @@
+{
+  "measured": {
+    "15": {
+      "fitted_alpha": 6.000321105303014,
+      "post_edit_projection_signed_ratio": -5.000321105303014,
+      "alpha6_formula_relative_error": 0.0023480019428142717,
+      "orthogonal_change_fraction": 0.002336677108446956,
+      "unselected_columns_bit_identical": true,
+      "inactive_selected_neurons_give_zero_delta": true,
+      "alpha6_prediction_supported_within_0.02": true
+    },
+    "19": {
+      "fitted_alpha": 6.000173248681915,
+      "post_edit_projection_signed_ratio": -5.000173248681916,
+      "alpha6_formula_relative_error": 0.0029439001476156564,
+      "orthogonal_change_fraction": 0.0029356989456286895,
+      "unselected_columns_bit_identical": true,
+      "inactive_selected_neurons_give_zero_delta": true,
+      "alpha6_prediction_supported_within_0.02": true
+    }
+  },
+  "hypothesis": "The exact published patch over-subtracts the layer-specific direction at alpha6 on 64 columns, reversing its component near -5x.",
+  "qualification": "Measured local linear operator; not by itself proof of reduced generation loops."
+}

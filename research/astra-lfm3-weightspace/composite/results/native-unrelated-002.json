@@ -1,0 +1,116 @@
+{
+  "activation_arrays": 16,
+  "composite": {
+    "activation_keys": [
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "D",
+    "correct": true,
+    "generated_slots": 2,
+    "generation_s": 0.3285823919577524,
+    "gold": "C",
+    "gold_margin": 18.359375,
+    "hit_token_limit": false,
+    "id": "unrelated-002",
+    "input_sha256": "cbfae9aecd73cdb7e92ace40dc3b74a279452ef7127245c47d41fd752f83e64d",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        50
+      ],
+      "input_ids": [
+        1,
+        50
+      ]
+    },
+    "letter_logits": [
+      -5.65625,
+      -4.28125,
+      14.875,
+      -3.484375
+    ],
+    "max_new_tokens": 24,
+    "modality": "text",
+    "prediction": "C",
+    "restricted_prediction": "C",
+    "split": "regression",
+    "text": "C",
+    "tokens": [
+      43,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "unrelated-002",
+  "modality": "text",
+  "reference": {
+    "activation_keys": [
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "D",
+    "correct": true,
+    "generated_slots": 2,
+    "generation_s": 0.32598459406290203,
+    "gold": "C",
+    "gold_margin": 18.359375,
+    "hit_token_limit": false,
+    "id": "unrelated-002",
+    "input_sha256": "cbfae9aecd73cdb7e92ace40dc3b74a279452ef7127245c47d41fd752f83e64d",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        50
+      ],
+      "input_ids": [
+        1,
+        50
+      ]
+    },
+    "letter_logits": [
+      -5.65625,
+      -4.28125,
+      14.875,
+      -3.484375
+    ],
+    "max_new_tokens": 24,
+    "modality": "text",
+    "prediction": "C",
+    "restricted_prediction": "C",
+    "split": "regression",
+    "text": "C",
+    "tokens": [
+      43,
+      124900
+    ]
+  }
+}

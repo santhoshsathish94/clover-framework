@@ -1,0 +1,83 @@
+{
+  "cells": {
+    "addition:mcq_gold_A": {
+      "correct": 6,
+      "total": 6
+    },
+    "all:mcq": {
+      "correct": 96,
+      "total": 96
+    },
+    "addition:mcq_gold_B": {
+      "correct": 6,
+      "total": 6
+    },
+    "addition:mcq_gold_C": {
+      "correct": 6,
+      "total": 6
+    },
+    "addition:mcq_gold_D": {
+      "correct": 6,
+      "total": 6
+    },
+    "subtraction:mcq_gold_A": {
+      "correct": 6,
+      "total": 6
+    },
+    "subtraction:mcq_gold_B": {
+      "correct": 6,
+      "total": 6
+    },
+    "subtraction:mcq_gold_C": {
+      "correct": 6,
+      "total": 6
+    },
+    "subtraction:mcq_gold_D": {
+      "correct": 6,
+      "total": 6
+    },
+    "multiplication:mcq_gold_A": {
+      "correct": 6,
+      "total": 6
+    },
+    "multiplication:mcq_gold_B": {
+      "correct": 6,
+      "total": 6
+    },
+    "multiplication:mcq_gold_C": {
+      "correct": 6,
+      "total": 6
+    },
+    "multiplication:mcq_gold_D": {
+      "correct": 6,
+      "total": 6
+    },
+    "selection:mcq_gold_A": {
+      "correct": 6,
+      "total": 6
+    },
+    "selection:mcq_gold_B": {
+      "correct": 6,
+      "total": 6
+    },
+    "selection:mcq_gold_C": {
+      "correct": 6,
+      "total": 6
+    },
+    "selection:mcq_gold_D": {
+      "correct": 6,
+      "total": 6
+    }
+  },
+  "groups_with_rotation_value_disagreement": [],
+  "predicted_letters": {
+    "A": 24,
+    "B": 24,
+    "C": 24,
+    "D": 24
+  },
+  "case_count": 96,
+  "elapsed_s": 29.15817186795175,
+  "scope": "Fresh discovery diagnostic, not held-out validation or a model improvement claim",
+  "original_hashes_verified_before_and_after": true
+}

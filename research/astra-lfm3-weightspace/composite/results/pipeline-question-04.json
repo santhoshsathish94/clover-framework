@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is three quarters of 20?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "f073579a458d16a9439f9eb47e3cc7dfc0f6c8cc92203a77dff5c36788b39af7",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is three quarters of 20?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "4cd0541c1cc26311f5e15f83cecc7a3eb48619873a5463a3a6e6bb34cc584272",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is three quarters of 20?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "What is three quarters of 20?",
+  "composite_correct": false,
+  "composite_s": 0.721966102020815,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "15"
+  ],
+  "id": "question-04",
+  "input": "What is three quarters of 20?",
+  "native_correct": true,
+  "native_text": "15",
+  "reference": "What is three quarters of 20?",
+  "reference_s": 0.4168185140006244,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "6fb24aae05eda872689a0912643405c032e26ee2e14cab6577b7df8d9c69067a",
+    "zero_ncm": false
+  }
+}

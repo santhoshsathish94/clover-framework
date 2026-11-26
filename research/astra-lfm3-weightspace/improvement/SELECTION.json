@@ -1,0 +1,27 @@
+{
+  "source_trial": {
+    "name": "layer22-followup-a4",
+    "layer": 22,
+    "strength": 4.0,
+    "totals": {
+      "arithmetic_mcq": {
+        "correct": 79,
+        "total": 144
+      },
+      "arithmetic_free": {
+        "correct": 32,
+        "total": 36
+      },
+      "selection": {
+        "correct": 48,
+        "total": 48
+      }
+    },
+    "results_sha256": "3cd12690729bf874ef6646de789e03b867060176f5edab50eacfeb893c2341ee",
+    "followup": true,
+    "hypothesis_sha256": "26581fb3093f97a1418d54f5e8bdd8779c7c98875ddbb54a70b927ece3202d54"
+  },
+  "trials_sha256": "0453583c8d35c7b2f59262c79ed93c4fcd3f1f364859a9c8924e4ec627ce4101",
+  "frozen_before_final_evaluation": true,
+  "followup_hypothesis_sha256": "26581fb3093f97a1418d54f5e8bdd8779c7c98875ddbb54a70b927ece3202d54"
+}

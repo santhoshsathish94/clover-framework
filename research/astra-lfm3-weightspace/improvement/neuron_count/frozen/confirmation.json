@@ -1,0 +1,7706 @@
+[
+  {
+    "id": "width-confirmation-000-r0",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 60 plus 57?\nA. 117\nB. 116\nC. 118\nD. 174\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 117,
+    "choices": [
+      117,
+      116,
+      118,
+      174
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-000-r1",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 60 plus 57?\nA. 174\nB. 117\nC. 116\nD. 118\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 117,
+    "choices": [
+      174,
+      117,
+      116,
+      118
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-000-r2",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 60 plus 57?\nA. 118\nB. 174\nC. 117\nD. 116\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 117,
+    "choices": [
+      118,
+      174,
+      117,
+      116
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-000-r3",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 60 plus 57?\nA. 116\nB. 118\nC. 174\nD. 117\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 117,
+    "choices": [
+      116,
+      118,
+      174,
+      117
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-000-free",
+    "group": 0,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 60 plus 57? Reply with just the number.",
+    "gold_value": 117,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-001-r0",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 490 minus 45?\nA. 445\nB. 444\nC. 446\nD. 490\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 445,
+    "choices": [
+      445,
+      444,
+      446,
+      490
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-001-r1",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 490 minus 45?\nA. 490\nB. 445\nC. 444\nD. 446\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 445,
+    "choices": [
+      490,
+      445,
+      444,
+      446
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-001-r2",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 490 minus 45?\nA. 446\nB. 490\nC. 445\nD. 444\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 445,
+    "choices": [
+      446,
+      490,
+      445,
+      444
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-001-r3",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 490 minus 45?\nA. 444\nB. 446\nC. 490\nD. 445\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 445,
+    "choices": [
+      444,
+      446,
+      490,
+      445
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-001-free",
+    "group": 1,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 490 minus 45? Reply with just the number.",
+    "gold_value": 445,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-002-r0",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 40 times 61?\nA. 2440\nB. 2439\nC. 2441\nD. 2501\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2440,
+    "choices": [
+      2440,
+      2439,
+      2441,
+      2501
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-002-r1",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 40 times 61?\nA. 2501\nB. 2440\nC. 2439\nD. 2441\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2440,
+    "choices": [
+      2501,
+      2440,
+      2439,
+      2441
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-002-r2",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 40 times 61?\nA. 2441\nB. 2501\nC. 2440\nD. 2439\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2440,
+    "choices": [
+      2441,
+      2501,
+      2440,
+      2439
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-002-r3",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 40 times 61?\nA. 2439\nB. 2441\nC. 2501\nD. 2440\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2440,
+    "choices": [
+      2439,
+      2441,
+      2501,
+      2440
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-002-free",
+    "group": 2,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 40 times 61? Reply with just the number.",
+    "gold_value": 2440,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-003-r0",
+    "group": 3,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 25 plus 42?\nA. 67\nB. 66\nC. 68\nD. 109\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 67,
+    "choices": [
+      67,
+      66,
+      68,
+      109
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-003-r1",
+    "group": 3,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 25 plus 42?\nA. 109\nB. 67\nC. 66\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 67,
+    "choices": [
+      109,
+      67,
+      66,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-003-r2",
+    "group": 3,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 25 plus 42?\nA. 68\nB. 109\nC. 67\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 67,
+    "choices": [
+      68,
+      109,
+      67,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-003-r3",
+    "group": 3,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 25 plus 42?\nA. 66\nB. 68\nC. 109\nD. 67\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 67,
+    "choices": [
+      66,
+      68,
+      109,
+      67
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-003-free",
+    "group": 3,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 25 plus 42? Reply with just the number.",
+    "gold_value": 67,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-004-r0",
+    "group": 4,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 469 minus 36?\nA. 433\nB. 432\nC. 434\nD. 469\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 433,
+    "choices": [
+      433,
+      432,
+      434,
+      469
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-004-r1",
+    "group": 4,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 469 minus 36?\nA. 469\nB. 433\nC. 432\nD. 434\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 433,
+    "choices": [
+      469,
+      433,
+      432,
+      434
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-004-r2",
+    "group": 4,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 469 minus 36?\nA. 434\nB. 469\nC. 433\nD. 432\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 433,
+    "choices": [
+      434,
+      469,
+      433,
+      432
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-004-r3",
+    "group": 4,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 469 minus 36?\nA. 432\nB. 434\nC. 469\nD. 433\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 433,
+    "choices": [
+      432,
+      434,
+      469,
+      433
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-004-free",
+    "group": 4,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 469 minus 36? Reply with just the number.",
+    "gold_value": 433,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-005-r0",
+    "group": 5,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 59 times 16?\nA. 944\nB. 943\nC. 945\nD. 960\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 944,
+    "choices": [
+      944,
+      943,
+      945,
+      960
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-005-r1",
+    "group": 5,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 59 times 16?\nA. 960\nB. 944\nC. 943\nD. 945\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 944,
+    "choices": [
+      960,
+      944,
+      943,
+      945
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-005-r2",
+    "group": 5,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 59 times 16?\nA. 945\nB. 960\nC. 944\nD. 943\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 944,
+    "choices": [
+      945,
+      960,
+      944,
+      943
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-005-r3",
+    "group": 5,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 59 times 16?\nA. 943\nB. 945\nC. 960\nD. 944\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 944,
+    "choices": [
+      943,
+      945,
+      960,
+      944
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-005-free",
+    "group": 5,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 59 times 16? Reply with just the number.",
+    "gold_value": 944,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-006-r0",
+    "group": 6,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 39 plus 63?\nA. 102\nB. 101\nC. 103\nD. 165\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 102,
+    "choices": [
+      102,
+      101,
+      103,
+      165
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-006-r1",
+    "group": 6,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 39 plus 63?\nA. 165\nB. 102\nC. 101\nD. 103\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 102,
+    "choices": [
+      165,
+      102,
+      101,
+      103
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-006-r2",
+    "group": 6,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 39 plus 63?\nA. 103\nB. 165\nC. 102\nD. 101\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 102,
+    "choices": [
+      103,
+      165,
+      102,
+      101
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-006-r3",
+    "group": 6,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 39 plus 63?\nA. 101\nB. 103\nC. 165\nD. 102\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 102,
+    "choices": [
+      101,
+      103,
+      165,
+      102
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-006-free",
+    "group": 6,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 39 plus 63? Reply with just the number.",
+    "gold_value": 102,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-007-r0",
+    "group": 7,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 33?\nA. 65\nB. 64\nC. 66\nD. 98\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 65,
+    "choices": [
+      65,
+      64,
+      66,
+      98
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-007-r1",
+    "group": 7,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 33?\nA. 98\nB. 65\nC. 64\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 65,
+    "choices": [
+      98,
+      65,
+      64,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-007-r2",
+    "group": 7,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 33?\nA. 66\nB. 98\nC. 65\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 65,
+    "choices": [
+      66,
+      98,
+      65,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-007-r3",
+    "group": 7,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 33?\nA. 64\nB. 66\nC. 98\nD. 65\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 65,
+    "choices": [
+      64,
+      66,
+      98,
+      65
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-007-free",
+    "group": 7,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 33? Reply with just the number.",
+    "gold_value": 65,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-008-r0",
+    "group": 8,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 63?\nA. 3591\nB. 3590\nC. 3592\nD. 3654\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3591,
+    "choices": [
+      3591,
+      3590,
+      3592,
+      3654
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-008-r1",
+    "group": 8,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 63?\nA. 3654\nB. 3591\nC. 3590\nD. 3592\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3591,
+    "choices": [
+      3654,
+      3591,
+      3590,
+      3592
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-008-r2",
+    "group": 8,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 63?\nA. 3592\nB. 3654\nC. 3591\nD. 3590\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3591,
+    "choices": [
+      3592,
+      3654,
+      3591,
+      3590
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-008-r3",
+    "group": 8,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 63?\nA. 3590\nB. 3592\nC. 3654\nD. 3591\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3591,
+    "choices": [
+      3590,
+      3592,
+      3654,
+      3591
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-008-free",
+    "group": 8,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 63? Reply with just the number.",
+    "gold_value": 3591,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-009-r0",
+    "group": 9,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 31 plus 46?\nA. 77\nB. 76\nC. 78\nD. 123\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 77,
+    "choices": [
+      77,
+      76,
+      78,
+      123
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-009-r1",
+    "group": 9,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 31 plus 46?\nA. 123\nB. 77\nC. 76\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 77,
+    "choices": [
+      123,
+      77,
+      76,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-009-r2",
+    "group": 9,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 31 plus 46?\nA. 78\nB. 123\nC. 77\nD. 76\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 77,
+    "choices": [
+      78,
+      123,
+      77,
+      76
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-009-r3",
+    "group": 9,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 31 plus 46?\nA. 76\nB. 78\nC. 123\nD. 77\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 77,
+    "choices": [
+      76,
+      78,
+      123,
+      77
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-009-free",
+    "group": 9,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 31 plus 46? Reply with just the number.",
+    "gold_value": 77,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-010-r0",
+    "group": 10,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 44?\nA. 481\nB. 480\nC. 482\nD. 525\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 481,
+    "choices": [
+      481,
+      480,
+      482,
+      525
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-010-r1",
+    "group": 10,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 44?\nA. 525\nB. 481\nC. 480\nD. 482\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 481,
+    "choices": [
+      525,
+      481,
+      480,
+      482
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-010-r2",
+    "group": 10,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 44?\nA. 482\nB. 525\nC. 481\nD. 480\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 481,
+    "choices": [
+      482,
+      525,
+      481,
+      480
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-010-r3",
+    "group": 10,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 44?\nA. 480\nB. 482\nC. 525\nD. 481\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 481,
+    "choices": [
+      480,
+      482,
+      525,
+      481
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-010-free",
+    "group": 10,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 44? Reply with just the number.",
+    "gold_value": 481,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-011-r0",
+    "group": 11,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 37 times 46?\nA. 1702\nB. 1701\nC. 1703\nD. 1748\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1702,
+    "choices": [
+      1702,
+      1701,
+      1703,
+      1748
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-011-r1",
+    "group": 11,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 37 times 46?\nA. 1748\nB. 1702\nC. 1701\nD. 1703\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1702,
+    "choices": [
+      1748,
+      1702,
+      1701,
+      1703
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-011-r2",
+    "group": 11,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 37 times 46?\nA. 1703\nB. 1748\nC. 1702\nD. 1701\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1702,
+    "choices": [
+      1703,
+      1748,
+      1702,
+      1701
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-011-r3",
+    "group": 11,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 37 times 46?\nA. 1701\nB. 1703\nC. 1748\nD. 1702\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1702,
+    "choices": [
+      1701,
+      1703,
+      1748,
+      1702
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-011-free",
+    "group": 11,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 37 times 46? Reply with just the number.",
+    "gold_value": 1702,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-012-r0",
+    "group": 12,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 53?\nA. 53\nB. 52\nC. 54\nD. 120\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 53,
+    "choices": [
+      53,
+      52,
+      54,
+      120
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-012-r1",
+    "group": 12,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 53?\nA. 120\nB. 53\nC. 52\nD. 54\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 53,
+    "choices": [
+      120,
+      53,
+      52,
+      54
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-012-r2",
+    "group": 12,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 53?\nA. 54\nB. 120\nC. 53\nD. 52\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 53,
+    "choices": [
+      54,
+      120,
+      53,
+      52
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-012-r3",
+    "group": 12,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 53?\nA. 52\nB. 54\nC. 120\nD. 53\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 53,
+    "choices": [
+      52,
+      54,
+      120,
+      53
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-013-r0",
+    "group": 13,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 77 plus 18?\nA. 95\nB. 94\nC. 96\nD. 113\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 95,
+    "choices": [
+      95,
+      94,
+      96,
+      113
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-013-r1",
+    "group": 13,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 77 plus 18?\nA. 113\nB. 95\nC. 94\nD. 96\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 95,
+    "choices": [
+      113,
+      95,
+      94,
+      96
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-013-r2",
+    "group": 13,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 77 plus 18?\nA. 96\nB. 113\nC. 95\nD. 94\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 95,
+    "choices": [
+      96,
+      113,
+      95,
+      94
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-013-r3",
+    "group": 13,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 77 plus 18?\nA. 94\nB. 96\nC. 113\nD. 95\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 95,
+    "choices": [
+      94,
+      96,
+      113,
+      95
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-013-free",
+    "group": 13,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 77 plus 18? Reply with just the number.",
+    "gold_value": 95,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-014-r0",
+    "group": 14,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 623 minus 20?\nA. 603\nB. 602\nC. 604\nD. 623\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 603,
+    "choices": [
+      603,
+      602,
+      604,
+      623
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-014-r1",
+    "group": 14,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 623 minus 20?\nA. 623\nB. 603\nC. 602\nD. 604\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 603,
+    "choices": [
+      623,
+      603,
+      602,
+      604
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-014-r2",
+    "group": 14,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 623 minus 20?\nA. 604\nB. 623\nC. 603\nD. 602\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 603,
+    "choices": [
+      604,
+      623,
+      603,
+      602
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-014-r3",
+    "group": 14,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 623 minus 20?\nA. 602\nB. 604\nC. 623\nD. 603\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 603,
+    "choices": [
+      602,
+      604,
+      623,
+      603
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-014-free",
+    "group": 14,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 623 minus 20? Reply with just the number.",
+    "gold_value": 603,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-015-r0",
+    "group": 15,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 times 36?\nA. 2088\nB. 2087\nC. 2089\nD. 2124\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2088,
+    "choices": [
+      2088,
+      2087,
+      2089,
+      2124
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-015-r1",
+    "group": 15,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 times 36?\nA. 2124\nB. 2088\nC. 2087\nD. 2089\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2088,
+    "choices": [
+      2124,
+      2088,
+      2087,
+      2089
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-015-r2",
+    "group": 15,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 times 36?\nA. 2089\nB. 2124\nC. 2088\nD. 2087\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2088,
+    "choices": [
+      2089,
+      2124,
+      2088,
+      2087
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-015-r3",
+    "group": 15,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 times 36?\nA. 2087\nB. 2089\nC. 2124\nD. 2088\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2088,
+    "choices": [
+      2087,
+      2089,
+      2124,
+      2088
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-015-free",
+    "group": 15,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 times 36? Reply with just the number.",
+    "gold_value": 2088,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-016-r0",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 26 plus 12?\nA. 38\nB. 37\nC. 39\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 38,
+    "choices": [
+      38,
+      37,
+      39,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-016-r1",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 26 plus 12?\nA. 50\nB. 38\nC. 37\nD. 39\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 38,
+    "choices": [
+      50,
+      38,
+      37,
+      39
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-016-r2",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 26 plus 12?\nA. 39\nB. 50\nC. 38\nD. 37\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 38,
+    "choices": [
+      39,
+      50,
+      38,
+      37
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-016-r3",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 26 plus 12?\nA. 37\nB. 39\nC. 50\nD. 38\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 38,
+    "choices": [
+      37,
+      39,
+      50,
+      38
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-016-free",
+    "group": 16,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 26 plus 12? Reply with just the number.",
+    "gold_value": 38,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-017-r0",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 26?\nA. 499\nB. 498\nC. 500\nD. 525\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 499,
+    "choices": [
+      499,
+      498,
+      500,
+      525
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-017-r1",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 26?\nA. 525\nB. 499\nC. 498\nD. 500\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 499,
+    "choices": [
+      525,
+      499,
+      498,
+      500
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-017-r2",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 26?\nA. 500\nB. 525\nC. 499\nD. 498\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 499,
+    "choices": [
+      500,
+      525,
+      499,
+      498
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-017-r3",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 26?\nA. 498\nB. 500\nC. 525\nD. 499\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 499,
+    "choices": [
+      498,
+      500,
+      525,
+      499
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-017-free",
+    "group": 17,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 525 minus 26? Reply with just the number.",
+    "gold_value": 499,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-018-r0",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 68 times 47?\nA. 3196\nB. 3195\nC. 3197\nD. 3243\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3196,
+    "choices": [
+      3196,
+      3195,
+      3197,
+      3243
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-018-r1",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 68 times 47?\nA. 3243\nB. 3196\nC. 3195\nD. 3197\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3196,
+    "choices": [
+      3243,
+      3196,
+      3195,
+      3197
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-018-r2",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 68 times 47?\nA. 3197\nB. 3243\nC. 3196\nD. 3195\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3196,
+    "choices": [
+      3197,
+      3243,
+      3196,
+      3195
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-018-r3",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 68 times 47?\nA. 3195\nB. 3197\nC. 3243\nD. 3196\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3196,
+    "choices": [
+      3195,
+      3197,
+      3243,
+      3196
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-018-free",
+    "group": 18,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 68 times 47? Reply with just the number.",
+    "gold_value": 3196,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-019-r0",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 69?\nA. 69\nB. 68\nC. 70\nD. 100\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 69,
+    "choices": [
+      69,
+      68,
+      70,
+      100
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-019-r1",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 69?\nA. 100\nB. 69\nC. 68\nD. 70\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 69,
+    "choices": [
+      100,
+      69,
+      68,
+      70
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-019-r2",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 69?\nA. 70\nB. 100\nC. 69\nD. 68\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 69,
+    "choices": [
+      70,
+      100,
+      69,
+      68
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-019-r3",
+    "group": 19,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 69?\nA. 68\nB. 70\nC. 100\nD. 69\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 69,
+    "choices": [
+      68,
+      70,
+      100,
+      69
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-020-r0",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 plus 61?\nA. 105\nB. 104\nC. 106\nD. 166\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 105,
+    "choices": [
+      105,
+      104,
+      106,
+      166
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-020-r1",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 plus 61?\nA. 166\nB. 105\nC. 104\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 105,
+    "choices": [
+      166,
+      105,
+      104,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-020-r2",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 plus 61?\nA. 106\nB. 166\nC. 105\nD. 104\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 105,
+    "choices": [
+      106,
+      166,
+      105,
+      104
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-020-r3",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 plus 61?\nA. 104\nB. 106\nC. 166\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 105,
+    "choices": [
+      104,
+      106,
+      166,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-020-free",
+    "group": 20,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 plus 61? Reply with just the number.",
+    "gold_value": 105,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-021-r0",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 287 minus 19?\nA. 268\nB. 267\nC. 269\nD. 287\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 268,
+    "choices": [
+      268,
+      267,
+      269,
+      287
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-021-r1",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 287 minus 19?\nA. 287\nB. 268\nC. 267\nD. 269\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 268,
+    "choices": [
+      287,
+      268,
+      267,
+      269
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-021-r2",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 287 minus 19?\nA. 269\nB. 287\nC. 268\nD. 267\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 268,
+    "choices": [
+      269,
+      287,
+      268,
+      267
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-021-r3",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 287 minus 19?\nA. 267\nB. 269\nC. 287\nD. 268\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 268,
+    "choices": [
+      267,
+      269,
+      287,
+      268
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-021-free",
+    "group": 21,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 287 minus 19? Reply with just the number.",
+    "gold_value": 268,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-022-r0",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 19?\nA. 1083\nB. 1082\nC. 1084\nD. 1102\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1083,
+    "choices": [
+      1083,
+      1082,
+      1084,
+      1102
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-022-r1",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 19?\nA. 1102\nB. 1083\nC. 1082\nD. 1084\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1083,
+    "choices": [
+      1102,
+      1083,
+      1082,
+      1084
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-022-r2",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 19?\nA. 1084\nB. 1102\nC. 1083\nD. 1082\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1083,
+    "choices": [
+      1084,
+      1102,
+      1083,
+      1082
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-022-r3",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 19?\nA. 1082\nB. 1084\nC. 1102\nD. 1083\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1083,
+    "choices": [
+      1082,
+      1084,
+      1102,
+      1083
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-022-free",
+    "group": 22,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 19? Reply with just the number.",
+    "gold_value": 1083,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-023-r0",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 38?\nA. 38\nB. 37\nC. 39\nD. 86\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 38,
+    "choices": [
+      38,
+      37,
+      39,
+      86
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-023-r1",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 38?\nA. 86\nB. 38\nC. 37\nD. 39\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 38,
+    "choices": [
+      86,
+      38,
+      37,
+      39
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-023-r2",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 38?\nA. 39\nB. 86\nC. 38\nD. 37\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 38,
+    "choices": [
+      39,
+      86,
+      38,
+      37
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-023-r3",
+    "group": 23,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 38?\nA. 37\nB. 39\nC. 86\nD. 38\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 38,
+    "choices": [
+      37,
+      39,
+      86,
+      38
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-024-r0",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 60?\nA. 123\nB. 122\nC. 124\nD. 183\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 123,
+    "choices": [
+      123,
+      122,
+      124,
+      183
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-024-r1",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 60?\nA. 183\nB. 123\nC. 122\nD. 124\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 123,
+    "choices": [
+      183,
+      123,
+      122,
+      124
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-024-r2",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 60?\nA. 124\nB. 183\nC. 123\nD. 122\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 123,
+    "choices": [
+      124,
+      183,
+      123,
+      122
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-024-r3",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 60?\nA. 122\nB. 124\nC. 183\nD. 123\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 123,
+    "choices": [
+      122,
+      124,
+      183,
+      123
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-024-free",
+    "group": 24,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 60? Reply with just the number.",
+    "gold_value": 123,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-025-r0",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 22?\nA. 531\nB. 530\nC. 532\nD. 553\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 531,
+    "choices": [
+      531,
+      530,
+      532,
+      553
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-025-r1",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 22?\nA. 553\nB. 531\nC. 530\nD. 532\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 531,
+    "choices": [
+      553,
+      531,
+      530,
+      532
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-025-r2",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 22?\nA. 532\nB. 553\nC. 531\nD. 530\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 531,
+    "choices": [
+      532,
+      553,
+      531,
+      530
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-025-r3",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 22?\nA. 530\nB. 532\nC. 553\nD. 531\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 531,
+    "choices": [
+      530,
+      532,
+      553,
+      531
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-025-free",
+    "group": 25,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 22? Reply with just the number.",
+    "gold_value": 531,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-026-r0",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 times 54?\nA. 3024\nB. 3023\nC. 3025\nD. 3078\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3024,
+    "choices": [
+      3024,
+      3023,
+      3025,
+      3078
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-026-r1",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 times 54?\nA. 3078\nB. 3024\nC. 3023\nD. 3025\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3024,
+    "choices": [
+      3078,
+      3024,
+      3023,
+      3025
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-026-r2",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 times 54?\nA. 3025\nB. 3078\nC. 3024\nD. 3023\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3024,
+    "choices": [
+      3025,
+      3078,
+      3024,
+      3023
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-026-r3",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 times 54?\nA. 3023\nB. 3025\nC. 3078\nD. 3024\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3024,
+    "choices": [
+      3023,
+      3025,
+      3078,
+      3024
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-026-free",
+    "group": 26,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 times 54? Reply with just the number.",
+    "gold_value": 3024,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-027-r0",
+    "group": 27,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 30?\nA. 118\nB. 117\nC. 119\nD. 148\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 118,
+    "choices": [
+      118,
+      117,
+      119,
+      148
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-027-r1",
+    "group": 27,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 30?\nA. 148\nB. 118\nC. 117\nD. 119\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 118,
+    "choices": [
+      148,
+      118,
+      117,
+      119
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-027-r2",
+    "group": 27,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 30?\nA. 119\nB. 148\nC. 118\nD. 117\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 118,
+    "choices": [
+      119,
+      148,
+      118,
+      117
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-027-r3",
+    "group": 27,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 30?\nA. 117\nB. 119\nC. 148\nD. 118\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 118,
+    "choices": [
+      117,
+      119,
+      148,
+      118
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-027-free",
+    "group": 27,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 30? Reply with just the number.",
+    "gold_value": 118,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-028-r0",
+    "group": 28,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 27?\nA. 351\nB. 350\nC. 352\nD. 378\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 351,
+    "choices": [
+      351,
+      350,
+      352,
+      378
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-028-r1",
+    "group": 28,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 27?\nA. 378\nB. 351\nC. 350\nD. 352\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 351,
+    "choices": [
+      378,
+      351,
+      350,
+      352
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-028-r2",
+    "group": 28,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 27?\nA. 352\nB. 378\nC. 351\nD. 350\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 351,
+    "choices": [
+      352,
+      378,
+      351,
+      350
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-028-r3",
+    "group": 28,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 27?\nA. 350\nB. 352\nC. 378\nD. 351\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 351,
+    "choices": [
+      350,
+      352,
+      378,
+      351
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-028-free",
+    "group": 28,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 27? Reply with just the number.",
+    "gold_value": 351,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-029-r0",
+    "group": 29,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 38 times 17?\nA. 646\nB. 645\nC. 647\nD. 663\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 646,
+    "choices": [
+      646,
+      645,
+      647,
+      663
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-029-r1",
+    "group": 29,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 38 times 17?\nA. 663\nB. 646\nC. 645\nD. 647\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 646,
+    "choices": [
+      663,
+      646,
+      645,
+      647
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-029-r2",
+    "group": 29,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 38 times 17?\nA. 647\nB. 663\nC. 646\nD. 645\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 646,
+    "choices": [
+      647,
+      663,
+      646,
+      645
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-029-r3",
+    "group": 29,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 38 times 17?\nA. 645\nB. 647\nC. 663\nD. 646\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 646,
+    "choices": [
+      645,
+      647,
+      663,
+      646
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-029-free",
+    "group": 29,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 38 times 17? Reply with just the number.",
+    "gold_value": 646,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-030-r0",
+    "group": 30,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 27?\nA. 27\nB. 26\nC. 28\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 27,
+    "choices": [
+      27,
+      26,
+      28,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-030-r1",
+    "group": 30,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 27?\nA. 79\nB. 27\nC. 26\nD. 28\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 27,
+    "choices": [
+      79,
+      27,
+      26,
+      28
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-030-r2",
+    "group": 30,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 27?\nA. 28\nB. 79\nC. 27\nD. 26\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 27,
+    "choices": [
+      28,
+      79,
+      27,
+      26
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-030-r3",
+    "group": 30,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 27?\nA. 26\nB. 28\nC. 79\nD. 27\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 27,
+    "choices": [
+      26,
+      28,
+      79,
+      27
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-031-r0",
+    "group": 31,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 53?\nA. 116\nB. 115\nC. 117\nD. 169\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 116,
+    "choices": [
+      116,
+      115,
+      117,
+      169
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-031-r1",
+    "group": 31,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 53?\nA. 169\nB. 116\nC. 115\nD. 117\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 116,
+    "choices": [
+      169,
+      116,
+      115,
+      117
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-031-r2",
+    "group": 31,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 53?\nA. 117\nB. 169\nC. 116\nD. 115\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 116,
+    "choices": [
+      117,
+      169,
+      116,
+      115
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-031-r3",
+    "group": 31,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 53?\nA. 115\nB. 117\nC. 169\nD. 116\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 116,
+    "choices": [
+      115,
+      117,
+      169,
+      116
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-031-free",
+    "group": 31,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 plus 53? Reply with just the number.",
+    "gold_value": 116,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-032-r0",
+    "group": 32,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 133 minus 60?\nA. 73\nB. 72\nC. 74\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 73,
+    "choices": [
+      73,
+      72,
+      74,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-032-r1",
+    "group": 32,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 133 minus 60?\nA. 133\nB. 73\nC. 72\nD. 74\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 73,
+    "choices": [
+      133,
+      73,
+      72,
+      74
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-032-r2",
+    "group": 32,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 133 minus 60?\nA. 74\nB. 133\nC. 73\nD. 72\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 73,
+    "choices": [
+      74,
+      133,
+      73,
+      72
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-032-r3",
+    "group": 32,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 133 minus 60?\nA. 72\nB. 74\nC. 133\nD. 73\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 73,
+    "choices": [
+      72,
+      74,
+      133,
+      73
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-032-free",
+    "group": 32,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 133 minus 60? Reply with just the number.",
+    "gold_value": 73,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-033-r0",
+    "group": 33,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 70 times 51?\nA. 3570\nB. 3569\nC. 3571\nD. 3621\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3570,
+    "choices": [
+      3570,
+      3569,
+      3571,
+      3621
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-033-r1",
+    "group": 33,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 70 times 51?\nA. 3621\nB. 3570\nC. 3569\nD. 3571\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3570,
+    "choices": [
+      3621,
+      3570,
+      3569,
+      3571
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-033-r2",
+    "group": 33,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 70 times 51?\nA. 3571\nB. 3621\nC. 3570\nD. 3569\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3570,
+    "choices": [
+      3571,
+      3621,
+      3570,
+      3569
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-033-r3",
+    "group": 33,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 70 times 51?\nA. 3569\nB. 3571\nC. 3621\nD. 3570\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3570,
+    "choices": [
+      3569,
+      3571,
+      3621,
+      3570
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-033-free",
+    "group": 33,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 70 times 51? Reply with just the number.",
+    "gold_value": 3570,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-034-r0",
+    "group": 34,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 83?\nA. 83\nB. 82\nC. 84\nD. 111\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 83,
+    "choices": [
+      83,
+      82,
+      84,
+      111
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-034-r1",
+    "group": 34,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 83?\nA. 111\nB. 83\nC. 82\nD. 84\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 83,
+    "choices": [
+      111,
+      83,
+      82,
+      84
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-034-r2",
+    "group": 34,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 83?\nA. 84\nB. 111\nC. 83\nD. 82\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 83,
+    "choices": [
+      84,
+      111,
+      83,
+      82
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-034-r3",
+    "group": 34,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 83?\nA. 82\nB. 84\nC. 111\nD. 83\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 83,
+    "choices": [
+      82,
+      84,
+      111,
+      83
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-035-r0",
+    "group": 35,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 84 plus 49?\nA. 133\nB. 132\nC. 134\nD. 182\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 133,
+    "choices": [
+      133,
+      132,
+      134,
+      182
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-035-r1",
+    "group": 35,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 84 plus 49?\nA. 182\nB. 133\nC. 132\nD. 134\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 133,
+    "choices": [
+      182,
+      133,
+      132,
+      134
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-035-r2",
+    "group": 35,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 84 plus 49?\nA. 134\nB. 182\nC. 133\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 133,
+    "choices": [
+      134,
+      182,
+      133,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-035-r3",
+    "group": 35,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 84 plus 49?\nA. 132\nB. 134\nC. 182\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 133,
+    "choices": [
+      132,
+      134,
+      182,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-035-free",
+    "group": 35,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 84 plus 49? Reply with just the number.",
+    "gold_value": 133,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-036-r0",
+    "group": 36,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 126 minus 11?\nA. 115\nB. 114\nC. 116\nD. 126\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 115,
+    "choices": [
+      115,
+      114,
+      116,
+      126
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-036-r1",
+    "group": 36,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 126 minus 11?\nA. 126\nB. 115\nC. 114\nD. 116\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 115,
+    "choices": [
+      126,
+      115,
+      114,
+      116
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-036-r2",
+    "group": 36,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 126 minus 11?\nA. 116\nB. 126\nC. 115\nD. 114\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 115,
+    "choices": [
+      116,
+      126,
+      115,
+      114
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-036-r3",
+    "group": 36,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 126 minus 11?\nA. 114\nB. 116\nC. 126\nD. 115\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 115,
+    "choices": [
+      114,
+      116,
+      126,
+      115
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-036-free",
+    "group": 36,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 126 minus 11? Reply with just the number.",
+    "gold_value": 115,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-037-r0",
+    "group": 37,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 55?\nA. 3135\nB. 3134\nC. 3136\nD. 3190\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3135,
+    "choices": [
+      3135,
+      3134,
+      3136,
+      3190
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-037-r1",
+    "group": 37,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 55?\nA. 3190\nB. 3135\nC. 3134\nD. 3136\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3135,
+    "choices": [
+      3190,
+      3135,
+      3134,
+      3136
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-037-r2",
+    "group": 37,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 55?\nA. 3136\nB. 3190\nC. 3135\nD. 3134\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3135,
+    "choices": [
+      3136,
+      3190,
+      3135,
+      3134
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-037-r3",
+    "group": 37,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 55?\nA. 3134\nB. 3136\nC. 3190\nD. 3135\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3135,
+    "choices": [
+      3134,
+      3136,
+      3190,
+      3135
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-037-free",
+    "group": 37,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 57 times 55? Reply with just the number.",
+    "gold_value": 3135,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-038-r0",
+    "group": 38,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 19 plus 17?\nA. 36\nB. 35\nC. 37\nD. 53\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 36,
+    "choices": [
+      36,
+      35,
+      37,
+      53
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-038-r1",
+    "group": 38,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 19 plus 17?\nA. 53\nB. 36\nC. 35\nD. 37\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 36,
+    "choices": [
+      53,
+      36,
+      35,
+      37
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-038-r2",
+    "group": 38,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 19 plus 17?\nA. 37\nB. 53\nC. 36\nD. 35\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 36,
+    "choices": [
+      37,
+      53,
+      36,
+      35
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-038-r3",
+    "group": 38,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 19 plus 17?\nA. 35\nB. 37\nC. 53\nD. 36\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 36,
+    "choices": [
+      35,
+      37,
+      53,
+      36
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-038-free",
+    "group": 38,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 19 plus 17? Reply with just the number.",
+    "gold_value": 36,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-039-r0",
+    "group": 39,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 259 minus 59?\nA. 200\nB. 199\nC. 201\nD. 259\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 200,
+    "choices": [
+      200,
+      199,
+      201,
+      259
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-039-r1",
+    "group": 39,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 259 minus 59?\nA. 259\nB. 200\nC. 199\nD. 201\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 200,
+    "choices": [
+      259,
+      200,
+      199,
+      201
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-039-r2",
+    "group": 39,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 259 minus 59?\nA. 201\nB. 259\nC. 200\nD. 199\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 200,
+    "choices": [
+      201,
+      259,
+      200,
+      199
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-039-r3",
+    "group": 39,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 259 minus 59?\nA. 199\nB. 201\nC. 259\nD. 200\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 200,
+    "choices": [
+      199,
+      201,
+      259,
+      200
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-039-free",
+    "group": 39,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 259 minus 59? Reply with just the number.",
+    "gold_value": 200,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-040-r0",
+    "group": 40,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 times 26?\nA. 1976\nB. 1975\nC. 1977\nD. 2002\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1976,
+    "choices": [
+      1976,
+      1975,
+      1977,
+      2002
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-040-r1",
+    "group": 40,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 times 26?\nA. 2002\nB. 1976\nC. 1975\nD. 1977\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1976,
+    "choices": [
+      2002,
+      1976,
+      1975,
+      1977
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-040-r2",
+    "group": 40,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 times 26?\nA. 1977\nB. 2002\nC. 1976\nD. 1975\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1976,
+    "choices": [
+      1977,
+      2002,
+      1976,
+      1975
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-040-r3",
+    "group": 40,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 times 26?\nA. 1975\nB. 1977\nC. 2002\nD. 1976\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1976,
+    "choices": [
+      1975,
+      1977,
+      2002,
+      1976
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-040-free",
+    "group": 40,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 times 26? Reply with just the number.",
+    "gold_value": 1976,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-041-r0",
+    "group": 41,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 plus 66?\nA. 124\nB. 123\nC. 125\nD. 190\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 124,
+    "choices": [
+      124,
+      123,
+      125,
+      190
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-041-r1",
+    "group": 41,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 plus 66?\nA. 190\nB. 124\nC. 123\nD. 125\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 124,
+    "choices": [
+      190,
+      124,
+      123,
+      125
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-041-r2",
+    "group": 41,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 plus 66?\nA. 125\nB. 190\nC. 124\nD. 123\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 124,
+    "choices": [
+      125,
+      190,
+      124,
+      123
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-041-r3",
+    "group": 41,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 plus 66?\nA. 123\nB. 125\nC. 190\nD. 124\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 124,
+    "choices": [
+      123,
+      125,
+      190,
+      124
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-041-free",
+    "group": 41,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 58 plus 66? Reply with just the number.",
+    "gold_value": 124,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-042-r0",
+    "group": 42,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 154 minus 38?\nA. 116\nB. 115\nC. 117\nD. 154\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 116,
+    "choices": [
+      116,
+      115,
+      117,
+      154
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-042-r1",
+    "group": 42,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 154 minus 38?\nA. 154\nB. 116\nC. 115\nD. 117\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 116,
+    "choices": [
+      154,
+      116,
+      115,
+      117
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-042-r2",
+    "group": 42,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 154 minus 38?\nA. 117\nB. 154\nC. 116\nD. 115\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 116,
+    "choices": [
+      117,
+      154,
+      116,
+      115
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-042-r3",
+    "group": 42,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 154 minus 38?\nA. 115\nB. 117\nC. 154\nD. 116\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 116,
+    "choices": [
+      115,
+      117,
+      154,
+      116
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-042-free",
+    "group": 42,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 154 minus 38? Reply with just the number.",
+    "gold_value": 116,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-043-r0",
+    "group": 43,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 times 27?\nA. 1701\nB. 1700\nC. 1702\nD. 1728\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1701,
+    "choices": [
+      1701,
+      1700,
+      1702,
+      1728
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-043-r1",
+    "group": 43,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 times 27?\nA. 1728\nB. 1701\nC. 1700\nD. 1702\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1701,
+    "choices": [
+      1728,
+      1701,
+      1700,
+      1702
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-043-r2",
+    "group": 43,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 times 27?\nA. 1702\nB. 1728\nC. 1701\nD. 1700\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1701,
+    "choices": [
+      1702,
+      1728,
+      1701,
+      1700
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-043-r3",
+    "group": 43,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 times 27?\nA. 1700\nB. 1702\nC. 1728\nD. 1701\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1701,
+    "choices": [
+      1700,
+      1702,
+      1728,
+      1701
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-043-free",
+    "group": 43,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 63 times 27? Reply with just the number.",
+    "gold_value": 1701,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-044-r0",
+    "group": 44,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 51?\nA. 51\nB. 50\nC. 52\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 51,
+    "choices": [
+      51,
+      50,
+      52,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-044-r1",
+    "group": 44,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 51?\nA. 106\nB. 51\nC. 50\nD. 52\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 51,
+    "choices": [
+      106,
+      51,
+      50,
+      52
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-044-r2",
+    "group": 44,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 51?\nA. 52\nB. 106\nC. 51\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 51,
+    "choices": [
+      52,
+      106,
+      51,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-044-r3",
+    "group": 44,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 51?\nA. 50\nB. 52\nC. 106\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 51,
+    "choices": [
+      50,
+      52,
+      106,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-045-r0",
+    "group": 45,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 plus 65?\nA. 78\nB. 77\nC. 79\nD. 143\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 78,
+    "choices": [
+      78,
+      77,
+      79,
+      143
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-045-r1",
+    "group": 45,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 plus 65?\nA. 143\nB. 78\nC. 77\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 78,
+    "choices": [
+      143,
+      78,
+      77,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-045-r2",
+    "group": 45,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 plus 65?\nA. 79\nB. 143\nC. 78\nD. 77\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 78,
+    "choices": [
+      79,
+      143,
+      78,
+      77
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-045-r3",
+    "group": 45,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 plus 65?\nA. 77\nB. 79\nC. 143\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 78,
+    "choices": [
+      77,
+      79,
+      143,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-045-free",
+    "group": 45,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 plus 65? Reply with just the number.",
+    "gold_value": 78,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-046-r0",
+    "group": 46,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 119 minus 14?\nA. 105\nB. 104\nC. 106\nD. 119\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 105,
+    "choices": [
+      105,
+      104,
+      106,
+      119
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-046-r1",
+    "group": 46,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 119 minus 14?\nA. 119\nB. 105\nC. 104\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 105,
+    "choices": [
+      119,
+      105,
+      104,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-046-r2",
+    "group": 46,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 119 minus 14?\nA. 106\nB. 119\nC. 105\nD. 104\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 105,
+    "choices": [
+      106,
+      119,
+      105,
+      104
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-046-r3",
+    "group": 46,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 119 minus 14?\nA. 104\nB. 106\nC. 119\nD. 105\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 105,
+    "choices": [
+      104,
+      106,
+      119,
+      105
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-046-free",
+    "group": 46,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 119 minus 14? Reply with just the number.",
+    "gold_value": 105,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-047-r0",
+    "group": 47,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 times 48?\nA. 624\nB. 623\nC. 625\nD. 672\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 624,
+    "choices": [
+      624,
+      623,
+      625,
+      672
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-047-r1",
+    "group": 47,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 times 48?\nA. 672\nB. 624\nC. 623\nD. 625\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 624,
+    "choices": [
+      672,
+      624,
+      623,
+      625
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-047-r2",
+    "group": 47,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 times 48?\nA. 625\nB. 672\nC. 624\nD. 623\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 624,
+    "choices": [
+      625,
+      672,
+      624,
+      623
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-047-r3",
+    "group": 47,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 times 48?\nA. 623\nB. 625\nC. 672\nD. 624\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 624,
+    "choices": [
+      623,
+      625,
+      672,
+      624
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-047-free",
+    "group": 47,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 13 times 48? Reply with just the number.",
+    "gold_value": 624,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-048-r0",
+    "group": 48,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 plus 33?\nA. 89\nB. 88\nC. 90\nD. 122\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 89,
+    "choices": [
+      89,
+      88,
+      90,
+      122
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-048-r1",
+    "group": 48,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 plus 33?\nA. 122\nB. 89\nC. 88\nD. 90\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 89,
+    "choices": [
+      122,
+      89,
+      88,
+      90
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-048-r2",
+    "group": 48,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 plus 33?\nA. 90\nB. 122\nC. 89\nD. 88\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 89,
+    "choices": [
+      90,
+      122,
+      89,
+      88
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-048-r3",
+    "group": 48,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 plus 33?\nA. 88\nB. 90\nC. 122\nD. 89\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 89,
+    "choices": [
+      88,
+      90,
+      122,
+      89
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-048-free",
+    "group": 48,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 56 plus 33? Reply with just the number.",
+    "gold_value": 89,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-049-r0",
+    "group": 49,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 18?\nA. 360\nB. 359\nC. 361\nD. 378\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 360,
+    "choices": [
+      360,
+      359,
+      361,
+      378
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-049-r1",
+    "group": 49,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 18?\nA. 378\nB. 360\nC. 359\nD. 361\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 360,
+    "choices": [
+      378,
+      360,
+      359,
+      361
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-049-r2",
+    "group": 49,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 18?\nA. 361\nB. 378\nC. 360\nD. 359\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 360,
+    "choices": [
+      361,
+      378,
+      360,
+      359
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-049-r3",
+    "group": 49,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 18?\nA. 359\nB. 361\nC. 378\nD. 360\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 360,
+    "choices": [
+      359,
+      361,
+      378,
+      360
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-049-free",
+    "group": 49,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 378 minus 18? Reply with just the number.",
+    "gold_value": 360,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-050-r0",
+    "group": 50,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 16 times 26?\nA. 416\nB. 415\nC. 417\nD. 442\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 416,
+    "choices": [
+      416,
+      415,
+      417,
+      442
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-050-r1",
+    "group": 50,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 16 times 26?\nA. 442\nB. 416\nC. 415\nD. 417\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 416,
+    "choices": [
+      442,
+      416,
+      415,
+      417
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-050-r2",
+    "group": 50,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 16 times 26?\nA. 417\nB. 442\nC. 416\nD. 415\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 416,
+    "choices": [
+      417,
+      442,
+      416,
+      415
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-050-r3",
+    "group": 50,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 16 times 26?\nA. 415\nB. 417\nC. 442\nD. 416\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 416,
+    "choices": [
+      415,
+      417,
+      442,
+      416
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-050-free",
+    "group": 50,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 16 times 26? Reply with just the number.",
+    "gold_value": 416,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-051-r0",
+    "group": 51,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 63?\nA. 63\nB. 62\nC. 64\nD. 106\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 63,
+    "choices": [
+      63,
+      62,
+      64,
+      106
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-051-r1",
+    "group": 51,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 63?\nA. 106\nB. 63\nC. 62\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 63,
+    "choices": [
+      106,
+      63,
+      62,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-051-r2",
+    "group": 51,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 63?\nA. 64\nB. 106\nC. 63\nD. 62\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 63,
+    "choices": [
+      64,
+      106,
+      63,
+      62
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-051-r3",
+    "group": 51,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 63?\nA. 62\nB. 64\nC. 106\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 63,
+    "choices": [
+      62,
+      64,
+      106,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-052-r0",
+    "group": 52,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 53 plus 38?\nA. 91\nB. 90\nC. 92\nD. 129\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 91,
+    "choices": [
+      91,
+      90,
+      92,
+      129
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-052-r1",
+    "group": 52,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 53 plus 38?\nA. 129\nB. 91\nC. 90\nD. 92\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 91,
+    "choices": [
+      129,
+      91,
+      90,
+      92
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-052-r2",
+    "group": 52,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 53 plus 38?\nA. 92\nB. 129\nC. 91\nD. 90\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 91,
+    "choices": [
+      92,
+      129,
+      91,
+      90
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-052-r3",
+    "group": 52,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 53 plus 38?\nA. 90\nB. 92\nC. 129\nD. 91\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 91,
+    "choices": [
+      90,
+      92,
+      129,
+      91
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-052-free",
+    "group": 52,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 53 plus 38? Reply with just the number.",
+    "gold_value": 91,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-053-r0",
+    "group": 53,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 45?\nA. 452\nB. 451\nC. 453\nD. 497\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 452,
+    "choices": [
+      452,
+      451,
+      453,
+      497
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-053-r1",
+    "group": 53,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 45?\nA. 497\nB. 452\nC. 451\nD. 453\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 452,
+    "choices": [
+      497,
+      452,
+      451,
+      453
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-053-r2",
+    "group": 53,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 45?\nA. 453\nB. 497\nC. 452\nD. 451\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 452,
+    "choices": [
+      453,
+      497,
+      452,
+      451
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-053-r3",
+    "group": 53,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 45?\nA. 451\nB. 453\nC. 497\nD. 452\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 452,
+    "choices": [
+      451,
+      453,
+      497,
+      452
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-053-free",
+    "group": 53,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 45? Reply with just the number.",
+    "gold_value": 452,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-054-r0",
+    "group": 54,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 89 times 38?\nA. 3382\nB. 3381\nC. 3383\nD. 3420\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 3382,
+    "choices": [
+      3382,
+      3381,
+      3383,
+      3420
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-054-r1",
+    "group": 54,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 89 times 38?\nA. 3420\nB. 3382\nC. 3381\nD. 3383\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 3382,
+    "choices": [
+      3420,
+      3382,
+      3381,
+      3383
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-054-r2",
+    "group": 54,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 89 times 38?\nA. 3383\nB. 3420\nC. 3382\nD. 3381\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 3382,
+    "choices": [
+      3383,
+      3420,
+      3382,
+      3381
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-054-r3",
+    "group": 54,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 89 times 38?\nA. 3381\nB. 3383\nC. 3420\nD. 3382\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 3382,
+    "choices": [
+      3381,
+      3383,
+      3420,
+      3382
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-054-free",
+    "group": 54,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 89 times 38? Reply with just the number.",
+    "gold_value": 3382,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-055-r0",
+    "group": 55,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 61?\nA. 61\nB. 60\nC. 62\nD. 102\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 61,
+    "choices": [
+      61,
+      60,
+      62,
+      102
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-055-r1",
+    "group": 55,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 61?\nA. 102\nB. 61\nC. 60\nD. 62\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 61,
+    "choices": [
+      102,
+      61,
+      60,
+      62
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-055-r2",
+    "group": 55,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 61?\nA. 62\nB. 102\nC. 61\nD. 60\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 61,
+    "choices": [
+      62,
+      102,
+      61,
+      60
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-055-r3",
+    "group": 55,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 61?\nA. 60\nB. 62\nC. 102\nD. 61\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 61,
+    "choices": [
+      60,
+      62,
+      102,
+      61
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-056-r0",
+    "group": 56,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 36 plus 15?\nA. 51\nB. 50\nC. 52\nD. 66\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 51,
+    "choices": [
+      51,
+      50,
+      52,
+      66
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-056-r1",
+    "group": 56,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 36 plus 15?\nA. 66\nB. 51\nC. 50\nD. 52\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 51,
+    "choices": [
+      66,
+      51,
+      50,
+      52
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-056-r2",
+    "group": 56,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 36 plus 15?\nA. 52\nB. 66\nC. 51\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 51,
+    "choices": [
+      52,
+      66,
+      51,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-056-r3",
+    "group": 56,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 36 plus 15?\nA. 50\nB. 52\nC. 66\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 51,
+    "choices": [
+      50,
+      52,
+      66,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-056-free",
+    "group": 56,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 36 plus 15? Reply with just the number.",
+    "gold_value": 51,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-057-r0",
+    "group": 57,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 175 minus 29?\nA. 146\nB. 145\nC. 147\nD. 175\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 146,
+    "choices": [
+      146,
+      145,
+      147,
+      175
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-057-r1",
+    "group": 57,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 175 minus 29?\nA. 175\nB. 146\nC. 145\nD. 147\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 146,
+    "choices": [
+      175,
+      146,
+      145,
+      147
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-057-r2",
+    "group": 57,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 175 minus 29?\nA. 147\nB. 175\nC. 146\nD. 145\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 146,
+    "choices": [
+      147,
+      175,
+      146,
+      145
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-057-r3",
+    "group": 57,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 175 minus 29?\nA. 145\nB. 147\nC. 175\nD. 146\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 146,
+    "choices": [
+      145,
+      147,
+      175,
+      146
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-057-free",
+    "group": 57,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 175 minus 29? Reply with just the number.",
+    "gold_value": 146,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-058-r0",
+    "group": 58,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 74 times 12?\nA. 888\nB. 887\nC. 889\nD. 900\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 888,
+    "choices": [
+      888,
+      887,
+      889,
+      900
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-058-r1",
+    "group": 58,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 74 times 12?\nA. 900\nB. 888\nC. 887\nD. 889\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 888,
+    "choices": [
+      900,
+      888,
+      887,
+      889
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-058-r2",
+    "group": 58,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 74 times 12?\nA. 889\nB. 900\nC. 888\nD. 887\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 888,
+    "choices": [
+      889,
+      900,
+      888,
+      887
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-058-r3",
+    "group": 58,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 74 times 12?\nA. 887\nB. 889\nC. 900\nD. 888\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 888,
+    "choices": [
+      887,
+      889,
+      900,
+      888
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-058-free",
+    "group": 58,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 74 times 12? Reply with just the number.",
+    "gold_value": 888,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-059-r0",
+    "group": 59,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 17?\nA. 17\nB. 16\nC. 18\nD. 43\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 17,
+    "choices": [
+      17,
+      16,
+      18,
+      43
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-059-r1",
+    "group": 59,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 17?\nA. 43\nB. 17\nC. 16\nD. 18\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 17,
+    "choices": [
+      43,
+      17,
+      16,
+      18
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-059-r2",
+    "group": 59,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 17?\nA. 18\nB. 43\nC. 17\nD. 16\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 17,
+    "choices": [
+      18,
+      43,
+      17,
+      16
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-059-r3",
+    "group": 59,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 17?\nA. 16\nB. 18\nC. 43\nD. 17\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 17,
+    "choices": [
+      16,
+      18,
+      43,
+      17
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-060-r0",
+    "group": 60,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 21 plus 30?\nA. 51\nB. 50\nC. 52\nD. 81\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 51,
+    "choices": [
+      51,
+      50,
+      52,
+      81
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-060-r1",
+    "group": 60,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 21 plus 30?\nA. 81\nB. 51\nC. 50\nD. 52\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 51,
+    "choices": [
+      81,
+      51,
+      50,
+      52
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-060-r2",
+    "group": 60,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 21 plus 30?\nA. 52\nB. 81\nC. 51\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 51,
+    "choices": [
+      52,
+      81,
+      51,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-060-r3",
+    "group": 60,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 21 plus 30?\nA. 50\nB. 52\nC. 81\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 51,
+    "choices": [
+      50,
+      52,
+      81,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-060-free",
+    "group": 60,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 21 plus 30? Reply with just the number.",
+    "gold_value": 51,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-061-r0",
+    "group": 61,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 35?\nA. 63\nB. 62\nC. 64\nD. 98\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 63,
+    "choices": [
+      63,
+      62,
+      64,
+      98
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-061-r1",
+    "group": 61,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 35?\nA. 98\nB. 63\nC. 62\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 63,
+    "choices": [
+      98,
+      63,
+      62,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-061-r2",
+    "group": 61,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 35?\nA. 64\nB. 98\nC. 63\nD. 62\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 63,
+    "choices": [
+      64,
+      98,
+      63,
+      62
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-061-r3",
+    "group": 61,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 35?\nA. 62\nB. 64\nC. 98\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 63,
+    "choices": [
+      62,
+      64,
+      98,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-061-free",
+    "group": 61,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 98 minus 35? Reply with just the number.",
+    "gold_value": 63,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-062-r0",
+    "group": 62,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 20 times 65?\nA. 1300\nB. 1299\nC. 1301\nD. 1365\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1300,
+    "choices": [
+      1300,
+      1299,
+      1301,
+      1365
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-062-r1",
+    "group": 62,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 20 times 65?\nA. 1365\nB. 1300\nC. 1299\nD. 1301\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1300,
+    "choices": [
+      1365,
+      1300,
+      1299,
+      1301
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-062-r2",
+    "group": 62,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 20 times 65?\nA. 1301\nB. 1365\nC. 1300\nD. 1299\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1300,
+    "choices": [
+      1301,
+      1365,
+      1300,
+      1299
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-062-r3",
+    "group": 62,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 20 times 65?\nA. 1299\nB. 1301\nC. 1365\nD. 1300\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1300,
+    "choices": [
+      1299,
+      1301,
+      1365,
+      1300
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-062-free",
+    "group": 62,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 20 times 65? Reply with just the number.",
+    "gold_value": 1300,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-063-r0",
+    "group": 63,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 72 plus 60?\nA. 132\nB. 131\nC. 133\nD. 192\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 132,
+    "choices": [
+      132,
+      131,
+      133,
+      192
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-063-r1",
+    "group": 63,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 72 plus 60?\nA. 192\nB. 132\nC. 131\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 132,
+    "choices": [
+      192,
+      132,
+      131,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-063-r2",
+    "group": 63,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 72 plus 60?\nA. 133\nB. 192\nC. 132\nD. 131\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 132,
+    "choices": [
+      133,
+      192,
+      132,
+      131
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-063-r3",
+    "group": 63,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 72 plus 60?\nA. 131\nB. 133\nC. 192\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 132,
+    "choices": [
+      131,
+      133,
+      192,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-063-free",
+    "group": 63,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 72 plus 60? Reply with just the number.",
+    "gold_value": 132,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-064-r0",
+    "group": 64,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 476 minus 44?\nA. 432\nB. 431\nC. 433\nD. 476\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 432,
+    "choices": [
+      432,
+      431,
+      433,
+      476
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-064-r1",
+    "group": 64,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 476 minus 44?\nA. 476\nB. 432\nC. 431\nD. 433\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 432,
+    "choices": [
+      476,
+      432,
+      431,
+      433
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-064-r2",
+    "group": 64,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 476 minus 44?\nA. 433\nB. 476\nC. 432\nD. 431\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 432,
+    "choices": [
+      433,
+      476,
+      432,
+      431
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-064-r3",
+    "group": 64,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 476 minus 44?\nA. 431\nB. 433\nC. 476\nD. 432\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 432,
+    "choices": [
+      431,
+      433,
+      476,
+      432
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-064-free",
+    "group": 64,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 476 minus 44? Reply with just the number.",
+    "gold_value": 432,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-065-r0",
+    "group": 65,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 52 times 11?\nA. 572\nB. 571\nC. 573\nD. 583\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 572,
+    "choices": [
+      572,
+      571,
+      573,
+      583
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-065-r1",
+    "group": 65,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 52 times 11?\nA. 583\nB. 572\nC. 571\nD. 573\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 572,
+    "choices": [
+      583,
+      572,
+      571,
+      573
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-065-r2",
+    "group": 65,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 52 times 11?\nA. 573\nB. 583\nC. 572\nD. 571\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 572,
+    "choices": [
+      573,
+      583,
+      572,
+      571
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-065-r3",
+    "group": 65,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 52 times 11?\nA. 571\nB. 573\nC. 583\nD. 572\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 572,
+    "choices": [
+      571,
+      573,
+      583,
+      572
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-065-free",
+    "group": 65,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 52 times 11? Reply with just the number.",
+    "gold_value": 572,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-066-r0",
+    "group": 66,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 plus 35?\nA. 111\nB. 110\nC. 112\nD. 146\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 111,
+    "choices": [
+      111,
+      110,
+      112,
+      146
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-066-r1",
+    "group": 66,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 plus 35?\nA. 146\nB. 111\nC. 110\nD. 112\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 111,
+    "choices": [
+      146,
+      111,
+      110,
+      112
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-066-r2",
+    "group": 66,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 plus 35?\nA. 112\nB. 146\nC. 111\nD. 110\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 111,
+    "choices": [
+      112,
+      146,
+      111,
+      110
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-066-r3",
+    "group": 66,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 plus 35?\nA. 110\nB. 112\nC. 146\nD. 111\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 111,
+    "choices": [
+      110,
+      112,
+      146,
+      111
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-066-free",
+    "group": 66,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 76 plus 35? Reply with just the number.",
+    "gold_value": 111,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-067-r0",
+    "group": 67,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 63?\nA. 490\nB. 489\nC. 491\nD. 553\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 490,
+    "choices": [
+      490,
+      489,
+      491,
+      553
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-067-r1",
+    "group": 67,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 63?\nA. 553\nB. 490\nC. 489\nD. 491\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 490,
+    "choices": [
+      553,
+      490,
+      489,
+      491
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-067-r2",
+    "group": 67,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 63?\nA. 491\nB. 553\nC. 490\nD. 489\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 490,
+    "choices": [
+      491,
+      553,
+      490,
+      489
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-067-r3",
+    "group": 67,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 63?\nA. 489\nB. 491\nC. 553\nD. 490\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 490,
+    "choices": [
+      489,
+      491,
+      553,
+      490
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-067-free",
+    "group": 67,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 553 minus 63? Reply with just the number.",
+    "gold_value": 490,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-068-r0",
+    "group": 68,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 times 57?\nA. 5016\nB. 5015\nC. 5017\nD. 5073\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 5016,
+    "choices": [
+      5016,
+      5015,
+      5017,
+      5073
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-068-r1",
+    "group": 68,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 times 57?\nA. 5073\nB. 5016\nC. 5015\nD. 5017\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 5016,
+    "choices": [
+      5073,
+      5016,
+      5015,
+      5017
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-068-r2",
+    "group": 68,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 times 57?\nA. 5017\nB. 5073\nC. 5016\nD. 5015\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 5016,
+    "choices": [
+      5017,
+      5073,
+      5016,
+      5015
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-068-r3",
+    "group": 68,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 times 57?\nA. 5015\nB. 5017\nC. 5073\nD. 5016\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 5016,
+    "choices": [
+      5015,
+      5017,
+      5073,
+      5016
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-068-free",
+    "group": 68,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 times 57? Reply with just the number.",
+    "gold_value": 5016,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-069-r0",
+    "group": 69,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 33 plus 27?\nA. 60\nB. 59\nC. 61\nD. 87\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 60,
+    "choices": [
+      60,
+      59,
+      61,
+      87
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-069-r1",
+    "group": 69,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 33 plus 27?\nA. 87\nB. 60\nC. 59\nD. 61\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 60,
+    "choices": [
+      87,
+      60,
+      59,
+      61
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-069-r2",
+    "group": 69,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 33 plus 27?\nA. 61\nB. 87\nC. 60\nD. 59\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 60,
+    "choices": [
+      61,
+      87,
+      60,
+      59
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-069-r3",
+    "group": 69,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 33 plus 27?\nA. 59\nB. 61\nC. 87\nD. 60\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 60,
+    "choices": [
+      59,
+      61,
+      87,
+      60
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-069-free",
+    "group": 69,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 33 plus 27? Reply with just the number.",
+    "gold_value": 60,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-070-r0",
+    "group": 70,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 427 minus 27?\nA. 400\nB. 399\nC. 401\nD. 427\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 400,
+    "choices": [
+      400,
+      399,
+      401,
+      427
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-070-r1",
+    "group": 70,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 427 minus 27?\nA. 427\nB. 400\nC. 399\nD. 401\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 400,
+    "choices": [
+      427,
+      400,
+      399,
+      401
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-070-r2",
+    "group": 70,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 427 minus 27?\nA. 401\nB. 427\nC. 400\nD. 399\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 400,
+    "choices": [
+      401,
+      427,
+      400,
+      399
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-070-r3",
+    "group": 70,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 427 minus 27?\nA. 399\nB. 401\nC. 427\nD. 400\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 400,
+    "choices": [
+      399,
+      401,
+      427,
+      400
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-070-free",
+    "group": 70,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 427 minus 27? Reply with just the number.",
+    "gold_value": 400,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-071-r0",
+    "group": 71,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 51 times 54?\nA. 2754\nB. 2753\nC. 2755\nD. 2808\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2754,
+    "choices": [
+      2754,
+      2753,
+      2755,
+      2808
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-071-r1",
+    "group": 71,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 51 times 54?\nA. 2808\nB. 2754\nC. 2753\nD. 2755\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2754,
+    "choices": [
+      2808,
+      2754,
+      2753,
+      2755
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-071-r2",
+    "group": 71,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 51 times 54?\nA. 2755\nB. 2808\nC. 2754\nD. 2753\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2754,
+    "choices": [
+      2755,
+      2808,
+      2754,
+      2753
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-071-r3",
+    "group": 71,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 51 times 54?\nA. 2753\nB. 2755\nC. 2808\nD. 2754\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2754,
+    "choices": [
+      2753,
+      2755,
+      2808,
+      2754
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-071-free",
+    "group": 71,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 51 times 54? Reply with just the number.",
+    "gold_value": 2754,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-072-r0",
+    "group": 72,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 17 plus 46?\nA. 63\nB. 62\nC. 64\nD. 109\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 63,
+    "choices": [
+      63,
+      62,
+      64,
+      109
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-072-r1",
+    "group": 72,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 17 plus 46?\nA. 109\nB. 63\nC. 62\nD. 64\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 63,
+    "choices": [
+      109,
+      63,
+      62,
+      64
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-072-r2",
+    "group": 72,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 17 plus 46?\nA. 64\nB. 109\nC. 63\nD. 62\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 63,
+    "choices": [
+      64,
+      109,
+      63,
+      62
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-072-r3",
+    "group": 72,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 17 plus 46?\nA. 62\nB. 64\nC. 109\nD. 63\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 63,
+    "choices": [
+      62,
+      64,
+      109,
+      63
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-072-free",
+    "group": 72,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 17 plus 46? Reply with just the number.",
+    "gold_value": 63,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-073-r0",
+    "group": 73,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 420 minus 25?\nA. 395\nB. 394\nC. 396\nD. 420\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 395,
+    "choices": [
+      395,
+      394,
+      396,
+      420
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-073-r1",
+    "group": 73,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 420 minus 25?\nA. 420\nB. 395\nC. 394\nD. 396\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 395,
+    "choices": [
+      420,
+      395,
+      394,
+      396
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-073-r2",
+    "group": 73,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 420 minus 25?\nA. 396\nB. 420\nC. 395\nD. 394\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 395,
+    "choices": [
+      396,
+      420,
+      395,
+      394
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-073-r3",
+    "group": 73,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 420 minus 25?\nA. 394\nB. 396\nC. 420\nD. 395\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 395,
+    "choices": [
+      394,
+      396,
+      420,
+      395
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-073-free",
+    "group": 73,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 420 minus 25? Reply with just the number.",
+    "gold_value": 395,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-074-r0",
+    "group": 74,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 times 24?\nA. 2040\nB. 2039\nC. 2041\nD. 2064\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 2040,
+    "choices": [
+      2040,
+      2039,
+      2041,
+      2064
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-074-r1",
+    "group": 74,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 times 24?\nA. 2064\nB. 2040\nC. 2039\nD. 2041\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 2040,
+    "choices": [
+      2064,
+      2040,
+      2039,
+      2041
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-074-r2",
+    "group": 74,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 times 24?\nA. 2041\nB. 2064\nC. 2040\nD. 2039\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 2040,
+    "choices": [
+      2041,
+      2064,
+      2040,
+      2039
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-074-r3",
+    "group": 74,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 times 24?\nA. 2039\nB. 2041\nC. 2064\nD. 2040\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 2040,
+    "choices": [
+      2039,
+      2041,
+      2064,
+      2040
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-074-free",
+    "group": 74,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 times 24? Reply with just the number.",
+    "gold_value": 2040,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-075-r0",
+    "group": 75,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 40?\nA. 128\nB. 127\nC. 129\nD. 168\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 128,
+    "choices": [
+      128,
+      127,
+      129,
+      168
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-075-r1",
+    "group": 75,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 40?\nA. 168\nB. 128\nC. 127\nD. 129\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 128,
+    "choices": [
+      168,
+      128,
+      127,
+      129
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-075-r2",
+    "group": 75,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 40?\nA. 129\nB. 168\nC. 128\nD. 127\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 128,
+    "choices": [
+      129,
+      168,
+      128,
+      127
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-075-r3",
+    "group": 75,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 40?\nA. 127\nB. 129\nC. 168\nD. 128\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 128,
+    "choices": [
+      127,
+      129,
+      168,
+      128
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-075-free",
+    "group": 75,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 88 plus 40? Reply with just the number.",
+    "gold_value": 128,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-076-r0",
+    "group": 76,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 56?\nA. 441\nB. 440\nC. 442\nD. 497\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 441,
+    "choices": [
+      441,
+      440,
+      442,
+      497
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-076-r1",
+    "group": 76,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 56?\nA. 497\nB. 441\nC. 440\nD. 442\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 441,
+    "choices": [
+      497,
+      441,
+      440,
+      442
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-076-r2",
+    "group": 76,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 56?\nA. 442\nB. 497\nC. 441\nD. 440\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 441,
+    "choices": [
+      442,
+      497,
+      441,
+      440
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-076-r3",
+    "group": 76,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 56?\nA. 440\nB. 442\nC. 497\nD. 441\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 441,
+    "choices": [
+      440,
+      442,
+      497,
+      441
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-076-free",
+    "group": 76,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 497 minus 56? Reply with just the number.",
+    "gold_value": 441,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-077-r0",
+    "group": 77,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 15 times 67?\nA. 1005\nB. 1004\nC. 1006\nD. 1072\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1005,
+    "choices": [
+      1005,
+      1004,
+      1006,
+      1072
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-077-r1",
+    "group": 77,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 15 times 67?\nA. 1072\nB. 1005\nC. 1004\nD. 1006\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1005,
+    "choices": [
+      1072,
+      1005,
+      1004,
+      1006
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-077-r2",
+    "group": 77,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 15 times 67?\nA. 1006\nB. 1072\nC. 1005\nD. 1004\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1005,
+    "choices": [
+      1006,
+      1072,
+      1005,
+      1004
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-077-r3",
+    "group": 77,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 15 times 67?\nA. 1004\nB. 1006\nC. 1072\nD. 1005\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1005,
+    "choices": [
+      1004,
+      1006,
+      1072,
+      1005
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-077-free",
+    "group": 77,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 15 times 67? Reply with just the number.",
+    "gold_value": 1005,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-078-r0",
+    "group": 78,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 plus 49?\nA. 134\nB. 133\nC. 135\nD. 183\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 134,
+    "choices": [
+      134,
+      133,
+      135,
+      183
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-078-r1",
+    "group": 78,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 plus 49?\nA. 183\nB. 134\nC. 133\nD. 135\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 134,
+    "choices": [
+      183,
+      134,
+      133,
+      135
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-078-r2",
+    "group": 78,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 plus 49?\nA. 135\nB. 183\nC. 134\nD. 133\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 134,
+    "choices": [
+      135,
+      183,
+      134,
+      133
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-078-r3",
+    "group": 78,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 plus 49?\nA. 133\nB. 135\nC. 183\nD. 134\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 134,
+    "choices": [
+      133,
+      135,
+      183,
+      134
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-078-free",
+    "group": 78,
+    "family": "addition",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 85 plus 49? Reply with just the number.",
+    "gold_value": 134,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-079-r0",
+    "group": 79,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 595 minus 55?\nA. 540\nB. 539\nC. 541\nD. 595\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 540,
+    "choices": [
+      540,
+      539,
+      541,
+      595
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-079-r1",
+    "group": 79,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 595 minus 55?\nA. 595\nB. 540\nC. 539\nD. 541\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 540,
+    "choices": [
+      595,
+      540,
+      539,
+      541
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-079-r2",
+    "group": 79,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 595 minus 55?\nA. 541\nB. 595\nC. 540\nD. 539\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 540,
+    "choices": [
+      541,
+      595,
+      540,
+      539
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-079-r3",
+    "group": 79,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 595 minus 55?\nA. 539\nB. 541\nC. 595\nD. 540\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 540,
+    "choices": [
+      539,
+      541,
+      595,
+      540
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-079-free",
+    "group": 79,
+    "family": "subtraction",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 595 minus 55? Reply with just the number.",
+    "gold_value": 540,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-080-r0",
+    "group": 80,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 times 40?\nA. 1760\nB. 1759\nC. 1761\nD. 1800\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 1760,
+    "choices": [
+      1760,
+      1759,
+      1761,
+      1800
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-080-r1",
+    "group": 80,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 times 40?\nA. 1800\nB. 1760\nC. 1759\nD. 1761\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 1760,
+    "choices": [
+      1800,
+      1760,
+      1759,
+      1761
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-080-r2",
+    "group": 80,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 times 40?\nA. 1761\nB. 1800\nC. 1760\nD. 1759\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 1760,
+    "choices": [
+      1761,
+      1800,
+      1760,
+      1759
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-080-r3",
+    "group": 80,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 times 40?\nA. 1759\nB. 1761\nC. 1800\nD. 1760\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 1760,
+    "choices": [
+      1759,
+      1761,
+      1800,
+      1760
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-080-free",
+    "group": 80,
+    "family": "multiplication",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "What is 44 times 40? Reply with just the number.",
+    "gold_value": 1760,
+    "max_new_tokens": 24,
+    "format": "free"
+  },
+  {
+    "id": "width-confirmation-081-r0",
+    "group": 81,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 41?\nA. 41\nB. 40\nC. 42\nD. 88\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 41,
+    "choices": [
+      41,
+      40,
+      42,
+      88
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-081-r1",
+    "group": 81,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 41?\nA. 88\nB. 41\nC. 40\nD. 42\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 41,
+    "choices": [
+      88,
+      41,
+      40,
+      42
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-081-r2",
+    "group": 81,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 41?\nA. 42\nB. 88\nC. 41\nD. 40\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 41,
+    "choices": [
+      42,
+      88,
+      41,
+      40
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-081-r3",
+    "group": 81,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 41?\nA. 40\nB. 42\nC. 88\nD. 41\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 41,
+    "choices": [
+      40,
+      42,
+      88,
+      41
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-082-r0",
+    "group": 82,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 21?\nA. 21\nB. 20\nC. 22\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 21,
+    "choices": [
+      21,
+      20,
+      22,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-082-r1",
+    "group": 82,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 21?\nA. 79\nB. 21\nC. 20\nD. 22\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 21,
+    "choices": [
+      79,
+      21,
+      20,
+      22
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-082-r2",
+    "group": 82,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 21?\nA. 22\nB. 79\nC. 21\nD. 20\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 21,
+    "choices": [
+      22,
+      79,
+      21,
+      20
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-082-r3",
+    "group": 82,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 21?\nA. 20\nB. 22\nC. 79\nD. 21\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 21,
+    "choices": [
+      20,
+      22,
+      79,
+      21
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-083-r0",
+    "group": 83,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 89?\nA. 89\nB. 88\nC. 90\nD. 150\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 89,
+    "choices": [
+      89,
+      88,
+      90,
+      150
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-083-r1",
+    "group": 83,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 89?\nA. 150\nB. 89\nC. 88\nD. 90\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 89,
+    "choices": [
+      150,
+      89,
+      88,
+      90
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-083-r2",
+    "group": 83,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 89?\nA. 90\nB. 150\nC. 89\nD. 88\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 89,
+    "choices": [
+      90,
+      150,
+      89,
+      88
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-083-r3",
+    "group": 83,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 89?\nA. 88\nB. 90\nC. 150\nD. 89\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 89,
+    "choices": [
+      88,
+      90,
+      150,
+      89
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-084-r0",
+    "group": 84,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 59?\nA. 59\nB. 58\nC. 60\nD. 77\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 59,
+    "choices": [
+      59,
+      58,
+      60,
+      77
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-084-r1",
+    "group": 84,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 59?\nA. 77\nB. 59\nC. 58\nD. 60\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 59,
+    "choices": [
+      77,
+      59,
+      58,
+      60
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-084-r2",
+    "group": 84,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 59?\nA. 60\nB. 77\nC. 59\nD. 58\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 59,
+    "choices": [
+      60,
+      77,
+      59,
+      58
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-084-r3",
+    "group": 84,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 59?\nA. 58\nB. 60\nC. 77\nD. 59\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 59,
+    "choices": [
+      58,
+      60,
+      77,
+      59
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-085-r0",
+    "group": 85,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 77?\nA. 77\nB. 76\nC. 78\nD. 135\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 77,
+    "choices": [
+      77,
+      76,
+      78,
+      135
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-085-r1",
+    "group": 85,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 77?\nA. 135\nB. 77\nC. 76\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 77,
+    "choices": [
+      135,
+      77,
+      76,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-085-r2",
+    "group": 85,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 77?\nA. 78\nB. 135\nC. 77\nD. 76\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 77,
+    "choices": [
+      78,
+      135,
+      77,
+      76
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-085-r3",
+    "group": 85,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 77?\nA. 76\nB. 78\nC. 135\nD. 77\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 77,
+    "choices": [
+      76,
+      78,
+      135,
+      77
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-086-r0",
+    "group": 86,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 79?\nA. 79\nB. 78\nC. 80\nD. 139\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 79,
+    "choices": [
+      79,
+      78,
+      80,
+      139
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-086-r1",
+    "group": 86,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 79?\nA. 139\nB. 79\nC. 78\nD. 80\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 79,
+    "choices": [
+      139,
+      79,
+      78,
+      80
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-086-r2",
+    "group": 86,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 79?\nA. 80\nB. 139\nC. 79\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 79,
+    "choices": [
+      80,
+      139,
+      79,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-086-r3",
+    "group": 86,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 79?\nA. 78\nB. 80\nC. 139\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 79,
+    "choices": [
+      78,
+      80,
+      139,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-087-r0",
+    "group": 87,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 35?\nA. 35\nB. 34\nC. 36\nD. 65\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 35,
+    "choices": [
+      35,
+      34,
+      36,
+      65
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-087-r1",
+    "group": 87,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 35?\nA. 65\nB. 35\nC. 34\nD. 36\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 35,
+    "choices": [
+      65,
+      35,
+      34,
+      36
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-087-r2",
+    "group": 87,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 35?\nA. 36\nB. 65\nC. 35\nD. 34\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 35,
+    "choices": [
+      36,
+      65,
+      35,
+      34
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-087-r3",
+    "group": 87,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 35?\nA. 34\nB. 36\nC. 65\nD. 35\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 35,
+    "choices": [
+      34,
+      36,
+      65,
+      35
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-088-r0",
+    "group": 88,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 82?\nA. 82\nB. 81\nC. 83\nD. 131\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 82,
+    "choices": [
+      82,
+      81,
+      83,
+      131
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-088-r1",
+    "group": 88,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 82?\nA. 131\nB. 82\nC. 81\nD. 83\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 82,
+    "choices": [
+      131,
+      82,
+      81,
+      83
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-088-r2",
+    "group": 88,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 82?\nA. 83\nB. 131\nC. 82\nD. 81\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 82,
+    "choices": [
+      83,
+      131,
+      82,
+      81
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-088-r3",
+    "group": 88,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 82?\nA. 81\nB. 83\nC. 131\nD. 82\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 82,
+    "choices": [
+      81,
+      83,
+      131,
+      82
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-089-r0",
+    "group": 89,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 50?\nA. 50\nB. 49\nC. 51\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 50,
+    "choices": [
+      50,
+      49,
+      51,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-089-r1",
+    "group": 89,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 50?\nA. 78\nB. 50\nC. 49\nD. 51\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 50,
+    "choices": [
+      78,
+      50,
+      49,
+      51
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-089-r2",
+    "group": 89,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 50?\nA. 51\nB. 78\nC. 50\nD. 49\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 50,
+    "choices": [
+      51,
+      78,
+      50,
+      49
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-089-r3",
+    "group": 89,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 50?\nA. 49\nB. 51\nC. 78\nD. 50\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 50,
+    "choices": [
+      49,
+      51,
+      78,
+      50
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-090-r0",
+    "group": 90,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 28?\nA. 28\nB. 27\nC. 29\nD. 45\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 28,
+    "choices": [
+      28,
+      27,
+      29,
+      45
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-090-r1",
+    "group": 90,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 28?\nA. 45\nB. 28\nC. 27\nD. 29\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 28,
+    "choices": [
+      45,
+      28,
+      27,
+      29
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-090-r2",
+    "group": 90,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 28?\nA. 29\nB. 45\nC. 28\nD. 27\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 28,
+    "choices": [
+      29,
+      45,
+      28,
+      27
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-090-r3",
+    "group": 90,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 28?\nA. 27\nB. 29\nC. 45\nD. 28\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 28,
+    "choices": [
+      27,
+      29,
+      45,
+      28
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-091-r0",
+    "group": 91,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 78?\nA. 78\nB. 77\nC. 79\nD. 109\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 78,
+    "choices": [
+      78,
+      77,
+      79,
+      109
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-091-r1",
+    "group": 91,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 78?\nA. 109\nB. 78\nC. 77\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 78,
+    "choices": [
+      109,
+      78,
+      77,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-091-r2",
+    "group": 91,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 78?\nA. 79\nB. 109\nC. 78\nD. 77\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 78,
+    "choices": [
+      79,
+      109,
+      78,
+      77
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-091-r3",
+    "group": 91,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 78?\nA. 77\nB. 79\nC. 109\nD. 78\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 78,
+    "choices": [
+      77,
+      79,
+      109,
+      78
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-092-r0",
+    "group": 92,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 16?\nA. 16\nB. 15\nC. 17\nD. 41\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 16,
+    "choices": [
+      16,
+      15,
+      17,
+      41
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-092-r1",
+    "group": 92,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 16?\nA. 41\nB. 16\nC. 15\nD. 17\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 16,
+    "choices": [
+      41,
+      16,
+      15,
+      17
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-092-r2",
+    "group": 92,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 16?\nA. 17\nB. 41\nC. 16\nD. 15\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 16,
+    "choices": [
+      17,
+      41,
+      16,
+      15
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-092-r3",
+    "group": 92,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 16?\nA. 15\nB. 17\nC. 41\nD. 16\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 16,
+    "choices": [
+      15,
+      17,
+      41,
+      16
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-093-r0",
+    "group": 93,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 70?\nA. 70\nB. 69\nC. 71\nD. 127\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 70,
+    "choices": [
+      70,
+      69,
+      71,
+      127
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-093-r1",
+    "group": 93,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 70?\nA. 127\nB. 70\nC. 69\nD. 71\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 70,
+    "choices": [
+      127,
+      70,
+      69,
+      71
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-093-r2",
+    "group": 93,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 70?\nA. 71\nB. 127\nC. 70\nD. 69\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 70,
+    "choices": [
+      71,
+      127,
+      70,
+      69
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-093-r3",
+    "group": 93,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 70?\nA. 69\nB. 71\nC. 127\nD. 70\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 70,
+    "choices": [
+      69,
+      71,
+      127,
+      70
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-094-r0",
+    "group": 94,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 72?\nA. 72\nB. 71\nC. 73\nD. 132\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 72,
+    "choices": [
+      72,
+      71,
+      73,
+      132
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-094-r1",
+    "group": 94,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 72?\nA. 132\nB. 72\nC. 71\nD. 73\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 72,
+    "choices": [
+      132,
+      72,
+      71,
+      73
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-094-r2",
+    "group": 94,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 72?\nA. 73\nB. 132\nC. 72\nD. 71\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 72,
+    "choices": [
+      73,
+      132,
+      72,
+      71
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-094-r3",
+    "group": 94,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 72?\nA. 71\nB. 73\nC. 132\nD. 72\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 72,
+    "choices": [
+      71,
+      73,
+      132,
+      72
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-095-r0",
+    "group": 95,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 15?\nA. 15\nB. 14\nC. 16\nD. 79\nAnswer with only the correct letter.",
+    "gold_letter": "A",
+    "gold_value": 15,
+    "choices": [
+      15,
+      14,
+      16,
+      79
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-095-r1",
+    "group": 95,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 15?\nA. 79\nB. 15\nC. 14\nD. 16\nAnswer with only the correct letter.",
+    "gold_letter": "B",
+    "gold_value": 15,
+    "choices": [
+      79,
+      15,
+      14,
+      16
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-095-r2",
+    "group": 95,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 15?\nA. 16\nB. 79\nC. 15\nD. 14\nAnswer with only the correct letter.",
+    "gold_letter": "C",
+    "gold_value": 15,
+    "choices": [
+      16,
+      79,
+      15,
+      14
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  },
+  {
+    "id": "width-confirmation-095-r3",
+    "group": 95,
+    "family": "selection",
+    "modality": "text",
+    "split": "width-confirmation",
+    "prompt": "Which option is the number 15?\nA. 14\nB. 16\nC. 79\nD. 15\nAnswer with only the correct letter.",
+    "gold_letter": "D",
+    "gold_value": 15,
+    "choices": [
+      14,
+      16,
+      79,
+      15
+    ],
+    "max_new_tokens": 24,
+    "format": "mcq"
+  }
+]

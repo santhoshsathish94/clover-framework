@@ -1,0 +1,28 @@
+{
+  "decoder_trace": {
+    "codes": 47,
+    "fallbacks": [],
+    "levels": 5,
+    "ncm_z_sha256": "63f97d0fac839348d701f7c15ecbf86ea55e6fd0ad9dfeb4a7fdcab8609c7dc0",
+    "zero_ncm": false
+  },
+  "id": "format-code",
+  "input": "```python\ndef add(left, right):\n    return left + right\n```",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 47,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 5,
+    "s": 0.24,
+    "window_tokens": 512,
+    "windows": 0
+  },
+  "policy": "raw_full",
+  "raw_trace": [],
+  "seconds": 0.24382511398289353,
+  "text": "```python\ndef add(left, right):\n    return left + right\n```",
+  "upstream_ncm_unchanged": true
+}

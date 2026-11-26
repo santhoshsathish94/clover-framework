@@ -1,0 +1,44 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "text": "",
+      "trace": {
+        "fallbacks": [],
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "text": "",
+      "trace": {
+        "fallbacks": [],
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "text": "",
+      "trace": {
+        "fallbacks": [],
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "",
+  "composite_s": 0.41590192599687725,
+  "echoes_input": true,
+  "exact": true,
+  "id": "format-empty",
+  "input": "",
+  "reference": "",
+  "reference_s": 0.3768078989814967,
+  "state_arrays": 3,
+  "trace": {
+    "fallbacks": [],
+    "zero_ncm": false
+  }
+}

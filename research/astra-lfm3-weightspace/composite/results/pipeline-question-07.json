@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "I had 31 tickets and gave away 8. How many remain?",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "a2368354db0ba732bfa0314f5c3cd4d70789b374289785bb0f8dbc1902917903",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "correct": false,
+      "text": "I had 31 tickets and gave away 8. How many remain?",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "ed3ff2e2b78df6cc6106f676eed335c272c4b7313e1e908467621507749167bc",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "I had 31 tickets and gave away 8. How many remain?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "I had 31 tickets and gave away 8. How many remain?",
+  "composite_correct": false,
+  "composite_s": 0.7036805889802054,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "23"
+  ],
+  "id": "question-07",
+  "input": "I had 31 tickets and gave away 8. How many remain?",
+  "native_correct": true,
+  "native_text": "23",
+  "reference": "I had 31 tickets and gave away 8. How many remain?",
+  "reference_s": 0.9032195729669183,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 47,
+    "fallbacks": [
+      false
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "ed3ff2e2b78df6cc6106f676eed335c272c4b7313e1e908467621507749167bc",
+    "zero_ncm": false
+  }
+}

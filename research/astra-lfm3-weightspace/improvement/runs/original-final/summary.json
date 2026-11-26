@@ -1,0 +1,179 @@
+{
+  "cells": {
+    "addition:mcq_gold_A": {
+      "correct": 24,
+      "total": 24
+    },
+    "all:mcq": {
+      "correct": 230,
+      "total": 384
+    },
+    "addition:mcq_gold_B": {
+      "correct": 1,
+      "total": 24
+    },
+    "addition:mcq_gold_C": {
+      "correct": 1,
+      "total": 24
+    },
+    "addition:mcq_gold_D": {
+      "correct": 5,
+      "total": 24
+    },
+    "addition:free": {
+      "correct": 24,
+      "total": 24
+    },
+    "all:free": {
+      "correct": 61,
+      "total": 72
+    },
+    "subtraction:mcq_gold_A": {
+      "correct": 24,
+      "total": 24
+    },
+    "subtraction:mcq_gold_B": {
+      "correct": 21,
+      "total": 24
+    },
+    "subtraction:mcq_gold_C": {
+      "correct": 0,
+      "total": 24
+    },
+    "subtraction:mcq_gold_D": {
+      "correct": 0,
+      "total": 24
+    },
+    "subtraction:free": {
+      "correct": 24,
+      "total": 24
+    },
+    "multiplication:mcq_gold_A": {
+      "correct": 17,
+      "total": 24
+    },
+    "multiplication:mcq_gold_B": {
+      "correct": 10,
+      "total": 24
+    },
+    "multiplication:mcq_gold_C": {
+      "correct": 15,
+      "total": 24
+    },
+    "multiplication:mcq_gold_D": {
+      "correct": 16,
+      "total": 24
+    },
+    "multiplication:free": {
+      "correct": 13,
+      "total": 24
+    },
+    "selection:mcq_gold_A": {
+      "correct": 24,
+      "total": 24
+    },
+    "selection:mcq_gold_B": {
+      "correct": 24,
+      "total": 24
+    },
+    "selection:mcq_gold_C": {
+      "correct": 24,
+      "total": 24
+    },
+    "selection:mcq_gold_D": {
+      "correct": 24,
+      "total": 24
+    }
+  },
+  "groups_with_rotation_value_disagreement": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    8,
+    9,
+    10,
+    12,
+    13,
+    16,
+    17,
+    18,
+    20,
+    21,
+    24,
+    25,
+    26,
+    28,
+    29,
+    32,
+    33,
+    34,
+    36,
+    37,
+    38,
+    40,
+    41,
+    44,
+    45,
+    46,
+    48,
+    49,
+    50,
+    52,
+    53,
+    54,
+    56,
+    57,
+    58,
+    60,
+    61,
+    62,
+    64,
+    65,
+    68,
+    69,
+    72,
+    73,
+    76,
+    77,
+    78,
+    80,
+    81,
+    84,
+    85,
+    86,
+    88,
+    89,
+    92,
+    93
+  ],
+  "predicted_letters": {
+    "A": 199,
+    "C": 57,
+    "D": 57,
+    "B": 71
+  },
+  "name": "original-final",
+  "split": "final",
+  "checkpoint": "/opt/clover-k3/astra-weightspace-20261111/original",
+  "totals": {
+    "arithmetic_mcq": {
+      "correct": 134,
+      "total": 288
+    },
+    "arithmetic_free": {
+      "correct": 61,
+      "total": 72
+    },
+    "selection": {
+      "correct": 96,
+      "total": 96
+    }
+  },
+  "case_count": 456,
+  "case_sha256": "90562f30d32e60b1e99d8a0624256332762cb8d5af10e8dce8adaa7aa42e63f8",
+  "results_sha256": "39392f80e4e648ca9ce4d7908eee7a47daf70c1d3dd1301325dbf79ba740df32",
+  "elapsed_s": 115.23482543695718,
+  "original_and_frozen_inputs_unchanged": true
+}

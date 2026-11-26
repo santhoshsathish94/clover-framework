@@ -1,0 +1,39 @@
+{
+  "canonical_gold_missing_tokens": {
+    "true": [
+      10066
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 27,
+    "fallbacks": [
+      false
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "1a7753bf36f9daa6c206292a5b56e5c51949d0478ab4e4e854f0c1164f5174d9",
+    "zero_ncm": false
+  },
+  "gold": [
+    "true"
+  ],
+  "id": "question-23",
+  "input": "In JSON, which lowercase literal represents Boolean truth?",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 27,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 4,
+    "s": 0.13,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "stock",
+  "raw_trace": [],
+  "seconds": 0.12730999803170562,
+  "text": "In JSON, which lowercase literal represents Boolean truth?",
+  "upstream_ncm_unchanged": true
+}

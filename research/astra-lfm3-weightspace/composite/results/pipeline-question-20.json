@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+      "trace": {
+        "codes": 105,
+        "fallbacks": [
+          false
+        ],
+        "levels": 7,
+        "ncm_z_sha256": "c76f494c697a7894697b3f54236c90f2f898c93812e677072b6492e79d018323",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+      "trace": {
+        "codes": 105,
+        "fallbacks": [
+          false
+        ],
+        "levels": 7,
+        "ncm_z_sha256": "b10d36d904c0f6ce5890090ffe42cf275cd5648e5f915484d145c056f274dc80",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+  "composite_correct": false,
+  "composite_s": 1.096793596050702,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "B"
+  ],
+  "id": "question-20",
+  "input": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+  "native_correct": true,
+  "native_text": "B",
+  "reference": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+  "reference_s": 1.0240860930643976,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 105,
+    "fallbacks": [
+      false
+    ],
+    "levels": 7,
+    "ncm_z_sha256": "ba146cb5f7114d938301d43161c5ab7d0de57bee16e74da1e942499fbed036b5",
+    "zero_ncm": false
+  }
+}

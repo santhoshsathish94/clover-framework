@@ -1,0 +1,202 @@
+[
+  {
+    "id": "text-00",
+    "split": "discovery",
+    "text": "The delivery contains twelve blue folders and seven green notebooks."
+  },
+  {
+    "id": "text-01",
+    "split": "discovery",
+    "text": "The west entrance opens at eight and closes at six."
+  },
+  {
+    "id": "text-02",
+    "split": "discovery",
+    "text": "Mira placed four clean cups beside the silver kettle."
+  },
+  {
+    "id": "text-03",
+    "split": "discovery",
+    "text": "The first shipment weighs thirty kilograms before packing."
+  },
+  {
+    "id": "text-04",
+    "split": "discovery",
+    "text": "A spare battery is stored in the lower drawer."
+  },
+  {
+    "id": "text-05",
+    "split": "discovery",
+    "text": "The report lists three missing labels on the second page."
+  },
+  {
+    "id": "text-06",
+    "split": "discovery",
+    "text": "Each tray holds six glasses and there are five trays."
+  },
+  {
+    "id": "text-07",
+    "split": "discovery",
+    "text": "The red cable connects the monitor to the left socket."
+  },
+  {
+    "id": "text-08",
+    "split": "discovery",
+    "text": "The team approved the first draft after two corrections."
+  },
+  {
+    "id": "text-09",
+    "split": "discovery",
+    "text": "The invoice includes a ten percent discount on paper."
+  },
+  {
+    "id": "text-10",
+    "split": "discovery",
+    "text": "The parcel left the station on Tuesday morning."
+  },
+  {
+    "id": "text-11",
+    "split": "discovery",
+    "text": "The square has four equal sides and four right angles."
+  },
+  {
+    "id": "text-12",
+    "split": "discovery",
+    "text": "The sensor measures temperature once every twenty seconds."
+  },
+  {
+    "id": "text-13",
+    "split": "discovery",
+    "text": "The north room contains eight chairs and two desks."
+  },
+  {
+    "id": "text-14",
+    "split": "discovery",
+    "text": "The recipe requires one cup of rice and two cups of water."
+  },
+  {
+    "id": "text-15",
+    "split": "discovery",
+    "text": "The public library is closed on the first Monday."
+  },
+  {
+    "id": "text-16",
+    "split": "discovery",
+    "text": "A yellow sticker marks the equipment awaiting inspection."
+  },
+  {
+    "id": "text-17",
+    "split": "discovery",
+    "text": "The second container holds fifteen empty bottles."
+  },
+  {
+    "id": "text-18",
+    "split": "discovery",
+    "text": "The account balance increased from forty to fifty dollars."
+  },
+  {
+    "id": "text-19",
+    "split": "discovery",
+    "text": "The final paragraph describes the required safety inspection."
+  },
+  {
+    "id": "text-20",
+    "split": "heldout",
+    "text": "The package contains nine black pens and fourteen orange cards."
+  },
+  {
+    "id": "text-21",
+    "split": "heldout",
+    "text": "The east gate opens at seven and closes at five."
+  },
+  {
+    "id": "text-22",
+    "split": "heldout",
+    "text": "Arun placed three plates beside the wooden cutting board."
+  },
+  {
+    "id": "text-23",
+    "split": "heldout",
+    "text": "The next shipment weighs forty kilograms before packing."
+  },
+  {
+    "id": "text-24",
+    "split": "heldout",
+    "text": "The replacement key is kept in the upper cabinet."
+  },
+  {
+    "id": "text-25",
+    "split": "heldout",
+    "text": "The checklist identifies four loose screws on the back panel."
+  },
+  {
+    "id": "text-26",
+    "split": "heldout",
+    "text": "Each carton holds eight jars and there are seven cartons."
+  },
+  {
+    "id": "text-27",
+    "split": "heldout",
+    "text": "The white cable connects the printer to the right socket."
+  },
+  {
+    "id": "text-28",
+    "split": "heldout",
+    "text": "The committee accepted the revised plan after one correction."
+  },
+  {
+    "id": "text-29",
+    "split": "heldout",
+    "text": "The receipt includes a five percent discount on envelopes."
+  },
+  {
+    "id": "text-30",
+    "split": "heldout",
+    "text": "The order reached the depot on Thursday afternoon."
+  },
+  {
+    "id": "text-31",
+    "split": "heldout",
+    "text": "A triangle has three sides and three interior angles."
+  },
+  {
+    "id": "text-32",
+    "split": "heldout",
+    "text": "The instrument records pressure once every thirty seconds."
+  },
+  {
+    "id": "text-33",
+    "split": "heldout",
+    "text": "The south office contains six tables and eleven chairs."
+  },
+  {
+    "id": "text-34",
+    "split": "heldout",
+    "text": "The mixture uses two cups of flour and one cup of milk."
+  },
+  {
+    "id": "text-35",
+    "split": "heldout",
+    "text": "The local museum remains closed on the last Wednesday."
+  },
+  {
+    "id": "text-36",
+    "split": "heldout",
+    "text": "A purple tag identifies the tools scheduled for repair."
+  },
+  {
+    "id": "text-37",
+    "split": "heldout",
+    "text": "The third box contains seventeen folded towels."
+  },
+  {
+    "id": "text-38",
+    "split": "heldout",
+    "text": "The payment increased the balance from sixty to eighty dollars."
+  },
+  {
+    "id": "text-39",
+    "split": "heldout",
+    "text": "The opening section explains the monthly maintenance schedule."
+  }
+]

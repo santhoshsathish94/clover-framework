@@ -1,0 +1,48 @@
+{
+  "canonical_gold_missing_tokens": {
+    "Canberra": [
+      8535,
+      59405
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "b93db6462cd8de2627764b96465ffea926079b96227e97972756a9d4c3ae75ce",
+    "zero_ncm": false
+  },
+  "gold": [
+    "Canberra"
+  ],
+  "id": "question-10",
+  "input": "O",
+  "input_mode": "swapped_native_answer",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.08,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_restricted",
+  "raw_trace": [
+    {
+      "allowed_ids": 188,
+      "policy": "raw_restricted",
+      "positions": 1,
+      "token_ids": []
+    }
+  ],
+  "seconds": 0.0752863259986043,
+  "swapped_source_id": "question-11",
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

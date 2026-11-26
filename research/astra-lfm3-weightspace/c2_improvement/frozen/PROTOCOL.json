@@ -1,0 +1,35 @@
+{
+  "acceptance_gate": {
+    "backbone_loss_delta": "< 0 on both eval32 and heldout32 with one-sided paired sign p <= 0.01",
+    "cos_loss_delta": "< 0 on both eval32 and heldout32",
+    "hybridlink_loss_delta": "< 0 on both eval32 and heldout32 with one-sided paired sign p <= 0.01",
+    "loss_delta": "< 0 on both eval32 and heldout32 with one-sided paired sign p <= 0.01",
+    "mse_loss_delta": "< 0 on both eval32 and heldout32",
+    "qa_latent4_correct": ">= original",
+    "qa_natural_correct": ">= original with 0 newly broken questions",
+    "text_ce_delta": "<= 0.0005 (non-degraded ordinary text CE)"
+  },
+  "arms": [
+    "original",
+    "noop_control",
+    "anchor1.5_only",
+    "g0.92_only",
+    "combined_anchor1.5_g0.92"
+  ],
+  "gradient_training": false,
+  "heldout_splits": [
+    "eval32",
+    "heldout32"
+  ],
+  "mathematical_specification": {
+    "anchor1.5_only": "model.embed_tokens.weight[a] <- e_orig[a] + 1.5 * (e_c2[a] - e_orig[a]) for a in {125033, 125034}",
+    "combined_anchor1.5_g0.92": "both anchor1.5_only and g0.92_only applied together",
+    "g0.92_only": "adapter.post_ln.{weight,bias} <- 0.92 * adapter.post_ln.{weight,bias}"
+  },
+  "max_length": 8192,
+  "primary_candidate": "combined_anchor1.5_g0.92",
+  "single_component_ablations": [
+    "anchor1.5_only",
+    "g0.92_only"
+  ]
+}

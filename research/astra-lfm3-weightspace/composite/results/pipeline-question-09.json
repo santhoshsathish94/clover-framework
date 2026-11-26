@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of Japan?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "3a734e144982a06ac0dc80df90f5be01c42b2c3a19ac32179d21ae822b6a8b3b",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of Japan?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "e96a4c6b01bfd7080b51d9856a362c4703e02f409b9ddb65668a073f29af4bee",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of Japan?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "What is the capital of Japan?",
+  "composite_correct": false,
+  "composite_s": 0.6150538499932736,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "Tokyo"
+  ],
+  "id": "question-09",
+  "input": "What is the capital of Japan?",
+  "native_correct": true,
+  "native_text": "Tokyo",
+  "reference": "What is the capital of Japan?",
+  "reference_s": 0.4161987469997257,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "3a734e144982a06ac0dc80df90f5be01c42b2c3a19ac32179d21ae822b6a8b3b",
+    "zero_ncm": false
+  }
+}

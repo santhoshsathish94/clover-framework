@@ -1,0 +1,19 @@
+{
+  "c2_adapter_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+  "c2_model_sha256": "581239236b5966bc5f3883d28d81a061dca3718dfbdba5e11738fdefb97e9ad2",
+  "files": {
+    "c2_improvement/SPLITS.json": "44ccd84f7694d2ddb6da79d578be1d83a42022b47f7a1c9f17824e74fea45857",
+    "c2_improvement/diagnose.py": "08d039fb9ba94ac5e87fded05d563a18b7af71c601645d39be47c664e15750bd",
+    "c2_improvement/explore_discovery.py": "70696c34096bb6f704712e3f4a5a25a166c3915d60d9c8e67cfaeaf762f56ef3",
+    "c2_improvement/frozen/PROTOCOL.json": "61f3c6baa4461b1fc4894814a5d88ac8793108b2e52065f19e308ebf5cc404ea",
+    "c2_improvement/frozen/qa_cases.json": "9e63d3c9c456546d6d3aec3aa7fd06ff3f5f27ffebf3f140100079992b77608d",
+    "c2_improvement/probe_mechanisms.py": "42466484deb1e965d9afddbb54983a7f56c4ad45e6e9e5705c635f75c0ab6d71",
+    "c2_improvement/search_discovery.py": "b5f935c0637e89ec34ff00e4364a3a1429c0ad8d384f5d9be2082dc3326e0b72",
+    "c2_improvement/splits/discovery24.jsonl": "9c02f35d6aa6f22d611177f0eff5a603b2063e6515540ae30f72910f051b8eeb",
+    "c2_improvement/splits/eval32.jsonl": "37187b53a96ecca601e195beb05e3146da80e7c16fdd557a60e1e4b9e8a0ff96",
+    "c2_improvement/splits/heldout32.jsonl": "89c9fe2193ba1a714db97c9726f1a383ee8dbe0cca08df020d201aa9c627503e",
+    "c2_improvement/test_combo_discovery.py": "ddb1fac40e282591f4e18dda38b6481c37ede042faa811ffe5169d1968c12d63",
+    "c2_improvement/validate_c2.py": "c0af52d4184b36f3ab02f39f5f82979249ad3be92752ae631e19265b363441ea"
+  },
+  "orig_model_sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763"
+}

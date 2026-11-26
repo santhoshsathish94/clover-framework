@@ -1,0 +1,16 @@
+{
+  "files": {
+    "tuning.json": "5f5d23378c8318c8544cce0c7761366452290b866ef28f11c6c045d4f910c418",
+    "final.json": "90562f30d32e60b1e99d8a0624256332762cb8d5af10e8dce8adaa7aa42e63f8"
+  },
+  "sources": {
+    "runtime.py": "3732194cba4f0154b22e25038e1ebbde5155b444b1c997f1f5dcf2ec97d2f049",
+    "improvement/diagnose.py": "335c3364a27ed7afdba73638808bf4d248772b9331bca70c807f5dc1ba6781a5",
+    "improvement/evaluate.py": "5f84e5a3e4e7abbc757d9291db3b6ba15f31a01254be09e327987afb03edb42f",
+    "improvement/PROTOCOL.md": "e119a924d81bc156e7fb33a3cca010c732a9adaa290cc14c685e44a6f2e96c93"
+  },
+  "counts": {
+    "tuning": 228,
+    "final": 456
+  }
+}

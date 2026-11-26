@@ -1,0 +1,35 @@
+{
+  "requested_widths": [
+    64,
+    128,
+    256,
+    512,
+    1024
+  ],
+  "eligible_ranked_neurons": 2549,
+  "available_widths": [
+    64,
+    128,
+    256,
+    512,
+    1024
+  ],
+  "spec_count": 9,
+  "original64_rank_and_direction_exact": true,
+  "tuning_case_sha256": "5f5d23378c8318c8544cce0c7761366452290b866ef28f11c6c045d4f910c418",
+  "files": {
+    "directions.npz": "00ef6e895872ac24839ec880598a2a4086f629f4aa2c4ef74ec75a6aa3b056b2",
+    "specs.json": "c37dbc0c68609b38be568c628d3ac597097183668d1ea0c12a116175bf02b1c1",
+    "confirmation.json": "7dd99e8a07402e72f9e01aad470f44bd07a26914faa3ff1b3fc271ff7f4808f4",
+    "HYPOTHESIS.md": "fe4a3e99ac3711467c62aead0a5de2699bdde2f621eb492112b2526ece9a2619"
+  },
+  "hypothesis_sha256": "fe4a3e99ac3711467c62aead0a5de2699bdde2f621eb492112b2526ece9a2619",
+  "sources": {
+    "runtime.py": "3732194cba4f0154b22e25038e1ebbde5155b444b1c997f1f5dcf2ec97d2f049",
+    "improvement/diagnose.py": "335c3364a27ed7afdba73638808bf4d248772b9331bca70c807f5dc1ba6781a5",
+    "improvement/evaluate.py": "5f84e5a3e4e7abbc757d9291db3b6ba15f31a01254be09e327987afb03edb42f",
+    "improvement/interventions.py": "939ad34e97a8b632245593d41ac528c2825a56d5e92fa266e6000b3dc7c15ea4",
+    "improvement/neuron_count/study.py": "24c2fa01dc67e712e081023f67a4cc0326e7f80ce37407254e7a85c740c0d31d"
+  },
+  "confirmation_not_used_for_selection": true
+}

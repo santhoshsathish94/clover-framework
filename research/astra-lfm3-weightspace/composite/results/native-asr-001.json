@@ -1,0 +1,148 @@
+{
+  "activation_arrays": 20,
+  "composite": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "correct": false,
+    "generated_slots": 15,
+    "generation_s": 1.9307891770731658,
+    "gold": "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER",
+    "hit_token_limit": false,
+    "id": "asr-001",
+    "input_sha256": "7d6d2c5d5fb81d30a989a5bc08f6d9497844478dd6f5a43dc1f3a6c2c3ab874f",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        84
+      ],
+      "feature_attention_mask": [
+        1,
+        480
+      ],
+      "input_features": [
+        1,
+        128,
+        480
+      ],
+      "input_ids": [
+        1,
+        84
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "audio_asr",
+    "split": "regression",
+    "text": "Nor is Mr. Coulter's manner less interesting than his matter.",
+    "tokens": [
+      23696,
+      355,
+      7054,
+      22,
+      47881,
+      385,
+      589,
+      9109,
+      1941,
+      7063,
+      898,
+      709,
+      4555,
+      22,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "asr-001",
+  "modality": "audio_asr",
+  "reference": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "correct": false,
+    "generated_slots": 15,
+    "generation_s": 1.914996979990974,
+    "gold": "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER",
+    "hit_token_limit": false,
+    "id": "asr-001",
+    "input_sha256": "7d6d2c5d5fb81d30a989a5bc08f6d9497844478dd6f5a43dc1f3a6c2c3ab874f",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        84
+      ],
+      "feature_attention_mask": [
+        1,
+        480
+      ],
+      "input_features": [
+        1,
+        128,
+        480
+      ],
+      "input_ids": [
+        1,
+        84
+      ]
+    },
+    "max_new_tokens": 96,
+    "modality": "audio_asr",
+    "split": "regression",
+    "text": "Nor is Mr. Coulter's manner less interesting than his matter.",
+    "tokens": [
+      23696,
+      355,
+      7054,
+      22,
+      47881,
+      385,
+      589,
+      9109,
+      1941,
+      7063,
+      898,
+      709,
+      4555,
+      22,
+      124900
+    ]
+  }
+}

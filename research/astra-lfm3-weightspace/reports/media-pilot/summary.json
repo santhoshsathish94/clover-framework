@@ -1,0 +1,49 @@
+{
+  "name": "media-pilot",
+  "case_count": 4,
+  "groups": {
+    "pilot:audio_asr": {
+      "cases": 1,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 1.8434456250397488
+    },
+    "pilot:speech": {
+      "cases": 1,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 1.3636151250684634,
+      "speech_waveforms_nonempty": 1,
+      "speech_intelligibility": "not independently evaluated"
+    },
+    "pilot:video": {
+      "cases": 1,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 1,
+      "limit_hits": 0,
+      "generation_s": 0
+    },
+    "pilot:vision": {
+      "cases": 1,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 1,
+      "generation_s": 2.657156169996597
+    }
+  },
+  "elapsed_s": 8.1147416299209,
+  "source_hashes_verified_before_and_after": true,
+  "error_count": 1,
+  "results_sha256": "31ce358d103d7c3a55d1fd9c65b97cfcb79fd67ce5c8d410eab72a744a0f47c6",
+  "activations_sha256": "831a7cb0d9ec02893f90662e457c1e953bd4144fc90dee7b103b799e01784242",
+  "limitations": [
+    "Constructed small sample, not general benchmark accuracy",
+    "Speech intelligibility/naturalness not independently evaluated"
+  ]
+}

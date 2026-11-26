@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "H1",
+  "hypothesis_file": "reports/HYPOTHESES.md",
+  "hypothesis_sha256": "879bdc4a56cd88e23476fbf42ab14f84dc81fad685ad40aed7ba58e0ec941d71",
+  "baseline_results_sha256": "215984b766fb336eeabdb8c0e3c50da9131a64fbbc8fe5c7e96cf0384fe23cea",
+  "original_checkpoint_sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "target_tensor": "model.language_model.embedding_norm.weight",
+  "target_shape": [
+    2048
+  ],
+  "dtype": "BF16",
+  "flat_index": 36,
+  "file_offset": 1021865936,
+  "old_hex": "4240",
+  "new_hex": "2f40",
+  "original_gain": 3.03125,
+  "new_gain": 2.734375,
+  "requested_attenuation": 0.1,
+  "effective_attenuation": 0.09793814432989689,
+  "primary": true
+}

@@ -1,0 +1,49 @@
+{
+  "canonical_gold_missing_tokens": {
+    "2.5": [
+      26,
+      29
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 27,
+    "fallbacks": [
+      false
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "d0216f111fcd781a628bf3f62d8dd8b7b9d98cfd7dc837dfb650bcea2d2caf3d",
+    "zero_ncm": false
+  },
+  "gold": [
+    "2.5"
+  ],
+  "id": "question-05",
+  "input": "Convert 250 centimeters to meters. Give only the number.",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 27,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 4,
+    "s": 0.19,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_full",
+  "raw_trace": [
+    {
+      "allowed_ids": 128000,
+      "policy": "raw_full",
+      "positions": 12,
+      "token_ids": [
+        310
+      ]
+    }
+  ],
+  "seconds": 0.19191423803567886,
+  "text": "to",
+  "upstream_ncm_unchanged": true
+}

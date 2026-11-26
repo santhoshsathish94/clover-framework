@@ -1,0 +1,140 @@
+{
+  "activation_arrays": 20,
+  "composite": {
+    "activation_keys": [
+      "vision_tower",
+      "vision_tower.mean",
+      "multi_modal_projector",
+      "multi_modal_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "D",
+    "correct": true,
+    "generated_slots": 2,
+    "generation_s": 1.5680673350580037,
+    "gold": "B",
+    "gold_margin": 17.109375,
+    "hit_token_limit": false,
+    "id": "video-001",
+    "input_sha256": "1b2ad2976a417bae4e350481e1d2ff6da7a18b7dbc26288ce7f7c9920fdfd56b",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        335
+      ],
+      "input_ids": [
+        1,
+        335
+      ],
+      "pixel_values_videos": [
+        1024,
+        1536
+      ],
+      "video_grid_thw": [
+        1,
+        3
+      ]
+    },
+    "letter_logits": [
+      -6.65625,
+      13.4375,
+      -4.875,
+      -3.671875
+    ],
+    "max_new_tokens": 24,
+    "modality": "video",
+    "prediction": "B",
+    "restricted_prediction": "B",
+    "split": "regression",
+    "text": "B",
+    "tokens": [
+      42,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "video-001",
+  "modality": "video",
+  "reference": {
+    "activation_keys": [
+      "vision_tower",
+      "vision_tower.mean",
+      "multi_modal_projector",
+      "multi_modal_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "D",
+    "correct": true,
+    "generated_slots": 2,
+    "generation_s": 1.5651810229755938,
+    "gold": "B",
+    "gold_margin": 17.109375,
+    "hit_token_limit": false,
+    "id": "video-001",
+    "input_sha256": "1b2ad2976a417bae4e350481e1d2ff6da7a18b7dbc26288ce7f7c9920fdfd56b",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        335
+      ],
+      "input_ids": [
+        1,
+        335
+      ],
+      "pixel_values_videos": [
+        1024,
+        1536
+      ],
+      "video_grid_thw": [
+        1,
+        3
+      ]
+    },
+    "letter_logits": [
+      -6.65625,
+      13.4375,
+      -4.875,
+      -3.671875
+    ],
+    "max_new_tokens": 24,
+    "modality": "video",
+    "prediction": "B",
+    "restricted_prediction": "B",
+    "split": "regression",
+    "text": "B",
+    "tokens": [
+      42,
+      124900
+    ]
+  }
+}

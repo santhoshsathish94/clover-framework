@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the chemical symbol for oxygen?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "23e8132b30a8aa5ec318788546a518a7572932c5e59cf10f73950236399e231e",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the chemical symbol for oxygen?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "3ef3a8f199343a9b4fd0ec7ff55576bb8a28f16ab11f20dc284d5aea87f5cf61",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the chemical symbol for oxygen?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "What is the chemical symbol for oxygen?",
+  "composite_correct": false,
+  "composite_s": 0.6119502639630809,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "O"
+  ],
+  "id": "question-11",
+  "input": "What is the chemical symbol for oxygen?",
+  "native_correct": true,
+  "native_text": "O",
+  "reference": "What is the chemical symbol for oxygen?",
+  "reference_s": 0.5473080489318818,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "e04161f3d7083602e32a6d84dfbef472e94337312637b50db440b434583386dc",
+    "zero_ncm": false
+  }
+}

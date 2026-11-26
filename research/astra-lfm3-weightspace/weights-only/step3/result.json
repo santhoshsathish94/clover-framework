@@ -1,0 +1,450 @@
+{
+  "evidence_mode": "checkpoint weights and previously measured weight-only row family; no labels, prompts, activations, inference or model-code interpretation",
+  "boundary": {
+    "known_behavior_and_tokenizer_inputs_inaccessible": true,
+    "checkpoint_readonly": true
+  },
+  "tensor_hashes": {
+    "model.language_model.layers.0.conv.in_proj.weight": "480955ead84ac3183e3bf6c659d166899641db57754045b98e0c462fe1b744af",
+    "model.language_model.layers.0.operator_norm.weight": "26ccec081b5df823f6484ae588bb531ced187c076dcfe9a2aa6527234d494b7d"
+  },
+  "step2_result_sha256": "df09693385f63f6d2beb8e6a4a02ea7b4d4debd6fe3d9f2445b72f900eadd340",
+  "family_row_count": 4173,
+  "family_row_ids_first16": [
+    133,
+    134,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    63524,
+    63527,
+    63528
+  ],
+  "direction_norm": 1.0,
+  "input_common_energy": 126.49002861782802,
+  "input_deviation_energy": 0.8873530671358412,
+  "residual_mean_abs_direction_dot": 9.827435495807145e-17,
+  "projection_results": {
+    "bare_projection": {
+      "shape": [
+        6144,
+        2048
+      ],
+      "common_direction_gain": 5.88226341017449,
+      "isotropic_rms_gain": 1.6626369478047713,
+      "orthogonal_isotropic_rms_gain": 1.6579531903272267,
+      "common_gain_relative_to_isotropic": 3.5379121208277104,
+      "deviation_rms_gain": 1.6961633251239268,
+      "deviation_to_common_relative_gain": 0.28835215406880466,
+      "input_deviation_energy_fraction": 0.006966331505623874,
+      "projected_common_energy": 4376.684367552572,
+      "projected_deviation_energy": 2.552888176181272,
+      "projected_common_deviation_cross_term": -0.07676164570729674,
+      "projected_total_energy": 4379.160494083047,
+      "deviation_fraction_of_separate_component_energies": 0.000582952698633005,
+      "projection_row_cosine_to_common_direction": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.45926772995744203,
+          -0.24850255471658983,
+          -0.1393276546363547,
+          -0.03360632432967625,
+          -0.00027640894604802254,
+          0.031376425705123084,
+          0.1310647190934441,
+          0.23880207442837054,
+          0.45747289611269054
+        ]
+      },
+      "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+      "equal_row_blocks": [
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 3.767442052347307,
+          "isotropic_rms_gain": 0.9631111091162494,
+          "orthogonal_isotropic_rms_gain": 0.9597407395491129,
+          "common_gain_relative_to_isotropic": 3.9117418714070396,
+          "deviation_rms_gain": 0.9707850105408807,
+          "deviation_to_common_relative_gain": 0.2576774896739374,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 1795.3513516454404,
+          "projected_deviation_energy": 0.8362624158236397,
+          "projected_common_deviation_cross_term": -0.04311046120484845,
+          "projected_total_energy": 1796.1445036000594,
+          "deviation_fraction_of_separate_component_energies": 0.0004655763180176993,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.45926772995744203,
+              -0.2496408582068317,
+              -0.1545775069659145,
+              -0.05117245764963148,
+              0.00020545727069615482,
+              0.04508884718489928,
+              0.14331639006144797,
+              0.23552327325763617,
+              0.37513703836973944
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            0,
+            2048
+          ],
+          "block_role": "not assigned from weights alone"
+        },
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 2.4191266899182065,
+          "isotropic_rms_gain": 0.9536687498612951,
+          "orthogonal_isotropic_rms_gain": 0.9524019543634332,
+          "common_gain_relative_to_isotropic": 2.5366529943128078,
+          "deviation_rms_gain": 0.9982515964818555,
+          "deviation_to_common_relative_gain": 0.41264957335310437,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 740.2416493842278,
+          "projected_deviation_energy": 0.8842528772497869,
+          "projected_common_deviation_cross_term": -0.0013556186816855095,
+          "projected_total_energy": 741.1245466427958,
+          "deviation_fraction_of_separate_component_energies": 0.0011931209994841235,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.3851659125306444,
+              -0.19285424127836095,
+              -0.08889087337823011,
+              -0.018023233973910435,
+              0.0005648950755529473,
+              0.01893180747788079,
+              0.09211634179159538,
+              0.20763367238331087,
+              0.45747289611269054
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            2048,
+            4096
+          ],
+          "block_role": "not assigned from weights alone"
+        },
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 3.8151316185694193,
+          "isotropic_rms_gain": 0.9629613321626266,
+          "orthogonal_isotropic_rms_gain": 0.9594983123959395,
+          "common_gain_relative_to_isotropic": 3.9618741595795597,
+          "deviation_rms_gain": 0.968524774554593,
+          "deviation_to_common_relative_gain": 0.2538640527735622,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 1841.0913665229045,
+          "projected_deviation_energy": 0.8323728831078456,
+          "projected_common_deviation_cross_term": -0.03229556582076258,
+          "projected_total_energy": 1841.8914438401916,
+          "deviation_fraction_of_separate_component_energies": 0.0004519040964075261,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.39337699313502783,
+              -0.26805196332246756,
+              -0.15290104911708824,
+              -0.04702300359315568,
+              -0.0017955437801733805,
+              0.04282879015337022,
+              0.1419946761843887,
+              0.24727416377664155,
+              0.34270657414877137
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            4096,
+            6144
+          ],
+          "block_role": "not assigned from weights alone"
+        }
+      ]
+    },
+    "column_scaled_projection": {
+      "shape": [
+        6144,
+        2048
+      ],
+      "common_direction_gain": 1.90727449899008,
+      "isotropic_rms_gain": 0.33182623999107286,
+      "orthogonal_isotropic_rms_gain": 0.3292193149365503,
+      "common_gain_relative_to_isotropic": 5.747810959860774,
+      "deviation_rms_gain": 0.34123601536262915,
+      "deviation_to_common_relative_gain": 0.1789129019149141,
+      "input_deviation_energy_fraction": 0.006966331505623874,
+      "projected_common_energy": 460.1322729767934,
+      "projected_deviation_energy": 0.10332518197601126,
+      "projected_common_deviation_cross_term": 0.002477958320566725,
+      "projected_total_energy": 460.23807611709,
+      "deviation_fraction_of_separate_component_energies": 0.00022450497612391717,
+      "projection_row_cosine_to_common_direction": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.47516817710979403,
+          -0.31519587852861514,
+          -0.2043702353676919,
+          -0.05300028447082472,
+          -0.0010927737587528826,
+          0.04655230320934363,
+          0.19480103308764432,
+          0.3020484292812377,
+          0.47111383121144285
+        ]
+      },
+      "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+      "equal_row_blocks": [
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 1.1744417569199928,
+          "isotropic_rms_gain": 0.19304704858383973,
+          "orthogonal_isotropic_rms_gain": 0.19134144038329018,
+          "common_gain_relative_to_isotropic": 6.083707394313964,
+          "deviation_rms_gain": 0.19381136956496173,
+          "deviation_to_common_relative_gain": 0.16502424954068187,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 174.46939654881174,
+          "projected_deviation_energy": 0.033331507471531824,
+          "projected_common_deviation_cross_term": -0.00048549957529256957,
+          "projected_total_energy": 174.50224255670798,
+          "deviation_fraction_of_separate_component_energies": 0.00019100851799165705,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.47516817710979403,
+              -0.31566483042957244,
+              -0.21512045769432456,
+              -0.07532107720476117,
+              -0.0012139368568169265,
+              0.06537161313957272,
+              0.1995401268073009,
+              0.30866545193825734,
+              0.3779028074013767
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            0,
+            2048
+          ],
+          "block_role": "not assigned from weights alone"
+        },
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 0.9123245210753397,
+          "isotropic_rms_gain": 0.18837497809494935,
+          "orthogonal_isotropic_rms_gain": 0.18733887728442297,
+          "common_gain_relative_to_isotropic": 4.8431300712108785,
+          "deviation_rms_gain": 0.20308309967918273,
+          "deviation_to_common_relative_gain": 0.2225996287371653,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 105.28220847638336,
+          "projected_deviation_energy": 0.036596876605879305,
+          "projected_common_deviation_cross_term": 0.002393548393869127,
+          "projected_total_energy": 105.32119890138311,
+          "deviation_fraction_of_separate_component_energies": 0.00034748662865307164,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.4329960664234161,
+              -0.27904894198555874,
+              -0.1647915486450905,
+              -0.02565593758984985,
+              -0.00015330648428494691,
+              0.025757023511509,
+              0.17351587411042346,
+              0.28354300169517854,
+              0.47111383121144285
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            2048,
+            4096
+          ],
+          "block_role": "not assigned from weights alone"
+        },
+        {
+          "shape": [
+            2048,
+            2048
+          ],
+          "common_direction_gain": 1.1941719065298744,
+          "isotropic_rms_gain": 0.19327792995427337,
+          "orthogonal_isotropic_rms_gain": 0.1915148964888924,
+          "common_gain_relative_to_isotropic": 6.178521814737966,
+          "deviation_rms_gain": 0.19400109750363123,
+          "deviation_to_common_relative_gain": 0.1624565914193845,
+          "input_deviation_energy_fraction": 0.006966331505623874,
+          "projected_common_energy": 180.3806679515984,
+          "projected_deviation_energy": 0.03339679789860013,
+          "projected_common_deviation_cross_term": 0.0005699095019900575,
+          "projected_total_energy": 180.414634658999,
+          "deviation_fraction_of_separate_component_energies": 0.0001851119420482612,
+          "projection_row_cosine_to_common_direction": {
+            "probabilities": [
+              0,
+              0.01,
+              0.05,
+              0.25,
+              0.5,
+              0.75,
+              0.95,
+              0.99,
+              1
+            ],
+            "quantiles": [
+              -0.4290942235525653,
+              -0.32319219921532566,
+              -0.21816728675071634,
+              -0.07168884419906024,
+              -0.004092022118273902,
+              0.0636866362871421,
+              0.19911584233540996,
+              0.3061051135931146,
+              0.405073062571062
+            ]
+          },
+          "qualification": "Linear weight geometry; common/deviation terms need not remain orthogonal after projection. No nonlinear layer or inference was run.",
+          "row_range_half_open": [
+            4096,
+            6144
+          ],
+          "block_role": "not assigned from weights alone"
+        }
+      ]
+    }
+  },
+  "scaling_vector": {
+    "probabilities": [
+      0,
+      0.01,
+      0.05,
+      0.25,
+      0.5,
+      0.75,
+      0.95,
+      0.99,
+      1
+    ],
+    "quantiles": [
+      -0.7578125,
+      0.158203125,
+      0.1650390625,
+      0.171875,
+      0.1767578125,
+      0.184814453125,
+      0.2216796875,
+      0.36822265624999995,
+      0.828125
+    ]
+  },
+  "scaling_composition_definition": "A = P diag(s); this is an algebraic composition of named stored weights, not a model forward or a claim about the full normalization/gating computation",
+  "checkpoint_sha256_before": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "checkpoint_sha256_after": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "elapsed_s": 3.4134497930062935,
+  "limits": [
+    "Only the first input projection and its dimension-matched named scaling vector were examined",
+    "RMS normalization, nonlinear gates, temporal convolution, output projection and residual paths were not evaluated",
+    "Static gain ratios do not establish a semantic function, behavioral distinction, defect, or downstream influence in the complete model",
+    "Three equal output-row blocks are inspected without assigning undocumented gate roles"
+  ],
+  "arrays_sha256": "1ae19832fd78262ef048aec680def116e1af2e8c0583cfe9c29fa69a42273c41"
+}

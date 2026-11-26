@@ -1,0 +1,31 @@
+[
+  {
+    "id": "pilot-vision",
+    "modality": "vision",
+    "image": "image-000.png",
+    "prompt": "Describe the shape and its color.",
+    "max_new_tokens": 24
+  },
+  {
+    "id": "pilot-video",
+    "modality": "video",
+    "video": "video-000.npy",
+    "prompt": "Describe how the square changes color.",
+    "max_new_tokens": 32
+  },
+  {
+    "id": "pilot-asr",
+    "modality": "audio_asr",
+    "audio": "speech-input-006.wav",
+    "system": "Perform ASR in English.",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "pilot-speech",
+    "modality": "speech",
+    "prompt": "Hello.",
+    "system": "Perform TTS in American English using a female voice.",
+    "generation_mode": "audio",
+    "max_new_tokens": 96
+  }
+]

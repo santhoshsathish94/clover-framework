@@ -1,0 +1,40 @@
+{
+  "canonical_gold_missing_tokens": {
+    "cold": [
+      75,
+      864
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      true
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "e8155e674a193046318563e7856d08eca618b6256695a64b7bf34b0bc2fe0c97",
+    "zero_ncm": false
+  },
+  "gold": [
+    "cold"
+  ],
+  "id": "question-17",
+  "input": "Write the opposite of hot.",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.09,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_forced_copy",
+  "raw_trace": [],
+  "seconds": 0.08552674006205052,
+  "text": "Write the opposite of hot.",
+  "upstream_ncm_unchanged": true
+}

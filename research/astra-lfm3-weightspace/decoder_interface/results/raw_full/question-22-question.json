@@ -1,0 +1,46 @@
+{
+  "canonical_gold_missing_tokens": {
+    "blue": []
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 73,
+    "fallbacks": [
+      false
+    ],
+    "levels": 6,
+    "ncm_z_sha256": "cf5aaf952348eee5cc770b51238ad5e112f6a9c2718ecec3a204ee3571c2dc5e",
+    "zero_ncm": false
+  },
+  "gold": [
+    "blue"
+  ],
+  "id": "question-22",
+  "input": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 73,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 6,
+    "s": 0.3,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_full",
+  "raw_trace": [
+    {
+      "allowed_ids": 128000,
+      "policy": "raw_full",
+      "positions": 22,
+      "token_ids": [
+        267
+      ]
+    }
+  ],
+  "seconds": 0.2984453981043771,
+  "text": "a",
+  "upstream_ncm_unchanged": true
+}

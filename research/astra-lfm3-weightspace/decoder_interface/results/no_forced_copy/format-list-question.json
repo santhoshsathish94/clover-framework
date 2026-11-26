@@ -1,0 +1,32 @@
+{
+  "decoder_trace": {
+    "codes": 27,
+    "fallbacks": [
+      true,
+      true,
+      true
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "6a3806eacb44df4e9b88eb3692bc2125e614cc4e7633a2ea0de078d9b3155d6e",
+    "zero_ncm": false
+  },
+  "id": "format-list",
+  "input": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 27,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 4,
+    "s": 0.13,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_forced_copy",
+  "raw_trace": [],
+  "seconds": 0.13403008307795972,
+  "text": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,22 @@
+{
+  "c2c3_weights/OBSERVATION.json": "972cc47fb5b53dd15c86d9f796fa28c2bb1d5edbeb87a6d1bd04d8b3318d47ab",
+  "c2c3_weights/RUNTIME_INPUTS.json": "fab148d016b377c171a5c3a7734137dd46165c7c3b43de57e5e64c65a99dec72",
+  "c2c3_weights/experiment.py": "2c11d621ab32860934401baef65c0ae34c80524d1584f7f61467473bcad128c7",
+  "c2c3_weights/frozen/PROTOCOL.json": "d4303d7ea2071747d0115cfcc6533a7b23a7ab3aad0cbad96ffc9bc4fb6882fb",
+  "c2c3_weights/frozen/cases.json": "d83013624ed769b31f82f6c60f51f6c0882704fd5c01eb4771277b577cec01bc",
+  "c2c3_weights/observe.py": "1c22c37b306eb4bd3e80c886c03378e59fe6a84b1dcd89729ad9829bb6634e02",
+  "c2c3_weights/raw_runtime.py": "ae35baa5c0c5ff96b499f44209c08249245944c3fee9f4f632ff7a855052c6b4",
+  "c2c3_weights/vendor/config.yaml": "6401af2a14d41c6582c3181a0b683e8970c1eeefe8cf7afaf74f1597da3fcd72",
+  "c2c3_weights/vendor/hybridlink.py": "54189a90edec64fd025fb14a0e31b0ccf41f171924c027d7c85dc64a8017df22",
+  "c2c3_weights/vendor/lfm3_clover.py": "a29d71f530698a8972570e6e2a2ac9fee66a12c8059590d28167c8a11aff1c5b",
+  "c2c3_weights/vendor/ncm/models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "c2c3_weights/vendor/ncm/models/common.py": "41b7c2c653d7ba312d583caca878ea3708d83da1a770b0b39651dbfd19754b73",
+  "c2c3_weights/vendor/ncm/models/next_concept.py": "4a1c483ca3b3522adb5ee754db4917c96ce08a82e992679ad7ed79e8f8c8da9b",
+  "c2c3_weights/vendor/ncm/models/quant.py": "5fd16053a826a5a0af580715a79bb03dc3eea49669514969c1086c445e9c9e2b",
+  "c2c3_weights/vendor/ncm/models/vae.py": "218ccc3ec3647c75470d24a52dd9ceb0485f9d5446f400890715f8ef7a344c31",
+  "c2c3_weights/vendor/ncm/models/vqvae.py": "9873af280da08ca39360388f652f993f17ace761a751ffa812caa706f66f592b",
+  "c2c3_weights/vendor/ncm/utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "c2c3_weights/vendor/ncm/utils/misc.py": "7e766c7ee036648f4959323ab671e6a7c5d3e873adb9ed60fbec83497728b452",
+  "c2c3_weights/vendor/ncm/utils/registry.py": "28ecdf5be072c55e18348e519b5bd079c58dee085561abfb3f4587e5eac7938a",
+  "c2c3_weights/vendor/ncm_runtime.py": "08b71682ee0132ef2940316bbcf19ef95458a4e9a383cee54474d7dbc6453234"
+}

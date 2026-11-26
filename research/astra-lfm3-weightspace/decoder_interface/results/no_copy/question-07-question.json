@@ -1,0 +1,39 @@
+{
+  "canonical_gold_missing_tokens": {
+    "23": [
+      1467
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 47,
+    "fallbacks": [
+      true
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "ed3ff2e2b78df6cc6106f676eed335c272c4b7313e1e908467621507749167bc",
+    "zero_ncm": false
+  },
+  "gold": [
+    "23"
+  ],
+  "id": "question-07",
+  "input": "I had 31 tickets and gave away 8. How many remain?",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 47,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 5,
+    "s": 0.18,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_copy",
+  "raw_trace": [],
+  "seconds": 0.1770231940317899,
+  "text": "I had 31 tickets and gave away 8. How many remain?",
+  "upstream_ncm_unchanged": true
+}

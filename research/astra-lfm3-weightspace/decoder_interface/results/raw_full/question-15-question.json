@@ -1,0 +1,46 @@
+{
+  "canonical_gold_missing_tokens": {
+    "120": [
+      6004
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "64854bcb2fb01511311156331af7ba05a390c4be4c64543d71e0061981e4f0eb",
+    "zero_ncm": false
+  },
+  "gold": [
+    "120"
+  ],
+  "id": "question-15",
+  "input": "How many minutes are in two hours?",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.15,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_full",
+  "raw_trace": [
+    {
+      "allowed_ids": 128000,
+      "policy": "raw_full",
+      "positions": 8,
+      "token_ids": []
+    }
+  ],
+  "seconds": 0.14660234097391367,
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

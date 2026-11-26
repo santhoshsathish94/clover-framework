@@ -1,0 +1,584 @@
+[
+  {
+    "gold": [
+      "41"
+    ],
+    "id": "question-00",
+    "native_correct": true,
+    "native_text": "41",
+    "previous_text": "What is 14 plus 27?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "c582f0b8158b22f261f93b8e07954dabb666e9ef2798e1fdba3761a64c4122e3",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "54",
+    "swapped_source_id": "question-01",
+    "text": "What is 14 plus 27?"
+  },
+  {
+    "gold": [
+      "54"
+    ],
+    "id": "question-01",
+    "native_correct": true,
+    "native_text": "54",
+    "previous_text": "What is 83 minus 29?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "c582f0b8158b22f261f93b8e07954dabb666e9ef2798e1fdba3761a64c4122e3",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "156",
+    "swapped_source_id": "question-02",
+    "text": "What is 83 minus 29?"
+  },
+  {
+    "gold": [
+      "156"
+    ],
+    "id": "question-02",
+    "native_correct": true,
+    "native_text": "156",
+    "previous_text": "What is 12 multiplied by 13?",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "8066f8df277b14fb9cb72aae48019b9004dac7eca9420e8d9b62283590ffd034",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "9",
+    "swapped_source_id": "question-03",
+    "text": "What is 12 multiplied by 13?"
+  },
+  {
+    "gold": [
+      "9"
+    ],
+    "id": "question-03",
+    "native_correct": true,
+    "native_text": "9",
+    "previous_text": "What is 81 divided by 9?",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "8066f8df277b14fb9cb72aae48019b9004dac7eca9420e8d9b62283590ffd034",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "15",
+    "swapped_source_id": "question-04",
+    "text": "What is 81 divided by 9?"
+  },
+  {
+    "gold": [
+      "15"
+    ],
+    "id": "question-04",
+    "native_correct": true,
+    "native_text": "15",
+    "previous_text": "What is three quarters of 20?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "6fb24aae05eda872689a0912643405c032e26ee2e14cab6577b7df8d9c69067a",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "2.5",
+    "swapped_source_id": "question-05",
+    "text": "What is three quarters of 20?"
+  },
+  {
+    "gold": [
+      "2.5"
+    ],
+    "id": "question-05",
+    "native_correct": true,
+    "native_text": "2.5",
+    "previous_text": "Convert 250 centimeters to meters. Give only the number.",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "d0216f111fcd781a628bf3f62d8dd8b7b9d98cfd7dc837dfb650bcea2d2caf3d",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "24",
+    "swapped_source_id": "question-06",
+    "text": "Convert 250 centimeters to meters. Give only the number."
+  },
+  {
+    "gold": [
+      "24"
+    ],
+    "id": "question-06",
+    "native_correct": true,
+    "native_text": "24",
+    "previous_text": "A box holds 6 pens. How many pens do 4 boxes hold?",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [
+        false
+      ],
+      "levels": 5,
+      "ncm_z_sha256": "f786a42b36c399af4240b983c0399d62e1dc35a372dad06a759747d75b5dfede",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "23",
+    "swapped_source_id": "question-07",
+    "text": "A box holds 6 pens. How many pens do 4 boxes hold?"
+  },
+  {
+    "gold": [
+      "23"
+    ],
+    "id": "question-07",
+    "native_correct": true,
+    "native_text": "23",
+    "previous_text": "I had 31 tickets and gave away 8. How many remain?",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [
+        false
+      ],
+      "levels": 5,
+      "ncm_z_sha256": "ed3ff2e2b78df6cc6106f676eed335c272c4b7313e1e908467621507749167bc",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Paris",
+    "swapped_source_id": "question-08",
+    "text": "I had 31 tickets and gave away 8. How many remain?"
+  },
+  {
+    "gold": [
+      "Paris"
+    ],
+    "id": "question-08",
+    "native_correct": true,
+    "native_text": "Paris",
+    "previous_text": "What is the capital of France?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Tokyo",
+    "swapped_source_id": "question-09",
+    "text": "What is the capital of France?"
+  },
+  {
+    "gold": [
+      "Tokyo"
+    ],
+    "id": "question-09",
+    "native_correct": true,
+    "native_text": "Tokyo",
+    "previous_text": "What is the capital of Japan?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "3a734e144982a06ac0dc80df90f5be01c42b2c3a19ac32179d21ae822b6a8b3b",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Canberra",
+    "swapped_source_id": "question-10",
+    "text": "What is the capital of Japan?"
+  },
+  {
+    "gold": [
+      "Canberra"
+    ],
+    "id": "question-10",
+    "native_correct": true,
+    "native_text": "Canberra",
+    "previous_text": "What is the capital of Australia?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "O",
+    "swapped_source_id": "question-11",
+    "text": "What is the capital of Australia?"
+  },
+  {
+    "gold": [
+      "O"
+    ],
+    "id": "question-11",
+    "native_correct": true,
+    "native_text": "O",
+    "previous_text": "What is the chemical symbol for oxygen?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "e04161f3d7083602e32a6d84dfbef472e94337312637b50db440b434583386dc",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "6",
+    "swapped_source_id": "question-12",
+    "text": "What is the chemical symbol for oxygen?"
+  },
+  {
+    "gold": [
+      "6",
+      "six"
+    ],
+    "id": "question-12",
+    "native_correct": true,
+    "native_text": "6",
+    "previous_text": "How many sides does a hexagon have?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "59b20020ebc3be68d15501820aff2b4eb4f9a1fed8120487db5eebe9acb74317",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Jupiter",
+    "swapped_source_id": "question-13",
+    "text": "How many sides does a hexagon have?"
+  },
+  {
+    "gold": [
+      "Jupiter"
+    ],
+    "id": "question-13",
+    "native_correct": true,
+    "native_text": "Jupiter",
+    "previous_text": "Which is the largest planet in the Solar System?",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "3c41d1e8377a2e6690d0a4f7dc0d2a090de527a04d3909093947612171f99d7a",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "0",
+    "swapped_source_id": "question-14",
+    "text": "Which is the largest planet in the Solar System?"
+  },
+  {
+    "gold": [
+      "0"
+    ],
+    "id": "question-14",
+    "native_correct": true,
+    "native_text": "0",
+    "previous_text": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [
+        false
+      ],
+      "levels": 5,
+      "ncm_z_sha256": "647a6fc2a7f2f073067fb243724b479562c1350f11e543ec042b51a26077b91b",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "120",
+    "swapped_source_id": "question-15",
+    "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number."
+  },
+  {
+    "gold": [
+      "120"
+    ],
+    "id": "question-15",
+    "native_correct": true,
+    "native_text": "120",
+    "previous_text": "How many minutes are in two hours?",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "64854bcb2fb01511311156331af7ba05a390c4be4c64543d71e0061981e4f0eb",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Children",
+    "swapped_source_id": "question-16",
+    "text": "How many minutes are in two hours?"
+  },
+  {
+    "gold": [
+      "children"
+    ],
+    "id": "question-16",
+    "native_correct": true,
+    "native_text": "Children",
+    "previous_text": "Write the plural of child.",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Cold",
+    "swapped_source_id": "question-17",
+    "text": "Write the plural of child."
+  },
+  {
+    "gold": [
+      "cold"
+    ],
+    "id": "question-17",
+    "native_correct": true,
+    "native_text": "Cold",
+    "previous_text": "Write the opposite of hot.",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "e8155e674a193046318563e7856d08eca618b6256695a64b7bf34b0bc2fe0c97",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "cba",
+    "swapped_source_id": "question-18",
+    "text": "Write the opposite of hot."
+  },
+  {
+    "gold": [
+      "cba"
+    ],
+    "id": "question-18",
+    "native_correct": true,
+    "native_text": "cba",
+    "previous_text": "Reverse the letters in abc.",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "de73d34aafee658f9de6cb5d7efb809b71c2ad7438c0b47325fd1fb5d75061e8",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "2, 5, 9",
+    "swapped_source_id": "question-19",
+    "text": "Reverse the letters in abc."
+  },
+  {
+    "gold": [
+      "2, 5, 9"
+    ],
+    "id": "question-19",
+    "native_correct": true,
+    "native_text": "2, 5, 9",
+    "previous_text": "Sort these numbers from smallest to largest: 9, 2, 5.",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [
+        false
+      ],
+      "levels": 5,
+      "ncm_z_sha256": "2fb7714135b873ea17b588d0a0b2733eaeb9c17d9c8c2e0d64b5e0a3d2aafffe",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "B",
+    "swapped_source_id": "question-20",
+    "text": "Sort these numbers from smallest to largest: 9, 2, 5."
+  },
+  {
+    "gold": [
+      "B"
+    ],
+    "id": "question-20",
+    "native_correct": true,
+    "native_text": "B",
+    "previous_text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter.",
+    "previous_trace": {
+      "codes": 105,
+      "fallbacks": [
+        false
+      ],
+      "levels": 7,
+      "ncm_z_sha256": "ba146cb5f7114d938301d43161c5ab7d0de57bee16e74da1e942499fbed036b5",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "HELLO",
+    "swapped_source_id": "question-21",
+    "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter."
+  },
+  {
+    "gold": [
+      "HELLO"
+    ],
+    "id": "question-21",
+    "native_correct": true,
+    "native_text": "HELLO",
+    "previous_text": "Convert the word hello to uppercase.",
+    "previous_trace": {
+      "codes": 13,
+      "fallbacks": [
+        false
+      ],
+      "levels": 3,
+      "ncm_z_sha256": "a9fbc7ac38c92a18ef139387314d2626c87229669613121ed26b41cfb8933a5c",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "Blue",
+    "swapped_source_id": "question-22",
+    "text": "Convert the word hello to uppercase."
+  },
+  {
+    "gold": [
+      "blue"
+    ],
+    "id": "question-22",
+    "native_correct": true,
+    "native_text": "Blue",
+    "previous_text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+    "previous_trace": {
+      "codes": 73,
+      "fallbacks": [
+        false
+      ],
+      "levels": 6,
+      "ncm_z_sha256": "cf5aaf952348eee5cc770b51238ad5e112f6a9c2718ecec3a204ee3571c2dc5e",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "true",
+    "swapped_source_id": "question-23",
+    "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?"
+  },
+  {
+    "gold": [
+      "true"
+    ],
+    "id": "question-23",
+    "native_correct": true,
+    "native_text": "true",
+    "previous_text": "In JSON, which lowercase literal represents Boolean truth?",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "1a7753bf36f9daa6c206292a5b56e5c51949d0478ab4e4e854f0c1164f5174d9",
+      "zero_ncm": false
+    },
+    "swapped_native_text": "41",
+    "swapped_source_id": "question-00",
+    "text": "In JSON, which lowercase literal represents Boolean truth?"
+  },
+  {
+    "id": "format-prose",
+    "previous_text": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [
+        false
+      ],
+      "levels": 5,
+      "ncm_z_sha256": "36f0a4909e436353bb4bce89c41e704505e933ddc09becdf58e096391eea9771",
+      "zero_ncm": false
+    },
+    "text": "The meeting starts at 09:30 in room 214. Bring the signed form."
+  },
+  {
+    "id": "format-list",
+    "previous_text": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+    "previous_trace": {
+      "codes": 27,
+      "fallbacks": [
+        false,
+        false,
+        false
+      ],
+      "levels": 4,
+      "ncm_z_sha256": "6a3806eacb44df4e9b88eb3692bc2125e614cc4e7633a2ea0de078d9b3155d6e",
+      "zero_ncm": false
+    },
+    "text": "- Load the document.\n- Check all three totals.\n- Report any difference."
+  },
+  {
+    "id": "format-code",
+    "previous_text": "```python\ndef add(left, right):\n    return left + right\n```",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [],
+      "levels": 5,
+      "ncm_z_sha256": "63f97d0fac839348d701f7c15ecbf86ea55e6fd0ad9dfeb4a7fdcab8609c7dc0",
+      "zero_ncm": false
+    },
+    "text": "```python\ndef add(left, right):\n    return left + right\n```"
+  },
+  {
+    "id": "format-table",
+    "previous_text": "| Item | Count |\n| Pen | 12 |\n| Book | 3 |",
+    "previous_trace": {
+      "codes": 47,
+      "fallbacks": [],
+      "levels": 5,
+      "ncm_z_sha256": "e4443fe269d349d2fa150b3b0bf299b15bc1403cef70e49d9147f6ca7c53ed01",
+      "zero_ncm": false
+    },
+    "text": "| Item | Count |\n| Pen | 12 |\n| Book | 3 |"
+  },
+  {
+    "id": "format-long",
+    "previous_text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+    "previous_trace": {
+      "codes": 313,
+      "fallbacks": [
+        false
+      ],
+      "levels": 11,
+      "ncm_z_sha256": "6ccae71447d6673b772f7b2634a9d92f231425391ee2bf84da0ab921fa4599bc",
+      "zero_ncm": false
+    },
+    "text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box."
+  },
+  {
+    "id": "format-empty",
+    "previous_text": "",
+    "previous_trace": {
+      "fallbacks": [],
+      "zero_ncm": false
+    },
+    "text": ""
+  }
+]

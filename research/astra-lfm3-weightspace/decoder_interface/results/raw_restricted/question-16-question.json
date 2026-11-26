@@ -1,0 +1,48 @@
+{
+  "canonical_gold_missing_tokens": {
+    "children": [
+      21539
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+    "zero_ncm": false
+  },
+  "gold": [
+    "children"
+  ],
+  "id": "question-16",
+  "input": "Write the plural of child.",
+  "input_mode": "question",
+  "input_preserved": false,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.09,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "raw_restricted",
+  "raw_trace": [
+    {
+      "allowed_ids": 199,
+      "policy": "raw_restricted",
+      "positions": 6,
+      "token_ids": [
+        597
+      ]
+    }
+  ],
+  "seconds": 0.08534864499233663,
+  "text": "The",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "429d5f101f1bb527e07e458711f7f8c6f46bbe5d7ec480c9c35a2298a2117dfd",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "983c23c34e755c6fe0d5f3828ddbb1727e7546c5e8bab30a9c8fec37c88bc29c",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+  "composite_correct": false,
+  "composite_s": 1.1013979200506583,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "0"
+  ],
+  "id": "question-14",
+  "input": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+  "native_correct": true,
+  "native_text": "0",
+  "reference": "At standard pressure, what is water's freezing point in Celsius? Give only the number.",
+  "reference_s": 1.110124530037865,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 47,
+    "fallbacks": [
+      false
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "647a6fc2a7f2f073067fb243724b479562c1350f11e543ec042b51a26077b91b",
+    "zero_ncm": false
+  }
+}

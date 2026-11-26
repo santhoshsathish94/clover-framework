@@ -1,0 +1,110 @@
+{
+  "repo_id": "hf-internal-testing/librispeech_asr_dummy",
+  "revision": "5be91486e11a2d616f4ec5db8d3fd248585ac07a",
+  "files": [
+    {
+      "file": "clean/validation-00000-of-00001.parquet",
+      "sha256": "4e69a06fa5edc90921e5e7e39a7084881f8b3ed9c805c574f4f39c6fde27c603"
+    }
+  ],
+  "selection": "first 7 rows with 16 kHz mono audio lasting 2-10 seconds; seventh is pilot only",
+  "selected": [
+    {
+      "source_id": "1272-128104-0000",
+      "file": "speech-input-000.wav",
+      "duration_s": 5.855,
+      "transcript": "MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL"
+    },
+    {
+      "source_id": "1272-128104-0001",
+      "file": "speech-input-001.wav",
+      "duration_s": 4.815,
+      "transcript": "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER"
+    },
+    {
+      "source_id": "1272-128104-0003",
+      "file": "speech-input-002.wav",
+      "duration_s": 9.9,
+      "transcript": "HE HAS GRAVE DOUBTS WHETHER SIR FREDERICK LEIGHTON'S WORK IS REALLY GREEK AFTER ALL AND CAN DISCOVER IN IT BUT LITTLE OF ROCKY ITHACA"
+    },
+    {
+      "source_id": "1272-128104-0005",
+      "file": "speech-input-003.wav",
+      "duration_s": 9.01,
+      "transcript": "IT IS OBVIOUSLY UNNECESSARY FOR US TO POINT OUT HOW LUMINOUS THESE CRITICISMS ARE HOW DELICATE IN EXPRESSION"
+    },
+    {
+      "source_id": "1272-128104-0006",
+      "file": "speech-input-004.wav",
+      "duration_s": 5.64,
+      "transcript": "ON THE GENERAL PRINCIPLES OF ART MISTER QUILTER WRITES WITH EQUAL LUCIDITY"
+    },
+    {
+      "source_id": "1272-128104-0007",
+      "file": "speech-input-005.wav",
+      "duration_s": 9.24,
+      "transcript": "PAINTING HE TELLS US IS OF A DIFFERENT QUALITY TO MATHEMATICS AND FINISH IN ART IS ADDING MORE FACT"
+    },
+    {
+      "source_id": "1272-128104-0008",
+      "file": "speech-input-006.wav",
+      "duration_s": 5.12,
+      "transcript": "AS FOR ETCHINGS THEY ARE OF TWO KINDS BRITISH AND FOREIGN"
+    }
+  ],
+  "dataset_card": {
+    "dataset_info": {
+      "config_name": "clean",
+      "features": [
+        {
+          "name": "file",
+          "dtype": "string"
+        },
+        {
+          "name": "audio",
+          "dtype": {
+            "audio": {
+              "sampling_rate": 16000
+            }
+          }
+        },
+        {
+          "name": "text",
+          "dtype": "string"
+        },
+        {
+          "name": "speaker_id",
+          "dtype": "int64"
+        },
+        {
+          "name": "chapter_id",
+          "dtype": "int64"
+        },
+        {
+          "name": "id",
+          "dtype": "string"
+        }
+      ],
+      "splits": [
+        {
+          "name": "validation",
+          "num_bytes": 9677021,
+          "num_examples": 73
+        }
+      ],
+      "download_size": 9192059,
+      "dataset_size": 9677021
+    },
+    "configs": [
+      {
+        "config_name": "clean",
+        "data_files": [
+          {
+            "split": "validation",
+            "path": "clean/validation-*"
+          }
+        ]
+      }
+    ]
+  }
+}

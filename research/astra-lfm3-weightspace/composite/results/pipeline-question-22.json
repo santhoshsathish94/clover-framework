@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+      "trace": {
+        "codes": 73,
+        "fallbacks": [
+          false
+        ],
+        "levels": 6,
+        "ncm_z_sha256": "b938ae1a31de7ab5caf1a86e59582ec7a39704cbc5461922239cece9ebde91bd",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+      "trace": {
+        "codes": 73,
+        "fallbacks": [
+          false
+        ],
+        "levels": 6,
+        "ncm_z_sha256": "9f4eb72bfb416c33b4f89a9c300acf001d58d8ab1c8255fdbff5d76dff4d6cc4",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+  "composite_correct": false,
+  "composite_s": 1.3075335109606385,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "blue"
+  ],
+  "id": "question-22",
+  "input": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+  "native_correct": true,
+  "native_text": "Blue",
+  "reference": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?",
+  "reference_s": 0.8022366689983755,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 73,
+    "fallbacks": [
+      false
+    ],
+    "levels": 6,
+    "ncm_z_sha256": "cf5aaf952348eee5cc770b51238ad5e112f6a9c2718ecec3a204ee3571c2dc5e",
+    "zero_ncm": false
+  }
+}

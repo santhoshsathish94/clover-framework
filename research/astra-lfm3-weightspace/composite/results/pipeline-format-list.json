@@ -1,0 +1,72 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false,
+          false,
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "a0a08343780b58ff3ae05cc70cbeb02af8306b4bbda02f5ac9acfd147b09f93a",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false,
+          false,
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "801d5f04fae711163d7d53632711449beec463ca3148cde3237b564334023275",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false,
+          false,
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+  "composite_s": 0.9915091240545735,
+  "echoes_input": true,
+  "exact": true,
+  "id": "format-list",
+  "input": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+  "reference": "- Load the document.\n- Check all three totals.\n- Report any difference.",
+  "reference_s": 0.8115450530312955,
+  "state_arrays": 12,
+  "trace": {
+    "codes": 27,
+    "fallbacks": [
+      false,
+      false,
+      false
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "6a3806eacb44df4e9b88eb3692bc2125e614cc4e7633a2ea0de078d9b3155d6e",
+    "zero_ncm": false
+  }
+}

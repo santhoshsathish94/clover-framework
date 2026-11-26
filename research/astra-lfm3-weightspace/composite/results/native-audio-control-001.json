@@ -1,0 +1,142 @@
+{
+  "activation_arrays": 20,
+  "composite": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "A",
+    "correct": false,
+    "generated_slots": 2,
+    "generation_s": 0.4107134479563683,
+    "gold": "B",
+    "gold_margin": -10.47119140625,
+    "hit_token_limit": false,
+    "id": "audio-control-001",
+    "input_sha256": "4ce05f073ae9139271fc5383ae87ad614a6aeceb29b45837032bac40994c87d8",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        74
+      ],
+      "feature_attention_mask": [
+        1,
+        199
+      ],
+      "input_features": [
+        1,
+        128,
+        199
+      ],
+      "input_ids": [
+        1,
+        74
+      ]
+    },
+    "letter_logits": [
+      10.375,
+      -0.09619140625,
+      0.5234375,
+      -0.1943359375
+    ],
+    "max_new_tokens": 24,
+    "modality": "audio",
+    "prediction": "A",
+    "restricted_prediction": "A",
+    "split": "regression",
+    "text": "A",
+    "tokens": [
+      41,
+      124900
+    ]
+  },
+  "exact": true,
+  "id": "audio-control-001",
+  "modality": "audio",
+  "reference": {
+    "activation_keys": [
+      "audio_encoder",
+      "audio_encoder.mean",
+      "audio_projector",
+      "audio_projector.mean",
+      "layer_0",
+      "layer_0.mean",
+      "layer_2",
+      "layer_2.mean",
+      "layer_4",
+      "layer_4.mean",
+      "layer_11",
+      "layer_11.mean",
+      "layer_17",
+      "layer_17.mean",
+      "layer_23",
+      "layer_23.mean",
+      "final_norm_input",
+      "final_norm_unit",
+      "final_hidden",
+      "letter_logits"
+    ],
+    "competitor": "A",
+    "correct": false,
+    "generated_slots": 2,
+    "generation_s": 0.40452883404213935,
+    "gold": "B",
+    "gold_margin": -10.47119140625,
+    "hit_token_limit": false,
+    "id": "audio-control-001",
+    "input_sha256": "4ce05f073ae9139271fc5383ae87ad614a6aeceb29b45837032bac40994c87d8",
+    "input_shapes": {
+      "attention_mask": [
+        1,
+        74
+      ],
+      "feature_attention_mask": [
+        1,
+        199
+      ],
+      "input_features": [
+        1,
+        128,
+        199
+      ],
+      "input_ids": [
+        1,
+        74
+      ]
+    },
+    "letter_logits": [
+      10.375,
+      -0.09619140625,
+      0.5234375,
+      -0.1943359375
+    ],
+    "max_new_tokens": 24,
+    "modality": "audio",
+    "prediction": "A",
+    "restricted_prediction": "A",
+    "split": "regression",
+    "text": "A",
+    "tokens": [
+      41,
+      124900
+    ]
+  }
+}

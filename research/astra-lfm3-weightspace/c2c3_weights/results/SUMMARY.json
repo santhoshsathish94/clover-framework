@@ -1,0 +1,58 @@
+{
+  "c2": {
+    "gains": {
+      "least_squares": 0.00836701995998099,
+      "norm_match": 0.023507801815867424,
+      "original": 1.0
+    },
+    "heldout_mean_nll": {
+      "norm_match": 5.343870448693633,
+      "original": 11.498324370384216,
+      "true_token": 0.08853011302553568,
+      "zero_input": 8.065744395554066
+    },
+    "paired_tests": {
+      "original": {
+        "better": 19,
+        "one_sided_p": 2.002716064453125e-05,
+        "ties": 0,
+        "worse": 1
+      },
+      "zero_input": {
+        "better": 14,
+        "one_sided_p": 0.057659149169921875,
+        "ties": 0,
+        "worse": 6
+      }
+    },
+    "passes_feedback_gate": false,
+    "selected": "norm_match"
+  },
+  "c3": {
+    "generated_tokens": {
+      "1.0": {
+        "correct": 118,
+        "oracle_correct": 171,
+        "total": 231
+      },
+      "2.0": {
+        "correct": 124,
+        "oracle_correct": 171,
+        "total": 231
+      }
+    },
+    "heldout_mean_code_nll": {
+      "1.0": 1.2971288472414018,
+      "2.0": 1.3191018849611282
+    },
+    "paired_test": {
+      "better": 5,
+      "one_sided_p": 0.9940910339355469,
+      "ties": 0,
+      "worse": 15
+    },
+    "passes_gate": false,
+    "selected_bridge_factor": "2.0"
+  },
+  "qualification": "Held out from this calibration, not an end-to-end planning or broad language-quality validation. No deployment."
+}

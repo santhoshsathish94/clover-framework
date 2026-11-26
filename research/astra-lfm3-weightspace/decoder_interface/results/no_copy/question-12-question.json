@@ -1,0 +1,43 @@
+{
+  "canonical_gold_missing_tokens": {
+    "6": [
+      30
+    ],
+    "six": [
+      1078
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      true
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "59b20020ebc3be68d15501820aff2b4eb4f9a1fed8120487db5eebe9acb74317",
+    "zero_ncm": false
+  },
+  "gold": [
+    "6",
+    "six"
+  ],
+  "id": "question-12",
+  "input": "How many sides does a hexagon have?",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.09,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_copy",
+  "raw_trace": [],
+  "seconds": 0.08660480298567563,
+  "text": "How many sides does a hexagon have?",
+  "upstream_ncm_unchanged": true
+}

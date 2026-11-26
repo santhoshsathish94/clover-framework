@@ -1,0 +1,45 @@
+{
+ "_job": {
+  "protocol": "think35",
+  "ckpt": "<data>/mathedit/ckpt/p50c",
+  "ckpt_mtime": 1792876032.906311,
+  "shard": "5/10"
+ },
+ "gsm8k": {
+  "acc": 0.6931818181818182,
+  "n_problems": 132,
+  "samples": 2,
+  "cut_share": 0.056818181818181816,
+  "mean_tokens": 11437.132575757576,
+  "s": 401,
+  "ok": 183,
+  "total": 264,
+  "cut": 15,
+  "tokens_sum": 3019403,
+  "shard": "5/10",
+  "no_answer_finished": 8
+ },
+ "_protocol": {
+  "name": "think35",
+  "sampling": {
+   "temperature": 0.6,
+   "top_p": 0.95,
+   "top_k": 20,
+   "presence_penalty": 1.5,
+   "max_tokens": 32768,
+   "seed": 0
+  },
+  "samples": {
+   "aime24": 16,
+   "aime25": 16,
+   "amc23": 16,
+   "math500": 4,
+   "minerva": 4,
+   "olympiad": 4,
+   "gsm8k": 2
+  },
+  "thinking": true,
+  "prompt": "Please reason step by step, and put your final answer within \\boxed{}.",
+  "ckpt": "<data>/mathedit/ckpt/p50c"
+ }
+}

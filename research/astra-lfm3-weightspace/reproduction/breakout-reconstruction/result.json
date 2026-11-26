@@ -1,0 +1,461 @@
+{
+  "source_commit": "4d09ba6d6a7e891dd8063974dfe81b3d78e3494f",
+  "answer_sha256": "a30bdda1acef79b507498edcef7e48d4fff16aa85783741925da9d5d4f42faf0",
+  "reference_npz_sha256": "6e8d42658aed3704c7bf6fb67015e9468cc03f1d67cb8a4fd192e6534fcccb4a",
+  "statements": 92,
+  "all_six_arrays_bit_identical": true,
+  "parameter_count": 20486,
+  "nonzero_count": 815,
+  "tensor_hashes": [
+    {
+      "name": "W1",
+      "reference_name": "actor/dense1/kernel",
+      "shape": [
+        600,
+        32
+      ],
+      "sha256": "4c50fb04509e2ebce41dd522a7e4dbd539cc3543451dff9e866cd820a3b96956",
+      "nonzero": 769
+    },
+    {
+      "name": "b1",
+      "reference_name": "actor/dense1/bias",
+      "shape": [
+        32
+      ],
+      "sha256": "b355028bee6f399c73d150c462826106aec1c3b6ad726289692e05b11e0da9af",
+      "nonzero": 1
+    },
+    {
+      "name": "W2",
+      "reference_name": "actor/dense2/kernel",
+      "shape": [
+        32,
+        32
+      ],
+      "sha256": "f43e749e8f8fb474301d92765e66e731a99e24c696334355f35923b5272bd621",
+      "nonzero": 24
+    },
+    {
+      "name": "b2",
+      "reference_name": "actor/dense2/bias",
+      "shape": [
+        32
+      ],
+      "sha256": "89a4454f29c11dcb70bdf71dd8b7235c19d7e647849964ce827649f0bf5577c4",
+      "nonzero": 8
+    },
+    {
+      "name": "W3",
+      "reference_name": "actor/logits/kernel",
+      "shape": [
+        32,
+        6
+      ],
+      "sha256": "9386911d9b0c21e64cafac4b6f1490ce2ea1510dae85c2855c3de76476471e6b",
+      "nonzero": 8
+    },
+    {
+      "name": "b3",
+      "reference_name": "actor/logits/bias",
+      "shape": [
+        6
+      ],
+      "sha256": "9c0ca54c97e7580a348f353cfe495148d2de153848c5ea2588dcfa3ac4e155df",
+      "nonzero": 5
+    }
+  ],
+  "landing_interval_probes": [
+    {
+      "paddle_column": 0,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.10955847054719925,
+        0.049958374351263046,
+        0.13909244537353516,
+        0.059928104281425476,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 3,
+      "expected_action": 3
+    },
+    {
+      "paddle_column": 1,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.08975778520107269,
+        0.02999100461602211,
+        0.11942730098962784,
+        0.03997867926955223,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 3,
+      "expected_action": 3
+    },
+    {
+      "paddle_column": 2,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.06988589465618134,
+        0.009999668225646019,
+        0.0996679961681366,
+        0.019997332245111465,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 3,
+      "expected_action": 3
+    },
+    {
+      "paddle_column": 3,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.049958374351263046,
+        -0.00999966450035572,
+        0.07982976734638214,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 3,
+      "expected_action": 3
+    },
+    {
+      "paddle_column": 4,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.02999100461602211,
+        -0.02999100089073181,
+        0.059928108006715775,
+        -0.019997332245111465,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 3,
+      "expected_action": 3
+    },
+    {
+      "paddle_column": 5,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        0.00999966450035572,
+        -0.049958374351263046,
+        0.03997867926955223,
+        -0.03997868299484253,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -1.0,
+        -0.9999092817306519,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -30.0,
+        -100.0,
+        -29.997276306152344,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 0,
+      "expected_action": 0
+    },
+    {
+      "paddle_column": 6,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        -0.00999966450035572,
+        -0.06988588720560074,
+        0.019997335970401764,
+        -0.059928104281425476,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        -0.9999092817306519,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        -29.997276306152344,
+        -100.0,
+        -30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 0,
+      "expected_action": 0
+    },
+    {
+      "paddle_column": 7,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        -0.02999100461602211,
+        -0.08975778520107269,
+        0.0,
+        -0.07982976734638214,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        30.0,
+        -100.0,
+        -30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 1,
+      "expected_action": 1
+    },
+    {
+      "paddle_column": 8,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        -0.04995837062597275,
+        -0.10955847054719925,
+        -0.019997328519821167,
+        -0.099667988717556,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        30.0,
+        -100.0,
+        -30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 1,
+      "expected_action": 1
+    },
+    {
+      "paddle_column": 9,
+      "ball": [
+        7,
+        4
+      ],
+      "trail": [
+        6,
+        3
+      ],
+      "first_layer_units_0_to_5": [
+        -0.06988590210676193,
+        -0.12927259504795074,
+        -0.03997868672013283,
+        -0.11942730098962784,
+        1.0,
+        1.0
+      ],
+      "second_layer_units_0_to_7": [
+        1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "logits": [
+        0.0,
+        30.0,
+        -100.0,
+        -30.0,
+        -100.0,
+        -100.0
+      ],
+      "argmax_action": 1,
+      "expected_action": 1
+    }
+  ],
+  "qualification": "Replay of published weight program, not a new LLM discovery; gameplay not yet evaluated."
+}

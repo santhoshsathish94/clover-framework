@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of France?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "73dabd820a6413b904673c37237b3fca647866170769efdb1c22a107a3336772",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of France?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "73dabd820a6413b904673c37237b3fca647866170769efdb1c22a107a3336772",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "What is the capital of France?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "What is the capital of France?",
+  "composite_correct": false,
+  "composite_s": 0.4900234929518774,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "Paris"
+  ],
+  "id": "question-08",
+  "input": "What is the capital of France?",
+  "native_correct": true,
+  "native_text": "Paris",
+  "reference": "What is the capital of France?",
+  "reference_s": 1.1140295390505344,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+    "zero_ncm": false
+  }
+}

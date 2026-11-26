@@ -1,0 +1,83 @@
+{
+  "name": "no-op-control",
+  "case_count": 112,
+  "groups": {
+    "discovery:text": {
+      "cases": 32,
+      "scored_cases": 32,
+      "correct": 15,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.813291872385889
+    },
+    "regression:audio": {
+      "cases": 2,
+      "scored_cases": 2,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 0.6875347369350493
+    },
+    "regression:audio_asr": {
+      "cases": 6,
+      "scored_cases": 6,
+      "correct": 1,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 14.166973327985033,
+      "corpus_word_error_rate": 0.07,
+      "asr_exact": 1
+    },
+    "regression:speech": {
+      "cases": 4,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 10.21490453905426,
+      "speech_waveforms_nonempty": 4,
+      "speech_intelligibility": "not independently evaluated"
+    },
+    "regression:text": {
+      "cases": 16,
+      "scored_cases": 16,
+      "correct": 15,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 3.9171636982355267
+    },
+    "regression:video": {
+      "cases": 8,
+      "scored_cases": 8,
+      "correct": 8,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.4083450199104846
+    },
+    "regression:vision": {
+      "cases": 12,
+      "scored_cases": 12,
+      "correct": 12,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 4.557180633652024
+    },
+    "validation:text": {
+      "cases": 32,
+      "scored_cases": 32,
+      "correct": 13,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.738920061732642
+    }
+  },
+  "elapsed_s": 59.830703918938525,
+  "source_hashes_verified_before_and_after": true,
+  "error_count": 0,
+  "results_sha256": "7ef3415cd4404e8b85d1363d536cfaefd68ec9c71ec229be0e765636b58c73ea",
+  "activations_sha256": "cf8cbe5af6bf7224982c2ecc418012389b55673542062326f670ea18b7124247",
+  "limitations": [
+    "Constructed small sample, not general benchmark accuracy",
+    "Speech intelligibility/naturalness not independently evaluated"
+  ]
+}

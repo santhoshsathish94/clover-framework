@@ -1,0 +1,1385 @@
+{
+  "files": [
+    {
+      "bytes": 1722,
+      "copy": "inputs/c1/.gitattributes",
+      "distinct_inode": true,
+      "sha256": "1ac2c590b2ff1ecfa63e3f5da44ec7ece12b2c5c4ccbc88cee6db3283d306d41",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/.gitattributes"
+    },
+    {
+      "bytes": 10574,
+      "copy": "inputs/c1/LICENSE",
+      "distinct_inode": true,
+      "sha256": "4d28ca14dedc0b3d0fcc2b3339f0e79931faa33874f3d24f522183a8fc70068c",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/LICENSE"
+    },
+    {
+      "bytes": 76824,
+      "copy": "inputs/c1/README.md",
+      "distinct_inode": true,
+      "sha256": "d33f901744f236bc8592db93581f1ff840fb3028e2042a0a7b30e36140d23cf0",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/README.md"
+    },
+    {
+      "bytes": 188029,
+      "copy": "inputs/c1/assets/lfm3-omni-architecture-light.png",
+      "distinct_inode": true,
+      "sha256": "950e15b1f21ab682b461375b1be91ef8422de1f00c5bf064f2c9ea28d556d4bc",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/assets/lfm3-omni-architecture-light.png"
+    },
+    {
+      "bytes": 208009,
+      "copy": "inputs/c1/assets/lfm3-omni-family-radar-light.png",
+      "distinct_inode": true,
+      "sha256": "0a90156e50907d71e7fe7e352c428eeaad863a425052250e115d10e903ae1d6d",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/assets/lfm3-omni-family-radar-light.png"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/c1/audio_tokenizer/config.json",
+      "distinct_inode": true,
+      "sha256": "04d24ad70085288c0c10a8788e470fabd0a786c27b772bfd90ea1cde1cf3ac6d",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/audio_tokenizer/config.json"
+    },
+    {
+      "bytes": 147143540,
+      "copy": "inputs/c1/audio_tokenizer/model.safetensors",
+      "distinct_inode": true,
+      "sha256": "45984a872fdcf0b94cd0ec68822bbf26f0c6fcb580cfaba0f7fa3ee60355137f",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/audio_tokenizer/model.safetensors"
+    },
+    {
+      "bytes": 13513,
+      "copy": "inputs/c1/chat_template.jinja",
+      "distinct_inode": true,
+      "sha256": "ea74cc1d14319ed436dc0f37632893004d436913113e7605267f2b01694d65e4",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/chat_template.jinja"
+    },
+    {
+      "bytes": 5912,
+      "copy": "inputs/c1/config.json",
+      "distinct_inode": true,
+      "sha256": "17e3792551ef56b37e85bbd1e6e968f70dc5b4b14c96f1339d0be85e0ba46875",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/config.json"
+    },
+    {
+      "bytes": 6113,
+      "copy": "inputs/c1/configuration_lfm3.py",
+      "distinct_inode": true,
+      "sha256": "176cced35657aedfea7d7002221360582d1c05fcaca882c21508bc3a73b282e5",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/configuration_lfm3.py"
+    },
+    {
+      "bytes": 14598,
+      "copy": "inputs/c1/configuration_lfm3_omni.py",
+      "distinct_inode": true,
+      "sha256": "9eccce3925353022c9a4d1cf59111830bbb2694e8c8d12ea439304e48a173c6a",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/configuration_lfm3_omni.py"
+    },
+    {
+      "bytes": 9158,
+      "copy": "inputs/c1/configuration_lfm3_vl.py",
+      "distinct_inode": true,
+      "sha256": "249e980a0b0ebd355be18bc0119b33809fa618b777c46f5424445a196c5cbc2e",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/configuration_lfm3_vl.py"
+    },
+    {
+      "bytes": 5401,
+      "copy": "inputs/c1/configuration_liquid_codec.py",
+      "distinct_inode": true,
+      "sha256": "ad89deb17164b8ae9a59d9c86545fd01ad281786c8702850aff9042e5f94a463",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/configuration_liquid_codec.py"
+    },
+    {
+      "bytes": 8935,
+      "copy": "inputs/c1/feature_extraction_lfm3_omni.py",
+      "distinct_inode": true,
+      "sha256": "bafd4bcf85d17c0bbf5cf213633935a6b03c731e55a348e70b0ecaf5a876ef5e",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/feature_extraction_lfm3_omni.py"
+    },
+    {
+      "bytes": 392,
+      "copy": "inputs/c1/generation_config.json",
+      "distinct_inode": true,
+      "sha256": "5f069cac2df137d9ac81bdd7aee88d48052a3897f9761cc9ba2f357f93405b85",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/generation_config.json"
+    },
+    {
+      "bytes": 12036,
+      "copy": "inputs/c1/image_processing_lfm3_vl.py",
+      "distinct_inode": true,
+      "sha256": "57db0cfa668bf89a6ff898874e1321e78c257d200f25c98e0ea52b30b8740088",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/image_processing_lfm3_vl.py"
+    },
+    {
+      "bytes": 8532,
+      "copy": "inputs/c1/lfm3_conv.py",
+      "distinct_inode": true,
+      "sha256": "80d4a985382a22774212759248a6b4c737bfbf9c2a47b3dd7f797dda748e4bb4",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/lfm3_conv.py"
+    },
+    {
+      "bytes": 4333941640,
+      "copy": "inputs/c1/model.safetensors",
+      "distinct_inode": true,
+      "sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/model.safetensors"
+    },
+    {
+      "bytes": 42359,
+      "copy": "inputs/c1/modeling_lfm3.py",
+      "distinct_inode": true,
+      "sha256": "e8cd5254ea99ce6bd731b57b10908c2e8b5010ce8315341f895a38484885eeab",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/modeling_lfm3.py"
+    },
+    {
+      "bytes": 98277,
+      "copy": "inputs/c1/modeling_lfm3_omni.py",
+      "distinct_inode": true,
+      "sha256": "9872e64112f9e255fba43212771226772af521e93f99c1984ecba1049664c465",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/modeling_lfm3_omni.py"
+    },
+    {
+      "bytes": 45019,
+      "copy": "inputs/c1/modeling_lfm3_vl.py",
+      "distinct_inode": true,
+      "sha256": "06d98684d2f4322bf65140f206f0bf194d14f6587387cd354ad580c12585ff28",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/modeling_lfm3_vl.py"
+    },
+    {
+      "bytes": 17884,
+      "copy": "inputs/c1/modeling_liquid_codec.py",
+      "distinct_inode": true,
+      "sha256": "5ca87e1b6e0549b40dc90fad5ee9d55620e9defb78c67e19c5937208c8e14f74",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/modeling_liquid_codec.py"
+    },
+    {
+      "bytes": 39031,
+      "copy": "inputs/c1/processing_lfm3_omni.py",
+      "distinct_inode": true,
+      "sha256": "07f97f35ccd0262b586c8878251f46c6a84e1e15ed92b0072a3acd3a63d2de5f",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/processing_lfm3_omni.py"
+    },
+    {
+      "bytes": 12152,
+      "copy": "inputs/c1/processing_lfm3_vl.py",
+      "distinct_inode": true,
+      "sha256": "d770011e71c8b8e94ea9436d4f6768b42db60c5db70145d47f326f5d76f633f6",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/processing_lfm3_vl.py"
+    },
+    {
+      "bytes": 2374,
+      "copy": "inputs/c1/processor_config.json",
+      "distinct_inode": true,
+      "sha256": "dd756829f85a10d343c4488c7d3479d3dc782e6f35721b7dae2fb588f781fc4a",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/processor_config.json"
+    },
+    {
+      "bytes": 17908634,
+      "copy": "inputs/c1/tokenizer.json",
+      "distinct_inode": true,
+      "sha256": "41927bd314d17d7d7fadb44e10cd0919f7b71528d7741596d8cbd15c6945ec44",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/tokenizer.json"
+    },
+    {
+      "bytes": 674,
+      "copy": "inputs/c1/tokenizer_config.json",
+      "distinct_inode": true,
+      "sha256": "ee4860abad5b84284f816d2812fc23a7477ce827ed6b4708af9a02c68ed00c7c",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/tokenizer_config.json"
+    },
+    {
+      "bytes": 706,
+      "copy": "inputs/c1/video_preprocessor_config.json",
+      "distinct_inode": true,
+      "sha256": "1ed75befc55ce0eda07fdcd7ad02c08605a973fcb1aebfbd0b86bb5221ae7c97",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/video_preprocessor_config.json"
+    },
+    {
+      "bytes": 17161,
+      "copy": "inputs/c1/video_processing_lfm3_vl.py",
+      "distinct_inode": true,
+      "sha256": "9a6b7804c520b59ae6a20bff4814196c187ef5b3ed8c93cbd7d0a9a66c413478",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/original/video_processing_lfm3_vl.py"
+    },
+    {
+      "bytes": 1316,
+      "copy": "inputs/reference/data/omni/precomputed/hybridagent/plan-trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "b2ef25fe7062beafce3f8603a7149a0f8da9ecf64f5e1666aafe6acb13007703",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/plan-trunk-0/index.bin"
+    },
+    {
+      "bytes": 32768,
+      "copy": "inputs/reference/data/omni/precomputed/hybridagent/plan-trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "bf848a5cbd6ff09afa865e345f6a58a5d6d20f6f06f4ff189447539eab94e190",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/plan-trunk-0/common.bin"
+    },
+    {
+      "bytes": 12593152,
+      "copy": "inputs/reference/data/omni/precomputed/hybridagent/plan-trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "965c37751abbd6f888441314601b0f66e3ca6795e3d7062e392a69908da517e4",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/plan-trunk-0/operator.bin"
+    },
+    {
+      "bytes": 12599296,
+      "copy": "inputs/reference/data/omni/precomputed/hybridagent/plan-trunk-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "5c29f077efe295b9fcb159bd9266638e7631b3673179ef534f95277fe21be5af",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/plan-trunk-0/ffn.bin"
+    },
+    {
+      "bytes": 1316,
+      "copy": "inputs/reference/data/omni/precomputed/bridges/bridge-trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "70afa9bc4ab441bd3f64a4d3654632e0af58f9f02f01038687cb31594cfb040e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/bridge-trunk-0/index.bin"
+    },
+    {
+      "bytes": 6144,
+      "copy": "inputs/reference/data/omni/precomputed/bridges/bridge-trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "83d8bf725b9343703ce1b7dfc92b0b03a273bd21695a23fd92d4da08336235ee",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/bridge-trunk-0/common.bin"
+    },
+    {
+      "bytes": 9441792,
+      "copy": "inputs/reference/data/omni/precomputed/bridges/bridge-trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "efd132b71a760f19cee85024a2cd580cde8ea964941adbe2e6c89938c4590a9e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/bridge-trunk-0/operator.bin"
+    },
+    {
+      "bytes": 1772544,
+      "copy": "inputs/reference/data/omni/precomputed/bridges/bridge-trunk-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "88b7366905a26750f18fdf32440bc57aff2d17288eac08e4889eb880b996ee4a",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/bridge-trunk-0/ffn.bin"
+    },
+    {
+      "bytes": 2612,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "030b3eba9b78748b11f9c45acc7cd630d5cd242a390bc4f129597c9020a935a0",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-trunk-0/index.bin"
+    },
+    {
+      "bytes": 7137792,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "7f3301867aff657b39e4bf974c2eb16b5724341ef8d9b4232929695c1ce6fa8d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-trunk-0/common.bin"
+    },
+    {
+      "bytes": 1186304,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "8122ca1fee5a86b8602238a52b524ba3537f0358c8c3aa2cc4f4c64640d50521",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-trunk-0/operator.bin"
+    },
+    {
+      "bytes": 2366976,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-trunk-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "b98a42aba7c9cb7ad0f32fb5f22ff4f1d7d67a86368e50210fb29a6cea114c59",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-trunk-0/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "cd8cd5bfc3c256d2c86111a0f9b978b3352e92cd45a6b56a204954efc79f2167",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-0/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "7a58319f674d0280705b5f742800e0fb1d78d63ede3a3f6e47de18caa8bcfc43",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-0/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "a60842b82651c8e3d9f1a3b684a1ccf95bff4bcfec8f20965a4527a15623f3a9",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-0/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "873433f69b338c6ef654128b961a4f2344c1787e3f7f50eacc23fb35c900a25e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-0/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-1/index.bin",
+      "distinct_inode": true,
+      "sha256": "dfdb673ac14cebf31a4e23d3c477756f24487fccfff8bcd59a6000775ebe41db",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-1/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-1/common.bin",
+      "distinct_inode": true,
+      "sha256": "2056498c444fd20ccec43a651a2dc703dcb4443e186b875348756813e3a71523",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-1/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-1/operator.bin",
+      "distinct_inode": true,
+      "sha256": "044f900dec98773effd24dff838cf9e603b11d972dd23dfbf611c5a8a41c35fc",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-1/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-1/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "92c4f3aecd6fdfbb7330565ea92839a09b731866086e44697f19660e0a158e7e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-1/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-2/index.bin",
+      "distinct_inode": true,
+      "sha256": "848650a64e772aeb9a022ea8160b75374560403f70c0a3524c5faaf5b5bf269d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-2/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-2/common.bin",
+      "distinct_inode": true,
+      "sha256": "c8ff1209c8edcd3d108ea918519de6e9173bc25cd6f50afc3990dc341dd9e599",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-2/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-2/operator.bin",
+      "distinct_inode": true,
+      "sha256": "25efdf635aec0a78833934c657a514ba2d6790d95091a9083bf863c0f913974a",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-2/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-2/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "924dc4c473fc232386faf79948fee704df82d491779c00643147c0d60dec95cc",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-2/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-3/index.bin",
+      "distinct_inode": true,
+      "sha256": "561142980fc0bdec7188f17f4d7272d0f261b2160df23b24dfe2b610a75cd8a6",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-3/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-3/common.bin",
+      "distinct_inode": true,
+      "sha256": "163a16c37b9c53d79ddf974429a9e883eae35e65a4b569a7219fb334f6b9e86d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-3/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-3/operator.bin",
+      "distinct_inode": true,
+      "sha256": "89961592718b9590e82ab0524393a5a1ffaf69da5f9915d6e36135a5adacd71d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-3/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-3/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "34bf026585ba4d2360a07fd59baaa8ba953f2b90079279745deaba6af6b9e582",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-3/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-4/index.bin",
+      "distinct_inode": true,
+      "sha256": "156e4ec24dacc3dd9f345fd256217af7093e9692b1874ff9ac08d72ec60c1c79",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-4/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-4/common.bin",
+      "distinct_inode": true,
+      "sha256": "88cc12db16df557b403677c659d3738450412ac3902b37c8b6bfbb92bf596d87",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-4/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-4/operator.bin",
+      "distinct_inode": true,
+      "sha256": "a54e2cac447ef497cf8c085bb4c2ee82cb0827b6ae1dac4645c8ba908ae76233",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-4/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-4/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "0da9cbc76888d1ea969366b90e53fbc938fb334ab08432837b20fcfdff16d170",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-4/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-5/index.bin",
+      "distinct_inode": true,
+      "sha256": "c11ef0699eacbba04cc219d1bd79b6278218714d755b9f0fff48e659eb43e120",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-5/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-5/common.bin",
+      "distinct_inode": true,
+      "sha256": "2ed7a0c1df224e03c95d8edeef55ae76dee684d25a1f10cc5a537c4b4448722e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-5/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-5/operator.bin",
+      "distinct_inode": true,
+      "sha256": "81093ee21be771b0af07bd1d3160b7fb2c51660bbefd82e7ac590900d7ff4d42",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-5/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-5/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "802a0fc55cce213aacddf3bbe0b8332abc9aa3b264e2e42c3f9abbc221d0a2b3",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-5/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-6/index.bin",
+      "distinct_inode": true,
+      "sha256": "b22a126cfc506f1c5c0dec951ffd075ca6c5592cd2d0bb39c612c32791ea7d52",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-6/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-6/common.bin",
+      "distinct_inode": true,
+      "sha256": "ceae3c062bf51d71dfc59ff89dfdcf45799a06072d530fb8163674b57c90f53d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-6/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-6/operator.bin",
+      "distinct_inode": true,
+      "sha256": "ebfa989259839160edb17b29e51aae3e1fa2dfa9b7c6bf2fc41868097f0f7ba3",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-6/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-6/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "6ba4d0d29d9084d094b9097db0942dcdd54f231c609a835555d97d61ff446b39",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-6/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-7/index.bin",
+      "distinct_inode": true,
+      "sha256": "b0f8707fb6a3ac93545822e533902735963af34d1d69665812450997bd341e45",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-7/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-7/common.bin",
+      "distinct_inode": true,
+      "sha256": "c24cfed18bfee103e1e50ee3f15d7b1da6ff945d7974fb8c5eb4d68a0dd30901",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-7/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-7/operator.bin",
+      "distinct_inode": true,
+      "sha256": "e098ff1ba43ebcdac0df623ee426b359cb265298286f2cf4056dccf017fd6bdb",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-7/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-7/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "5ad22b587205b12f52517c6aa88c2b7944691f7e95a298e23bed1047d829a6af",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-7/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-8/index.bin",
+      "distinct_inode": true,
+      "sha256": "705f1397487b682ec6605171307fcc0fd54939801b427af57f9cf4fa44f8416c",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-8/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-8/common.bin",
+      "distinct_inode": true,
+      "sha256": "a54f8fd917d3a880b5caa7fdaa5aea15c2a12e88cf462d329000a412be9e7201",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-8/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-8/operator.bin",
+      "distinct_inode": true,
+      "sha256": "cda58933a1ea29e983fafe8309ce493d5c64ca8acde6b94accfd9456829efae9",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-8/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-8/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "e453f7a3b14bf7cb7b04c4bfbb578caeeb24bd5df331b0ba9144cf166ddec804",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-8/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-9/index.bin",
+      "distinct_inode": true,
+      "sha256": "a94e2f2159214744c86fa2305906f35039e6188ed4f8ee58bb963aa9cba7d0ac",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-9/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-9/common.bin",
+      "distinct_inode": true,
+      "sha256": "9fa9c9cae40b46a8e1139eeea3144814f121ba05d3cef1c47669708027075891",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-9/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-9/operator.bin",
+      "distinct_inode": true,
+      "sha256": "fc9c49a285923c441d2fba3c690d0a1b49ce712cd1ffde2bffa5d3467cab79ee",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-9/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-9/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "aba8ff3d61af4c8ca5d6eadcb179aaf0bfba681146350fe53e1bf1bdfe73aada",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-9/ffn.bin"
+    },
+    {
+      "bytes": 560,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-10/index.bin",
+      "distinct_inode": true,
+      "sha256": "c22cfd8a29270c92a7b14ea8bcd2140eac3f486a32733076ff00d6fbac480c9e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-10/index.bin"
+    },
+    {
+      "bytes": 17920,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-10/common.bin",
+      "distinct_inode": true,
+      "sha256": "a95ec5e3e9a9199b3a1786d847dadd44e06c231148ab7403d883d7070b6a5e6f",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-10/common.bin"
+    },
+    {
+      "bytes": 6291456,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-10/operator.bin",
+      "distinct_inode": true,
+      "sha256": "fecbeeebb9b285c4288782878badb9faa1ce2282b099a1cbeb54708a3db21ca8",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-10/operator.bin"
+    },
+    {
+      "bytes": 884736,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae-expert-10/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "b36c949ba6d616d4aea55de446912a6dd588641b33ebf75489b86eed5f0f4564",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/vqvae-expert-10/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "1546a1b69f64b5a1b7ac6d885587e1989c5082189735bb33827ae81e9622de12",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-0/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "2ea78060458a7c3653edbcdbbece855133fae5419dcb69b65e82f0926f4c2dd3",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-0/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "fa7926f1688866641a086503a9579cc337e84d74ceaf445fa2bc5c599fe58738",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-0/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "8771ff88af59e455b642d6b1de39712be09f7fc4af2467c48fe283e711942b18",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-0/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-1/index.bin",
+      "distinct_inode": true,
+      "sha256": "b9fab42604f84b6d8c34210666d811f17108a458d65877419b22428a9a848600",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-1/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-1/common.bin",
+      "distinct_inode": true,
+      "sha256": "4a060bd95418ac3e3e2fb8a1cc3ba61c59f4247ee905a10467391cf7558579a6",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-1/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-1/operator.bin",
+      "distinct_inode": true,
+      "sha256": "52a647eef1e536a71bbb5054118f531502f29245141d90c8021c4f0e2baea47e",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-1/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-1/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "85e1486966058f6efaa74ef77e0eaa31d701d2dea72a0615c77f6bf87bcc9b4f",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-1/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-2/index.bin",
+      "distinct_inode": true,
+      "sha256": "b002e59b02cd83aafd173ff70993f484121746bbc059e128d8fe34f39526a943",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-2/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-2/common.bin",
+      "distinct_inode": true,
+      "sha256": "d238d74d772583301fadd49a6ff69c34b3d27b50f841f4ea7782526bca24a767",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-2/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-2/operator.bin",
+      "distinct_inode": true,
+      "sha256": "788dd0f1c868245c6fdadd978f45fd4b07c26094847ed03fe37c99d1f3860d70",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-2/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-2/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "95bf667c4b4d15de2cadbf9b15ae84489ecc4bc6155d51b74a8725f78ee81922",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-2/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-3/index.bin",
+      "distinct_inode": true,
+      "sha256": "285d98031d3d8dd5589dd71d478125bb9a79f6df50a8504643ec8d2fb3f433ab",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-3/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-3/common.bin",
+      "distinct_inode": true,
+      "sha256": "49e43433322a84e1c50a917001e3a23c1aa02cba6d11713547faba2e76bde145",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-3/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-3/operator.bin",
+      "distinct_inode": true,
+      "sha256": "bc6b006b66cdb7992c4368454fd8a09176048e0c06fbac4f2a83fa6987955740",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-3/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-3/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "bb4632a5b3bcc5549691c244676e9e548e68cbaa8f59a1ce3daffcbcaea52efb",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-3/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-4/index.bin",
+      "distinct_inode": true,
+      "sha256": "0a3d5bc0863beda973b3452d9924c6a6f6566074eb2c2c1c13d600463ea53157",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-4/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-4/common.bin",
+      "distinct_inode": true,
+      "sha256": "595c8e13c535d849a347a313f276d7e7b7ed765ece15931d3b80c76c3a6cebce",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-4/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-4/operator.bin",
+      "distinct_inode": true,
+      "sha256": "ba11986608dd343c79c17dcc6c931fd5de73020f61674b619f844859ce8812cb",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-4/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-4/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "b9bdfc5b03f0bcda324287a03cde15dd834aff583979cf8ca07ba74e31c74ce5",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-4/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-5/index.bin",
+      "distinct_inode": true,
+      "sha256": "138a57a22b9baa8ee44c64d1a8d94bdaa8bf7093db072c891dff77a7dd8725c8",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-5/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-5/common.bin",
+      "distinct_inode": true,
+      "sha256": "dc277c60a825147ef4e6cfc7ebaad4be4fffb1fc104490279e3d814ecb538aae",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-5/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-5/operator.bin",
+      "distinct_inode": true,
+      "sha256": "272dde321367bea50b6db2c97fc92db5107c743f37e6374507cb284aa7020c75",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-5/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-5/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "c1d9cbf67495e71584b8f25f0d1a08f90b684a877c377c35d7c52cce8a80bb02",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-5/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-6/index.bin",
+      "distinct_inode": true,
+      "sha256": "56d688c9c20779ec8bd9e35be91513c1ab82c287c026ae4a46a1d82cef77863b",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-6/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-6/common.bin",
+      "distinct_inode": true,
+      "sha256": "64870fa7ffcf3dd19641d67000fce8756d610427d2ced30a9b558475d57b2e0c",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-6/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-6/operator.bin",
+      "distinct_inode": true,
+      "sha256": "d2c4d2ef2fdf71a98f5bb7e0a97741d4e42c5ea5a7a3242a4daf35ce2cda442a",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-6/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-6/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "b5188363f2ffa2678b6482561f7503d6ec765abd5e371cc3b2d87169cf52f602",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-6/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-7/index.bin",
+      "distinct_inode": true,
+      "sha256": "4a22090cba99941e9ade38bc5b1ae7976fc827a49726584f9cd247f7373461c1",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-7/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-7/common.bin",
+      "distinct_inode": true,
+      "sha256": "1e31fce2129aa9f3b8f9f0a445ea901df79601ab76c86a76927e57e085760969",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-7/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-7/operator.bin",
+      "distinct_inode": true,
+      "sha256": "6b1b0a2a8a7872f3015df675a1381d6bcb7216ef0b0286a8961b14b108dba0a1",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-7/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-7/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "53c27ec433e643e9123f03528405535f0657150d2522f1321caea776ebd7c743",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-7/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-8/index.bin",
+      "distinct_inode": true,
+      "sha256": "bf73430220b4a7d1d447ed701b2ef7b9d3d5866e233263648072b644ff1a83d0",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-8/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-8/common.bin",
+      "distinct_inode": true,
+      "sha256": "cdd4237087efd71a592b378710f8206c8381ec64522183b4ed0c5e5c21e3b858",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-8/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-8/operator.bin",
+      "distinct_inode": true,
+      "sha256": "a0652b74a49dce2b148aea66b26b8e077808d72d0a76e0d589ceac1e17465e95",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-8/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-8/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "53b017b9c3d2d92bee37a9bd66ff7d4cbdac266da5787db458c8e55981cf032c",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-8/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-9/index.bin",
+      "distinct_inode": true,
+      "sha256": "c79041626bc6a90d8fada253703587353d5eadfc4f319821afdd1d14037ada93",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-9/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-9/common.bin",
+      "distinct_inode": true,
+      "sha256": "6c65da8eadfbdec018117ea8f09dd16845ceca84c752dfd6f9a83130d375c950",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-9/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-9/operator.bin",
+      "distinct_inode": true,
+      "sha256": "603768a626f1aca24eb06dac26a1c6eb4afd7d78294b9319e8fe8cd9f4a2b730",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-9/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-9/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "b845cbe1d4ddd54507cdf6a16e4f0a1fbe7942f909056d3d20cd1e33a37cf547",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-9/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-10/index.bin",
+      "distinct_inode": true,
+      "sha256": "ac4c324568b11a332cac0e846f23a75d34644f06ba4d76c06da1256c00a90d45",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-10/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-10/common.bin",
+      "distinct_inode": true,
+      "sha256": "526ff1a235907750afb76853343f004b0b3f857a944796b1a828bfe18c1a0baa",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-10/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-10/operator.bin",
+      "distinct_inode": true,
+      "sha256": "00929919cccf8b4427307babd19f6959b4202ffa53e7be5802a507786eba0873",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-10/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-10/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "c51ab5d0771d01cdaadead0480e596f03c3800a40a3109d6b8bc5e31d97ecd87",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-10/ffn.bin"
+    },
+    {
+      "bytes": 1100,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-11/index.bin",
+      "distinct_inode": true,
+      "sha256": "1c9a97650f30d2b6bbf0b1eb26fdc1c2d3ee499c287c896ce302dae0d6bb77ec",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-11/index.bin"
+    },
+    {
+      "bytes": 512,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-11/common.bin",
+      "distinct_inode": true,
+      "sha256": "24b77ffc8b5084d525668e3e2adcc10b0852bf14bc158f5241baa216cc0a91cf",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-11/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-11/operator.bin",
+      "distinct_inode": true,
+      "sha256": "dca311674bbf7c4009e7d7e13fbefb73cf3dfd3d1d16ec35df3cda5bb7be7034",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-11/operator.bin"
+    },
+    {
+      "bytes": 9452544,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-trunk-11/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "7bc044bdc753ab6288b6a7eb0e8af918e54e27761f0d58979ea39e45aa3b9b23",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-trunk-11/ffn.bin"
+    },
+    {
+      "bytes": 2936,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-global-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "9cd3f970bf0af86bbca4ac5e0220f37db6419c40d6562473e2e666d3d7b1126b",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-global-0/index.bin"
+    },
+    {
+      "bytes": 629760,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-global-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "06b6ebe1ab5dfa203162e70d4d71eff9e27f1f17cca41e54cea93cacd9fbdc15",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-global-0/common.bin"
+    },
+    {
+      "bytes": 69386240,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-global-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "dd60fe98abe74eefee50aac5a4ea3e18dd8dfc3a482f9e57d61bd08505594ff5",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-global-0/operator.bin"
+    },
+    {
+      "bytes": 0,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ncm-global-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ncm-global-0/ffn.bin"
+    },
+    {
+      "bytes": 1532,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "475c0203dd4a9846ff34b8d970c7260c9360a95e2651b58014cf30e35e2d6f73",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-0/index.bin"
+    },
+    {
+      "bytes": 0,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-0/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "b1ea5bec9cac1efd3c683ebf4b5c1d7ec85b8c2489110d0d0e6cfcfb9ed36d77",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-0/operator.bin"
+    },
+    {
+      "bytes": 4726272,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "092faa3d2dad76756e0d87265a8d2b64f83651993f1f30e7eacc7660aaa015da",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-0/ffn.bin"
+    },
+    {
+      "bytes": 1532,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-1/index.bin",
+      "distinct_inode": true,
+      "sha256": "9c7c9f357c59cd335c6f72eedac8595592763706f0b21025aa9502cbb9fb8009",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-1/index.bin"
+    },
+    {
+      "bytes": 0,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-1/common.bin",
+      "distinct_inode": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-1/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-1/operator.bin",
+      "distinct_inode": true,
+      "sha256": "e1659946d0bf9447b5c4111184af270957622ba3044dbfc7464586dd7ad50c1d",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-1/operator.bin"
+    },
+    {
+      "bytes": 4726272,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-1/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "8ea88d23c910aef470b9cd2398b21f56e614206c0c6db92b1e2bafa2626b6cda",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-1/ffn.bin"
+    },
+    {
+      "bytes": 1532,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-2/index.bin",
+      "distinct_inode": true,
+      "sha256": "fe9c846c503dbc0df99fe521d62ce66b0120048d52ca6b1bfb1596541fe5accd",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-2/index.bin"
+    },
+    {
+      "bytes": 0,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-2/common.bin",
+      "distinct_inode": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-2/common.bin"
+    },
+    {
+      "bytes": 4730880,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-2/operator.bin",
+      "distinct_inode": true,
+      "sha256": "1d948996231be942f6a22f7eea649908224902ac2d9434c55d3defe905498146",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-2/operator.bin"
+    },
+    {
+      "bytes": 4726272,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-trunk-2/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "6c32258615790376e90cf276b0d77d297418204568d7d511aacbe049917ef1d7",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-trunk-2/ffn.bin"
+    },
+    {
+      "bytes": 1208,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-global-0/index.bin",
+      "distinct_inode": true,
+      "sha256": "a91e9bcc13617ddc84587ec16547e936a9bd2b9b147db3e6cf3c7a4ea82b6e5c",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-global-0/index.bin"
+    },
+    {
+      "bytes": 248832,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-global-0/common.bin",
+      "distinct_inode": true,
+      "sha256": "7c3a163db41bce670b50eba5cd14cc4f910bbbad6e903cea7f2bbca935cad68c",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-global-0/common.bin"
+    },
+    {
+      "bytes": 1182720,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-global-0/operator.bin",
+      "distinct_inode": true,
+      "sha256": "4fae7e8695ae6863f489d470f629f5c42300802f788dc222e9f4eb07adf25cea",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-global-0/operator.bin"
+    },
+    {
+      "bytes": 3076,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/ptr-global-0/ffn.bin",
+      "distinct_inode": true,
+      "sha256": "5724928b3ddcae1953023925fbb0ccd7794b6331a7c8be24bcc45616206fd2a2",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/ptr-global-0/ffn.bin"
+    },
+    {
+      "bytes": 98304000,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae_wte.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "6202f59ea68fbf64603fd25b09c804d8629ab111dcab771d28e2d14b8803eba3",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/vqvae_wte.bf16.bin"
+    },
+    {
+      "bytes": 98304000,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/vqvae_dec.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "318f125357b42dd044c653562eff36724de3aa73c1253876b39d89627495d9f2",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/vqvae_dec.bf16.bin"
+    },
+    {
+      "bytes": 524288000,
+      "copy": "inputs/reference/data/omni/precomputed/trunks/global-0/embed_tokens.bf16.bin",
+      "distinct_inode": true,
+      "sha256": "11b90ab1a047d0061c79695d07503dda24f7bcb716b9828e22b7dcdcbf59bb68",
+      "source": "/opt/clover-k3/s23-omni2b/pruned/global-0/embed_tokens.bf16.bin"
+    },
+    {
+      "bytes": 17909005,
+      "copy": "inputs/reference/data/omni/precomputed/trunks/tokenizer.json",
+      "distinct_inode": true,
+      "sha256": "8ecf017f37d2c5a5a372ebfabb6ffef6338902763bbdd397c88aad990a5690d2",
+      "source": "/opt/clover-k3/s23-omni2b/tokenizer.json"
+    },
+    {
+      "bytes": 6186,
+      "copy": "inputs/reference/data/omni/precomputed/ncm/manifest.json",
+      "distinct_inode": true,
+      "sha256": "68e992a08c6df25fa48eac40b2b762947b260e37da3251e142622a924de78c97",
+      "source": "/opt/clover-k3/s23-omni2b/ncm/precomputed/manifest.json"
+    },
+    {
+      "bytes": 4495,
+      "copy": "fixtures/MATERIALS.json",
+      "distinct_inode": true,
+      "sha256": "f2a06041d81b26a6c5dff9414a943fa6bd96732c5d618ea5c2642d47076b697d",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/MATERIALS.json"
+    },
+    {
+      "bytes": 41296,
+      "copy": "fixtures/cases.json",
+      "distinct_inode": true,
+      "sha256": "04eb461297b88dd8b748dc5ecc9f95d60f90b6d5476eb77e5e05e466865b1386",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/cases.json"
+    },
+    {
+      "bytes": 788,
+      "copy": "fixtures/image-000.png",
+      "distinct_inode": true,
+      "sha256": "70935817b8acf9a19a1919294bcdee3e65a617b140acdb01a6c6a003bbdd7584",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-000.png"
+    },
+    {
+      "bytes": 789,
+      "copy": "fixtures/image-001.png",
+      "distinct_inode": true,
+      "sha256": "d4382888bf0304cb7e7144b7147c43542ab323458b28e2097ee77fedcbbcad50",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-001.png"
+    },
+    {
+      "bytes": 788,
+      "copy": "fixtures/image-002.png",
+      "distinct_inode": true,
+      "sha256": "95979a76840781a529096178d0624ab65e6b904bcca4863baca793669a653d8f",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-002.png"
+    },
+    {
+      "bytes": 790,
+      "copy": "fixtures/image-003.png",
+      "distinct_inode": true,
+      "sha256": "68aaf1f050e70af67c5cc9fdaea9c6cec4a3cc308a48ce1d60b9c3d8a355635a",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-003.png"
+    },
+    {
+      "bytes": 924,
+      "copy": "fixtures/image-004.png",
+      "distinct_inode": true,
+      "sha256": "bc9b645a97f4074618a88619550683d6384ba5dbc48ac66edd6ff2cc3ada89d0",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-004.png"
+    },
+    {
+      "bytes": 992,
+      "copy": "fixtures/image-005.png",
+      "distinct_inode": true,
+      "sha256": "b95541b2f6ce34d441f15161cc4efd0445e2099f50ab35cc3784526c92f2b4d0",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-005.png"
+    },
+    {
+      "bytes": 987,
+      "copy": "fixtures/image-006.png",
+      "distinct_inode": true,
+      "sha256": "f3fdb6f56d9d2ec3035567f442d44866335e68ce78f134b69860027bfe24bfeb",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-006.png"
+    },
+    {
+      "bytes": 1039,
+      "copy": "fixtures/image-007.png",
+      "distinct_inode": true,
+      "sha256": "f10526e7fadd6bc10e76dedbdd0206bc07019d1d794d91330bd22b722efb2637",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-007.png"
+    },
+    {
+      "bytes": 1095,
+      "copy": "fixtures/image-008.png",
+      "distinct_inode": true,
+      "sha256": "b296cbd37101af7678e84c22934f3e214b1fbc368db48ae8630a2a0d7e4be336",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-008.png"
+    },
+    {
+      "bytes": 1147,
+      "copy": "fixtures/image-009.png",
+      "distinct_inode": true,
+      "sha256": "ef68798eb0b05559b48bd5b1904d366e7a841e1c2f951bce1a700b9d50f9f3a8",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-009.png"
+    },
+    {
+      "bytes": 2701,
+      "copy": "fixtures/image-010.png",
+      "distinct_inode": true,
+      "sha256": "c726e638163fbc7180ed1f47a6b1d0efa6f4451e8da779635945815a5595a8bb",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-010.png"
+    },
+    {
+      "bytes": 4032,
+      "copy": "fixtures/image-011.png",
+      "distinct_inode": true,
+      "sha256": "7e360a66da47eae37942215add8884fb8786a8897acf19100dca072c6d741c85",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/image-011.png"
+    },
+    {
+      "bytes": 128080,
+      "copy": "fixtures/nonspeech-000.wav",
+      "distinct_inode": true,
+      "sha256": "eac9274944f7b8a2e0bad9b13585cde94cf08e1da0dd2ea9494fd124cfdac7b5",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/nonspeech-000.wav"
+    },
+    {
+      "bytes": 128080,
+      "copy": "fixtures/nonspeech-001.wav",
+      "distinct_inode": true,
+      "sha256": "9f6fa30ef7b7f72b4998d8d9e087d2c65f095599d69ab8e7ce219d7781a6bf46",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/nonspeech-001.wav"
+    },
+    {
+      "bytes": 716,
+      "copy": "fixtures/pilot-cases.json",
+      "distinct_inode": true,
+      "sha256": "e4c7734a9df8e60717fcbbfbe31b398d27150efaac915a150929f8a9d696ea24",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/pilot-cases.json"
+    },
+    {
+      "bytes": 1,
+      "copy": "fixtures/source-librispeech/.cache/huggingface/.gitignore",
+      "distinct_inode": true,
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/.cache/huggingface/.gitignore"
+    },
+    {
+      "bytes": 191,
+      "copy": "fixtures/source-librispeech/.cache/huggingface/CACHEDIR.TAG",
+      "distinct_inode": true,
+      "sha256": "f6572428f6d5e1575e73a1502895a8731f10757dfbb634909c6e154b849af91d",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/.cache/huggingface/CACHEDIR.TAG"
+    },
+    {
+      "bytes": 0,
+      "copy": "fixtures/source-librispeech/.cache/huggingface/download/clean/validation-00000-of-00001.parquet.lock",
+      "distinct_inode": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/.cache/huggingface/download/clean/validation-00000-of-00001.parquet.lock"
+    },
+    {
+      "bytes": 124,
+      "copy": "fixtures/source-librispeech/.cache/huggingface/download/clean/validation-00000-of-00001.parquet.metadata",
+      "distinct_inode": true,
+      "sha256": "b487c998fe743e145b3ab3c25620ca396149e8dd2132b7c488776effccad7117",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/.cache/huggingface/download/clean/validation-00000-of-00001.parquet.metadata"
+    },
+    {
+      "bytes": 9192059,
+      "copy": "fixtures/source-librispeech/clean/validation-00000-of-00001.parquet",
+      "distinct_inode": true,
+      "sha256": "4e69a06fa5edc90921e5e7e39a7084881f8b3ed9c805c574f4f39c6fde27c603",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/clean/validation-00000-of-00001.parquet"
+    },
+    {
+      "bytes": 2259,
+      "copy": "fixtures/source-librispeech/upstream.json",
+      "distinct_inode": true,
+      "sha256": "10bb4d15b368faf9c9389b9d6b2a5a099166d1e3e1af3faeda22d844695b1cbe",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/source-librispeech/upstream.json"
+    },
+    {
+      "bytes": 374800,
+      "copy": "fixtures/speech-input-000.wav",
+      "distinct_inode": true,
+      "sha256": "6b26916afdbcce5b044bae73a98932074a073f79296a503de01bdc875023dc09",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-000.wav"
+    },
+    {
+      "bytes": 308240,
+      "copy": "fixtures/speech-input-001.wav",
+      "distinct_inode": true,
+      "sha256": "fdd15300d8157794d4fa927e5f606d3dc01e0b74a80de1bbd3222130e63e08d6",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-001.wav"
+    },
+    {
+      "bytes": 633680,
+      "copy": "fixtures/speech-input-002.wav",
+      "distinct_inode": true,
+      "sha256": "2a50c0d4713f46aba52b242a3db0c143bca9adca8dcedfe018d60ae8a5aabc28",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-002.wav"
+    },
+    {
+      "bytes": 576720,
+      "copy": "fixtures/speech-input-003.wav",
+      "distinct_inode": true,
+      "sha256": "1b5fe936e81c013ab806492df6e1d0b055e0f8943f69ce1279960023c8672210",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-003.wav"
+    },
+    {
+      "bytes": 361040,
+      "copy": "fixtures/speech-input-004.wav",
+      "distinct_inode": true,
+      "sha256": "4a4fb47ee4d8ad734bc410fc501f7d4938fd7389dedd4d1b600a7ba864b55de2",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-004.wav"
+    },
+    {
+      "bytes": 591440,
+      "copy": "fixtures/speech-input-005.wav",
+      "distinct_inode": true,
+      "sha256": "c3eb5a689382ebaf249d395f3bfd6beae2adc68f1ecce7d0fd5d2d22069e6bd4",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-005.wav"
+    },
+    {
+      "bytes": 327760,
+      "copy": "fixtures/speech-input-006.wav",
+      "distinct_inode": true,
+      "sha256": "d281478a74aefad413f61c6b3a037cbe594f1b5766125e3e372f8cee32744d61",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-input-006.wav"
+    },
+    {
+      "bytes": 3060,
+      "copy": "fixtures/speech-provenance.json",
+      "distinct_inode": true,
+      "sha256": "e0d8442002508555dd52b0d2e43d8d52852ab5fb5523182cd59d5d2e057cf466",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/speech-provenance.json"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-000.npy",
+      "distinct_inode": true,
+      "sha256": "d71dca6e6b24565cc27f5828a526a5c787910f9b699a70cb513ba143d9574e67",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-000.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-001.npy",
+      "distinct_inode": true,
+      "sha256": "f79e7fbfb19683a750e076a25a7e46fb0202248b85a80b85908266b881555c9e",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-001.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-002.npy",
+      "distinct_inode": true,
+      "sha256": "10200f241dc0754513fcc01d626edf9513f1077f0880073574adabf1de225904",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-002.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-003.npy",
+      "distinct_inode": true,
+      "sha256": "95d297da1ecf603880991a849d0bac26ed9772632fe4eb035d061f4278c90618",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-003.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-004.npy",
+      "distinct_inode": true,
+      "sha256": "36b05271af87d714aece39749b91561dc6255e59f79b8e32a9c5cc952e9b1862",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-004.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-005.npy",
+      "distinct_inode": true,
+      "sha256": "d6eb2f4a3927b309d20e177b0cf6d5dca155ad844dd2c57a4605ae4626e10509",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-005.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-006.npy",
+      "distinct_inode": true,
+      "sha256": "5575e46a2ea7b8af1e7d34742db72132aa701aed93d99395a523fada0b9b71ae",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-006.npy"
+    },
+    {
+      "bytes": 1572992,
+      "copy": "fixtures/video-007.npy",
+      "distinct_inode": true,
+      "sha256": "74a732eea5d6e08787fc8deaa6a8f7bd965ba1a6c4a769f5475f900a311756dc",
+      "source": "/opt/clover-k3/astra-weightspace-20261111/fixtures/video-007.npy"
+    }
+  ],
+  "original_sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "schema": 1
+}

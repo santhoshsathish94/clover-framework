@@ -1,0 +1,39 @@
+{
+  "canonical_gold_missing_tokens": {
+    "54": [
+      7033
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "c582f0b8158b22f261f93b8e07954dabb666e9ef2798e1fdba3761a64c4122e3",
+    "zero_ncm": false
+  },
+  "gold": [
+    "54"
+  ],
+  "id": "question-01",
+  "input": "What is 83 minus 29?",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 13,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 3,
+    "s": 0.09,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "stock",
+  "raw_trace": [],
+  "seconds": 0.08605271088890731,
+  "text": "What is 83 minus 29?",
+  "upstream_ncm_unchanged": true
+}

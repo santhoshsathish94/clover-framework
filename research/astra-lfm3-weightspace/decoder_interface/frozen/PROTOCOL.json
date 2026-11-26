@@ -1,0 +1,21 @@
+{
+  "candidate_tie_break": "first eligible policy in the frozen order",
+  "evidence_scope": "diagnosis using previously exposed cases; no new held-out improvement claim",
+  "input_modes": [
+    "question",
+    "native_answer",
+    "swapped_native_answer"
+  ],
+  "native_answer_source": "recorded model outputs from the previous study, never gold text inserted as a plan",
+  "policies": [
+    "stock",
+    "no_forced_copy",
+    "no_copy",
+    "raw_restricted",
+    "raw_full"
+  ],
+  "question_gate": "exceed stock and match or exceed native correct count; preserve all formatting controls",
+  "raw_full_vocabulary": 128000,
+  "training": false,
+  "weight_changes": false
+}

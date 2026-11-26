@@ -1,0 +1,20 @@
+{
+  "after_embed_sha256": "7c5588122d36b1d24106a41d8fca6ee546d4cb59d5626eb81c562fc052c6cffb",
+  "before_embed_sha256": "cf30c23f52409dc42d3371b0e8ee6346cf258287677352105c212e19e4bdc031",
+  "changed_embedding_rows": [
+    125033,
+    125034
+  ],
+  "changed_tensors": [
+    "model.embed_tokens.weight"
+  ],
+  "copy": {
+    "bytes": 3457635448,
+    "copy": "copies/anchor1.5_backbone/model.safetensors",
+    "distinct_inode": true,
+    "sha256": "581239236b5966bc5f3883d28d81a061dca3718dfbdba5e11738fdefb97e9ad2",
+    "source": "/opt/clover-k3/astra-weightspace-20261111/c2c3_weights/c2/model.safetensors"
+  },
+  "edited_file_sha256": "2ef457966491caee8fa04e7b11da7eaefd2edf716c3eaf1c97d1dd69576f6a58",
+  "unchanged_embedding_rows": 127998
+}

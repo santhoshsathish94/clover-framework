@@ -1,0 +1,7 @@
+{
+  "cases_exact": 112,
+  "text_tokens_logits_and_speech_identical": true,
+  "unchanged_required_arrays": 1912,
+  "changed_downstream_arrays": 0,
+  "upstream_identical": true
+}

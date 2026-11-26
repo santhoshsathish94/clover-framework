@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the opposite of hot.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "f7a77ae7decc269dfa476ecdec6fe3ee113944bb5babafd1c59fe14231ec0e11",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the opposite of hot.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "c38ec3b7fa2a10e92357556bf5c65e45d394ebda33283a26537b33428417deb3",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the opposite of hot.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Write the opposite of hot.",
+  "composite_correct": false,
+  "composite_s": 0.8183339990209788,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "cold"
+  ],
+  "id": "question-17",
+  "input": "Write the opposite of hot.",
+  "native_correct": true,
+  "native_text": "Cold",
+  "reference": "Write the opposite of hot.",
+  "reference_s": 0.4205929220188409,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "e8155e674a193046318563e7856d08eca618b6256695a64b7bf34b0bc2fe0c97",
+    "zero_ncm": false
+  }
+}

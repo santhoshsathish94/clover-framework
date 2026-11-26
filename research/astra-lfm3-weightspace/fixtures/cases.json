@@ -1,0 +1,1694 @@
+[
+  {
+    "id": "discovery-000",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 484 plus 66?\nA. 550\nB. 549\nC. 551\nD. 616\nAnswer with only the correct letter.",
+    "options": [
+      550,
+      549,
+      551,
+      616
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 550
+  },
+  {
+    "id": "discovery-001",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 351 minus 14?\nA. 336\nB. 337\nC. 338\nD. 351\nAnswer with only the correct letter.",
+    "options": [
+      336,
+      337,
+      338,
+      351
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 337
+  },
+  {
+    "id": "discovery-002",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 85 times 31?\nA. 2634\nB. 2636\nC. 2635\nD. 2666\nAnswer with only the correct letter.",
+    "options": [
+      2634,
+      2636,
+      2635,
+      2666
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 2635
+  },
+  {
+    "id": "discovery-003",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 3750 divided by 75?\nA. 49\nB. 51\nC. 125\nD. 50\nAnswer with only the correct letter.",
+    "options": [
+      49,
+      51,
+      125,
+      50
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 50
+  },
+  {
+    "id": "discovery-004",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 660 plus 43?\nA. 702\nB. 703\nC. 704\nD. 746\nAnswer with only the correct letter.",
+    "options": [
+      702,
+      703,
+      704,
+      746
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 703
+  },
+  {
+    "id": "discovery-005",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 923 minus 40?\nA. 882\nB. 884\nC. 883\nD. 923\nAnswer with only the correct letter.",
+    "options": [
+      882,
+      884,
+      883,
+      923
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 883
+  },
+  {
+    "id": "discovery-006",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 85 times 40?\nA. 3399\nB. 3401\nC. 3440\nD. 3400\nAnswer with only the correct letter.",
+    "options": [
+      3399,
+      3401,
+      3440,
+      3400
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 3400
+  },
+  {
+    "id": "discovery-007",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 897 divided by 23?\nA. 39\nB. 38\nC. 40\nD. 62\nAnswer with only the correct letter.",
+    "options": [
+      39,
+      38,
+      40,
+      62
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 39
+  },
+  {
+    "id": "discovery-008",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 605 plus 31?\nA. 635\nB. 637\nC. 636\nD. 667\nAnswer with only the correct letter.",
+    "options": [
+      635,
+      637,
+      636,
+      667
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 636
+  },
+  {
+    "id": "discovery-009",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 1248 minus 81?\nA. 1166\nB. 1168\nC. 1248\nD. 1167\nAnswer with only the correct letter.",
+    "options": [
+      1166,
+      1168,
+      1248,
+      1167
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1167
+  },
+  {
+    "id": "discovery-010",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 54 times 48?\nA. 2592\nB. 2591\nC. 2593\nD. 2640\nAnswer with only the correct letter.",
+    "options": [
+      2592,
+      2591,
+      2593,
+      2640
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 2592
+  },
+  {
+    "id": "discovery-011",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 992 divided by 32?\nA. 30\nB. 31\nC. 32\nD. 63\nAnswer with only the correct letter.",
+    "options": [
+      30,
+      31,
+      32,
+      63
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 31
+  },
+  {
+    "id": "discovery-012",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 847 plus 20?\nA. 866\nB. 868\nC. 887\nD. 867\nAnswer with only the correct letter.",
+    "options": [
+      866,
+      868,
+      887,
+      867
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 867
+  },
+  {
+    "id": "discovery-013",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 546 minus 41?\nA. 505\nB. 504\nC. 506\nD. 546\nAnswer with only the correct letter.",
+    "options": [
+      505,
+      504,
+      506,
+      546
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 505
+  },
+  {
+    "id": "discovery-014",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 61 times 64?\nA. 3903\nB. 3904\nC. 3905\nD. 3968\nAnswer with only the correct letter.",
+    "options": [
+      3903,
+      3904,
+      3905,
+      3968
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 3904
+  },
+  {
+    "id": "discovery-015",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 5427 divided by 67?\nA. 80\nB. 82\nC. 81\nD. 148\nAnswer with only the correct letter.",
+    "options": [
+      80,
+      82,
+      81,
+      148
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 81
+  },
+  {
+    "id": "discovery-016",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 418 plus 16?\nA. 434\nB. 433\nC. 435\nD. 450\nAnswer with only the correct letter.",
+    "options": [
+      434,
+      433,
+      435,
+      450
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 434
+  },
+  {
+    "id": "discovery-017",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 351 minus 75?\nA. 275\nB. 276\nC. 277\nD. 351\nAnswer with only the correct letter.",
+    "options": [
+      275,
+      276,
+      277,
+      351
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 276
+  },
+  {
+    "id": "discovery-018",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 35 times 66?\nA. 2309\nB. 2311\nC. 2310\nD. 2376\nAnswer with only the correct letter.",
+    "options": [
+      2309,
+      2311,
+      2310,
+      2376
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 2310
+  },
+  {
+    "id": "discovery-019",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 4399 divided by 83?\nA. 52\nB. 54\nC. 136\nD. 53\nAnswer with only the correct letter.",
+    "options": [
+      52,
+      54,
+      136,
+      53
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 53
+  },
+  {
+    "id": "discovery-020",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 770 plus 80?\nA. 849\nB. 850\nC. 851\nD. 930\nAnswer with only the correct letter.",
+    "options": [
+      849,
+      850,
+      851,
+      930
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 850
+  },
+  {
+    "id": "discovery-021",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 1105 minus 24?\nA. 1080\nB. 1082\nC. 1081\nD. 1105\nAnswer with only the correct letter.",
+    "options": [
+      1080,
+      1082,
+      1081,
+      1105
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1081
+  },
+  {
+    "id": "discovery-022",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 56 times 19?\nA. 1063\nB. 1065\nC. 1083\nD. 1064\nAnswer with only the correct letter.",
+    "options": [
+      1063,
+      1065,
+      1083,
+      1064
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 1064
+  },
+  {
+    "id": "discovery-023",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 4860 divided by 54?\nA. 90\nB. 89\nC. 91\nD. 144\nAnswer with only the correct letter.",
+    "options": [
+      90,
+      89,
+      91,
+      144
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 90
+  },
+  {
+    "id": "discovery-024",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 1078 plus 77?\nA. 1154\nB. 1156\nC. 1155\nD. 1232\nAnswer with only the correct letter.",
+    "options": [
+      1154,
+      1156,
+      1155,
+      1232
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 1155
+  },
+  {
+    "id": "discovery-025",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 845 minus 69?\nA. 775\nB. 777\nC. 845\nD. 776\nAnswer with only the correct letter.",
+    "options": [
+      775,
+      777,
+      845,
+      776
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 776
+  },
+  {
+    "id": "discovery-026",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 53 times 28?\nA. 1484\nB. 1483\nC. 1485\nD. 1512\nAnswer with only the correct letter.",
+    "options": [
+      1484,
+      1483,
+      1485,
+      1512
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 1484
+  },
+  {
+    "id": "discovery-027",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 1764 divided by 36?\nA. 48\nB. 49\nC. 50\nD. 85\nAnswer with only the correct letter.",
+    "options": [
+      48,
+      49,
+      50,
+      85
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 49
+  },
+  {
+    "id": "discovery-028",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 616 plus 76?\nA. 691\nB. 693\nC. 768\nD. 692\nAnswer with only the correct letter.",
+    "options": [
+      691,
+      693,
+      768,
+      692
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 692
+  },
+  {
+    "id": "discovery-029",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 481 minus 20?\nA. 461\nB. 460\nC. 462\nD. 481\nAnswer with only the correct letter.",
+    "options": [
+      461,
+      460,
+      462,
+      481
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 461
+  },
+  {
+    "id": "discovery-030",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 96 times 86?\nA. 8255\nB. 8256\nC. 8257\nD. 8342\nAnswer with only the correct letter.",
+    "options": [
+      8255,
+      8256,
+      8257,
+      8342
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 8256
+  },
+  {
+    "id": "discovery-031",
+    "modality": "text",
+    "split": "discovery",
+    "prompt": "What is 1222 divided by 26?\nA. 46\nB. 48\nC. 47\nD. 73\nAnswer with only the correct letter.",
+    "options": [
+      46,
+      48,
+      47,
+      73
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 47
+  },
+  {
+    "id": "validation-000",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1078 plus 18?\nA. 1096\nB. 1095\nC. 1097\nD. 1114\nAnswer with only the correct letter.",
+    "options": [
+      1096,
+      1095,
+      1097,
+      1114
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 1096
+  },
+  {
+    "id": "validation-001",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1274 minus 61?\nA. 1212\nB. 1213\nC. 1214\nD. 1274\nAnswer with only the correct letter.",
+    "options": [
+      1212,
+      1213,
+      1214,
+      1274
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1213
+  },
+  {
+    "id": "validation-002",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 98 times 21?\nA. 2057\nB. 2059\nC. 2058\nD. 2079\nAnswer with only the correct letter.",
+    "options": [
+      2057,
+      2059,
+      2058,
+      2079
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 2058
+  },
+  {
+    "id": "validation-003",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 3234 divided by 77?\nA. 41\nB. 43\nC. 119\nD. 42\nAnswer with only the correct letter.",
+    "options": [
+      41,
+      43,
+      119,
+      42
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 42
+  },
+  {
+    "id": "validation-004",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 891 plus 52?\nA. 942\nB. 943\nC. 944\nD. 995\nAnswer with only the correct letter.",
+    "options": [
+      942,
+      943,
+      944,
+      995
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 943
+  },
+  {
+    "id": "validation-005",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 715 minus 43?\nA. 671\nB. 673\nC. 672\nD. 715\nAnswer with only the correct letter.",
+    "options": [
+      671,
+      673,
+      672,
+      715
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 672
+  },
+  {
+    "id": "validation-006",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 69 times 64?\nA. 4415\nB. 4417\nC. 4480\nD. 4416\nAnswer with only the correct letter.",
+    "options": [
+      4415,
+      4417,
+      4480,
+      4416
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 4416
+  },
+  {
+    "id": "validation-007",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 3120 divided by 65?\nA. 48\nB. 47\nC. 49\nD. 113\nAnswer with only the correct letter.",
+    "options": [
+      48,
+      47,
+      49,
+      113
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 48
+  },
+  {
+    "id": "validation-008",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 847 plus 76?\nA. 922\nB. 924\nC. 923\nD. 999\nAnswer with only the correct letter.",
+    "options": [
+      922,
+      924,
+      923,
+      999
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 923
+  },
+  {
+    "id": "validation-009",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 819 minus 13?\nA. 805\nB. 807\nC. 819\nD. 806\nAnswer with only the correct letter.",
+    "options": [
+      805,
+      807,
+      819,
+      806
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 806
+  },
+  {
+    "id": "validation-010",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 49 times 84?\nA. 4116\nB. 4115\nC. 4117\nD. 4200\nAnswer with only the correct letter.",
+    "options": [
+      4116,
+      4115,
+      4117,
+      4200
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 4116
+  },
+  {
+    "id": "validation-011",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 2240 divided by 28?\nA. 79\nB. 80\nC. 81\nD. 108\nAnswer with only the correct letter.",
+    "options": [
+      79,
+      80,
+      81,
+      108
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 80
+  },
+  {
+    "id": "validation-012",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 319 plus 87?\nA. 405\nB. 407\nC. 493\nD. 406\nAnswer with only the correct letter.",
+    "options": [
+      405,
+      407,
+      493,
+      406
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 406
+  },
+  {
+    "id": "validation-013",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 377 minus 57?\nA. 320\nB. 319\nC. 321\nD. 377\nAnswer with only the correct letter.",
+    "options": [
+      320,
+      319,
+      321,
+      377
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 320
+  },
+  {
+    "id": "validation-014",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 70 times 71?\nA. 4969\nB. 4970\nC. 4971\nD. 5041\nAnswer with only the correct letter.",
+    "options": [
+      4969,
+      4970,
+      4971,
+      5041
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 4970
+  },
+  {
+    "id": "validation-015",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 2548 divided by 49?\nA. 51\nB. 53\nC. 52\nD. 101\nAnswer with only the correct letter.",
+    "options": [
+      51,
+      53,
+      52,
+      101
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 52
+  },
+  {
+    "id": "validation-016",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 638 plus 67?\nA. 705\nB. 704\nC. 706\nD. 772\nAnswer with only the correct letter.",
+    "options": [
+      705,
+      704,
+      706,
+      772
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 705
+  },
+  {
+    "id": "validation-017",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 559 minus 50?\nA. 508\nB. 509\nC. 510\nD. 559\nAnswer with only the correct letter.",
+    "options": [
+      508,
+      509,
+      510,
+      559
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 509
+  },
+  {
+    "id": "validation-018",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 67 times 72?\nA. 4823\nB. 4825\nC. 4824\nD. 4896\nAnswer with only the correct letter.",
+    "options": [
+      4823,
+      4825,
+      4824,
+      4896
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 4824
+  },
+  {
+    "id": "validation-019",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 4730 divided by 55?\nA. 85\nB. 87\nC. 141\nD. 86\nAnswer with only the correct letter.",
+    "options": [
+      85,
+      87,
+      141,
+      86
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 86
+  },
+  {
+    "id": "validation-020",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 913 plus 79?\nA. 991\nB. 992\nC. 993\nD. 1071\nAnswer with only the correct letter.",
+    "options": [
+      991,
+      992,
+      993,
+      1071
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 992
+  },
+  {
+    "id": "validation-021",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1274 minus 89?\nA. 1184\nB. 1186\nC. 1185\nD. 1274\nAnswer with only the correct letter.",
+    "options": [
+      1184,
+      1186,
+      1185,
+      1274
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1185
+  },
+  {
+    "id": "validation-022",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 94 times 73?\nA. 6861\nB. 6863\nC. 6935\nD. 6862\nAnswer with only the correct letter.",
+    "options": [
+      6861,
+      6863,
+      6935,
+      6862
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 6862
+  },
+  {
+    "id": "validation-023",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 4860 divided by 81?\nA. 60\nB. 59\nC. 61\nD. 141\nAnswer with only the correct letter.",
+    "options": [
+      60,
+      59,
+      61,
+      141
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 60
+  },
+  {
+    "id": "validation-024",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1034 plus 17?\nA. 1050\nB. 1052\nC. 1051\nD. 1068\nAnswer with only the correct letter.",
+    "options": [
+      1050,
+      1052,
+      1051,
+      1068
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 1051
+  },
+  {
+    "id": "validation-025",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1118 minus 79?\nA. 1038\nB. 1040\nC. 1118\nD. 1039\nAnswer with only the correct letter.",
+    "options": [
+      1038,
+      1040,
+      1118,
+      1039
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1039
+  },
+  {
+    "id": "validation-026",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 42 times 70?\nA. 2940\nB. 2939\nC. 2941\nD. 3010\nAnswer with only the correct letter.",
+    "options": [
+      2940,
+      2939,
+      2941,
+      3010
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 2940
+  },
+  {
+    "id": "validation-027",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 3003 divided by 77?\nA. 38\nB. 39\nC. 40\nD. 116\nAnswer with only the correct letter.",
+    "options": [
+      38,
+      39,
+      40,
+      116
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 39
+  },
+  {
+    "id": "validation-028",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 330 plus 50?\nA. 379\nB. 381\nC. 430\nD. 380\nAnswer with only the correct letter.",
+    "options": [
+      379,
+      381,
+      430,
+      380
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "addition",
+    "computed_answer": 380
+  },
+  {
+    "id": "validation-029",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 1209 minus 83?\nA. 1126\nB. 1125\nC. 1127\nD. 1209\nAnswer with only the correct letter.",
+    "options": [
+      1126,
+      1125,
+      1127,
+      1209
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "subtraction",
+    "computed_answer": 1126
+  },
+  {
+    "id": "validation-030",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 65 times 58?\nA. 3769\nB. 3770\nC. 3771\nD. 3828\nAnswer with only the correct letter.",
+    "options": [
+      3769,
+      3770,
+      3771,
+      3828
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "multiplication",
+    "computed_answer": 3770
+  },
+  {
+    "id": "validation-031",
+    "modality": "text",
+    "split": "validation",
+    "prompt": "What is 6391 divided by 77?\nA. 82\nB. 84\nC. 83\nD. 160\nAnswer with only the correct letter.",
+    "options": [
+      82,
+      84,
+      83,
+      160
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "division",
+    "computed_answer": 83
+  },
+  {
+    "id": "unrelated-000",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which is the capital of Japan?\nA. Tokyo\nB. Rome\nC. Lima\nD. Cairo\nAnswer with only the correct letter.",
+    "options": [
+      "Tokyo",
+      "Rome",
+      "Lima",
+      "Cairo"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-001",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which chemical symbol denotes oxygen?\nA. Au\nB. O\nC. Na\nD. Fe\nAnswer with only the correct letter.",
+    "options": [
+      "Au",
+      "O",
+      "Na",
+      "Fe"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-002",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "At standard pressure, water freezes at which Celsius temperature?\nA. 100\nB. 50\nC. 0\nD. -100\nAnswer with only the correct letter.",
+    "options": [
+      "100",
+      "50",
+      "0",
+      "-100"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-003",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which is a prime number?\nA. 9\nB. 21\nC. 27\nD. 29\nAnswer with only the correct letter.",
+    "options": [
+      "9",
+      "21",
+      "27",
+      "29"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-004",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "What is the plural of child?\nA. children\nB. childs\nC. childes\nD. childrens\nAnswer with only the correct letter.",
+    "options": [
+      "children",
+      "childs",
+      "childes",
+      "childrens"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-005",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which word is the opposite of increase?\nA. extend\nB. decrease\nC. enlarge\nD. raise\nAnswer with only the correct letter.",
+    "options": [
+      "extend",
+      "decrease",
+      "enlarge",
+      "raise"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-006",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "All tulips are plants. This object is a tulip. What must be true?\nA. It is a tree\nB. It is blue\nC. It is a plant\nD. It is not a plant\nAnswer with only the correct letter.",
+    "options": [
+      "It is a tree",
+      "It is blue",
+      "It is a plant",
+      "It is not a plant"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-007",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "What comes next: 2, 4, 8, 16?\nA. 18\nB. 20\nC. 24\nD. 32\nAnswer with only the correct letter.",
+    "options": [
+      "18",
+      "20",
+      "24",
+      "32"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-008",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "In Python, what is len([4, 5, 6])?\nA. 3\nB. 2\nC. 4\nD. 15\nAnswer with only the correct letter.",
+    "options": [
+      "3",
+      "2",
+      "4",
+      "15"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-009",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "In Python, what is [10, 20, 30][1]?\nA. 10\nB. 20\nC. 30\nD. 1\nAnswer with only the correct letter.",
+    "options": [
+      "10",
+      "20",
+      "30",
+      "1"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-010",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which JSON value represents a Boolean truth value?\nA. \"true\"\nB. None\nC. true\nD. True\nAnswer with only the correct letter.",
+    "options": [
+      "\"true\"",
+      "None",
+      "true",
+      "True"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-011",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which data structure normally uses first-in-first-out order?\nA. stack\nB. set\nC. tree\nD. queue\nAnswer with only the correct letter.",
+    "options": [
+      "stack",
+      "set",
+      "tree",
+      "queue"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-012",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which is the largest: 0.5, 0.05, 0.005, 0.0005?\nA. 0.5\nB. 0.05\nC. 0.005\nD. 0.0005\nAnswer with only the correct letter.",
+    "options": [
+      "0.5",
+      "0.05",
+      "0.005",
+      "0.0005"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-013",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which unit measures electrical resistance?\nA. volt\nB. ohm\nC. ampere\nD. watt\nAnswer with only the correct letter.",
+    "options": [
+      "volt",
+      "ohm",
+      "ampere",
+      "watt"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-014",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which planet is closest to the Sun?\nA. Mars\nB. Earth\nC. Mercury\nD. Jupiter\nAnswer with only the correct letter.",
+    "options": [
+      "Mars",
+      "Earth",
+      "Mercury",
+      "Jupiter"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "unrelated-015",
+    "modality": "text",
+    "split": "regression",
+    "prompt": "Which organ primarily pumps blood through the body?\nA. lung\nB. kidney\nC. liver\nD. heart\nAnswer with only the correct letter.",
+    "options": [
+      "lung",
+      "kidney",
+      "liver",
+      "heart"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "family": "unrelated"
+  },
+  {
+    "id": "vision-000",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "image": "image-000.png"
+  },
+  {
+    "id": "vision-001",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "image": "image-001.png"
+  },
+  {
+    "id": "vision-002",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "image": "image-002.png"
+  },
+  {
+    "id": "vision-003",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "image": "image-003.png"
+  },
+  {
+    "id": "vision-004",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "How many blue circles are visible?\nA. one\nB. two\nC. three\nD. four\nAnswer with only the correct letter.",
+    "options": [
+      "one",
+      "two",
+      "three",
+      "four"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "image": "image-004.png"
+  },
+  {
+    "id": "vision-005",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "How many blue circles are visible?\nA. one\nB. two\nC. three\nD. four\nAnswer with only the correct letter.",
+    "options": [
+      "one",
+      "two",
+      "three",
+      "four"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "image": "image-005.png"
+  },
+  {
+    "id": "vision-006",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "How many blue circles are visible?\nA. one\nB. two\nC. three\nD. four\nAnswer with only the correct letter.",
+    "options": [
+      "one",
+      "two",
+      "three",
+      "four"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "image": "image-006.png"
+  },
+  {
+    "id": "vision-007",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "How many blue circles are visible?\nA. one\nB. two\nC. three\nD. four\nAnswer with only the correct letter.",
+    "options": [
+      "one",
+      "two",
+      "three",
+      "four"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "image": "image-007.png"
+  },
+  {
+    "id": "vision-008",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "Where is the red square relative to the blue circle?\nA. left\nB. right\nC. above\nD. below\nAnswer with only the correct letter.",
+    "options": [
+      "left",
+      "right",
+      "above",
+      "below"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "image": "image-008.png"
+  },
+  {
+    "id": "vision-009",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "Where is the red square relative to the blue circle?\nA. left\nB. right\nC. above\nD. below\nAnswer with only the correct letter.",
+    "options": [
+      "left",
+      "right",
+      "above",
+      "below"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "image": "image-009.png"
+  },
+  {
+    "id": "vision-010",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "Which number is printed in the image?\nA. 427\nB. 863\nC. 472\nD. 836\nAnswer with only the correct letter.",
+    "options": [
+      "427",
+      "863",
+      "472",
+      "836"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "image": "image-010.png"
+  },
+  {
+    "id": "vision-011",
+    "modality": "vision",
+    "split": "regression",
+    "prompt": "Which number is printed in the image?\nA. 427\nB. 863\nC. 472\nD. 836\nAnswer with only the correct letter.",
+    "options": [
+      "427",
+      "863",
+      "472",
+      "836"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "image": "image-011.png"
+  },
+  {
+    "id": "video-000",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "video": "video-000.npy",
+    "reversed_pair": 0
+  },
+  {
+    "id": "video-001",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "video": "video-001.npy",
+    "reversed_pair": 0
+  },
+  {
+    "id": "video-002",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "video": "video-002.npy",
+    "reversed_pair": 1
+  },
+  {
+    "id": "video-003",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "video": "video-003.npy",
+    "reversed_pair": 1
+  },
+  {
+    "id": "video-004",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "C",
+    "max_new_tokens": 24,
+    "video": "video-004.npy",
+    "reversed_pair": 2
+  },
+  {
+    "id": "video-005",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "video": "video-005.npy",
+    "reversed_pair": 2
+  },
+  {
+    "id": "video-006",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "D",
+    "max_new_tokens": 24,
+    "video": "video-006.npy",
+    "reversed_pair": 3
+  },
+  {
+    "id": "video-007",
+    "modality": "video",
+    "split": "regression",
+    "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+    "options": [
+      "red",
+      "green",
+      "blue",
+      "yellow"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "video": "video-007.npy",
+    "reversed_pair": 3
+  },
+  {
+    "id": "asr-000",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-000.wav",
+    "gold_text": "MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "asr-001",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-001.wav",
+    "gold_text": "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "asr-002",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-002.wav",
+    "gold_text": "HE HAS GRAVE DOUBTS WHETHER SIR FREDERICK LEIGHTON'S WORK IS REALLY GREEK AFTER ALL AND CAN DISCOVER IN IT BUT LITTLE OF ROCKY ITHACA",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "asr-003",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-003.wav",
+    "gold_text": "IT IS OBVIOUSLY UNNECESSARY FOR US TO POINT OUT HOW LUMINOUS THESE CRITICISMS ARE HOW DELICATE IN EXPRESSION",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "asr-004",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-004.wav",
+    "gold_text": "ON THE GENERAL PRINCIPLES OF ART MISTER QUILTER WRITES WITH EQUAL LUCIDITY",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "asr-005",
+    "modality": "audio_asr",
+    "split": "regression",
+    "system": "Perform ASR in English.",
+    "audio": "speech-input-005.wav",
+    "gold_text": "PAINTING HE TELLS US IS OF A DIFFERENT QUALITY TO MATHEMATICS AND FINISH IN ART IS ADDING MORE FACT",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "audio-control-000",
+    "modality": "audio",
+    "split": "regression",
+    "prompt": "What can be heard in this recording?\nA. silence\nB. a steady tone\nC. a spoken sentence\nD. applause\nAnswer with only the correct letter.",
+    "options": [
+      "silence",
+      "a steady tone",
+      "a spoken sentence",
+      "applause"
+    ],
+    "gold_letter": "A",
+    "max_new_tokens": 24,
+    "audio": "nonspeech-000.wav"
+  },
+  {
+    "id": "audio-control-001",
+    "modality": "audio",
+    "split": "regression",
+    "prompt": "What can be heard in this recording?\nA. silence\nB. a steady tone\nC. a spoken sentence\nD. applause\nAnswer with only the correct letter.",
+    "options": [
+      "silence",
+      "a steady tone",
+      "a spoken sentence",
+      "applause"
+    ],
+    "gold_letter": "B",
+    "max_new_tokens": 24,
+    "audio": "nonspeech-001.wav"
+  },
+  {
+    "id": "tts-000",
+    "modality": "speech",
+    "split": "regression",
+    "system": "Perform TTS in American English using a female voice.",
+    "prompt": "Good morning.",
+    "generation_mode": "audio",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "tts-001",
+    "modality": "speech",
+    "split": "regression",
+    "system": "Perform TTS in American English using a female voice.",
+    "prompt": "The meeting starts at nine.",
+    "generation_mode": "audio",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "tts-002",
+    "modality": "speech",
+    "split": "regression",
+    "system": "Perform TTS in American English using a female voice.",
+    "prompt": "Please close the window.",
+    "generation_mode": "audio",
+    "max_new_tokens": 96
+  },
+  {
+    "id": "tts-003",
+    "modality": "speech",
+    "split": "regression",
+    "system": "Perform TTS in American English using a female voice.",
+    "prompt": "There are three green cups.",
+    "generation_mode": "audio",
+    "max_new_tokens": 96
+  }
+]

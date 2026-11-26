@@ -1,0 +1,56 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "```python\ndef add(left, right):\n    return left + right\n```",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [],
+        "levels": 5,
+        "ncm_z_sha256": "ab5f5ea95e5e3b049ec4c94745af8f3f72b73ec56668364704cc93bc3d3c9329",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": false,
+      "changed_output": false,
+      "text": "```python\ndef add(left, right):\n    return left + right\n```",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [],
+        "levels": 5,
+        "ncm_z_sha256": "63f97d0fac839348d701f7c15ecbf86ea55e6fd0ad9dfeb4a7fdcab8609c7dc0",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "```python\ndef add(left, right):\n    return left + right\n```",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "```python\ndef add(left, right):\n    return left + right\n```",
+  "composite_s": 0.9001480470178649,
+  "echoes_input": true,
+  "exact": true,
+  "id": "format-code",
+  "input": "```python\ndef add(left, right):\n    return left + right\n```",
+  "reference": "```python\ndef add(left, right):\n    return left + right\n```",
+  "reference_s": 0.7884652479551733,
+  "state_arrays": 3,
+  "trace": {
+    "codes": 47,
+    "fallbacks": [],
+    "levels": 5,
+    "ncm_z_sha256": "63f97d0fac839348d701f7c15ecbf86ea55e6fd0ad9dfeb4a7fdcab8609c7dc0",
+    "zero_ncm": false
+  }
+}

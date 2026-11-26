@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "In JSON, which lowercase literal represents Boolean truth?",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "c2b6eaf42e0de4f68cd045b7dd5981aec3d719f7f67938a1545d8e5f08753d0c",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "In JSON, which lowercase literal represents Boolean truth?",
+      "trace": {
+        "codes": 27,
+        "fallbacks": [
+          false
+        ],
+        "levels": 4,
+        "ncm_z_sha256": "6d57a50a8d1844da9391fc98dbf55993d3551157bcddebc8d877a7ddbd39daea",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "In JSON, which lowercase literal represents Boolean truth?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "In JSON, which lowercase literal represents Boolean truth?",
+  "composite_correct": false,
+  "composite_s": 0.8933923449367285,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "true"
+  ],
+  "id": "question-23",
+  "input": "In JSON, which lowercase literal represents Boolean truth?",
+  "native_correct": true,
+  "native_text": "true",
+  "reference": "In JSON, which lowercase literal represents Boolean truth?",
+  "reference_s": 0.49897925194818527,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 27,
+    "fallbacks": [
+      false
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "1a7753bf36f9daa6c206292a5b56e5c51949d0478ab4e4e854f0c1164f5174d9",
+    "zero_ncm": false
+  }
+}

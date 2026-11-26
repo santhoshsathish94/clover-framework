@@ -1,0 +1,28 @@
+{
+  "decoder_trace": {
+    "codes": 47,
+    "fallbacks": [],
+    "levels": 5,
+    "ncm_z_sha256": "e4443fe269d349d2fa150b3b0bf299b15bc1403cef70e49d9147f6ca7c53ed01",
+    "zero_ncm": false
+  },
+  "id": "format-table",
+  "input": "| Item | Count |\n| Pen | 12 |\n| Book | 3 |",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 47,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 5,
+    "s": 0.25,
+    "window_tokens": 512,
+    "windows": 0
+  },
+  "policy": "raw_full",
+  "raw_trace": [],
+  "seconds": 0.24900765297934413,
+  "text": "| Item | Count |\n| Pen | 12 |\n| Book | 3 |",
+  "upstream_ncm_unchanged": true
+}

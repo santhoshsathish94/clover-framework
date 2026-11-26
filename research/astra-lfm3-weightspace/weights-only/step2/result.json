@@ -1,0 +1,3647 @@
+{
+  "evidence_mode": "weights and weights-derived step1 norms only; no inference, labels, activations or benchmarks",
+  "boundary": {
+    "known_behavior_and_tokenizer_inputs_inaccessible": true,
+    "checkpoint_readonly": true
+  },
+  "tensor": "model.language_model.embed_tokens.weight",
+  "norm_cutoff": 0.25,
+  "similarity_thresholds": [
+    0.9,
+    0.95,
+    0.99
+  ],
+  "seed": 20261111,
+  "step1_arrays_sha256": "f89f62cf5c18482ff7ff4aeed3c4f07fac7c75ad29d18d70d714c59d7ee80bf2",
+  "checkpoint_sha256_before": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "populations": {
+    "all_low_norm_rows": {
+      "normalized_mean_length": 0.9248261071567124,
+      "mean_all_off_diagonal_cosine": 0.8552861822917067,
+      "direction_defined": true,
+      "cosine_to_centroid": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          0.612568787494459,
+          0.6533922639328694,
+          0.6985422876208418,
+          0.8820991137306571,
+          0.985599425462743,
+          0.9924273595814669,
+          0.9934200559794717,
+          0.9937373468989522,
+          0.9939644810545338
+        ]
+      },
+      "fraction_with_centroid_cosine_at_least": {
+        "0.9": 0.7208530805687203,
+        "0.95": 0.6285545023696683,
+        "0.99": 0.4713270142180095
+      },
+      "rows": 8440,
+      "row_norms": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          0.17230955040052082,
+          0.17285029584120995,
+          0.17332542046538205,
+          0.17473207132213778,
+          0.17593365061617378,
+          0.19087146893819984,
+          0.2340345888505387,
+          0.24667452496841996,
+          0.24998974628651713
+        ]
+      },
+      "sampled_pair_cosines": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          0.40838274359703064,
+          0.5416530013084412,
+          0.6264054477214813,
+          0.750329852104187,
+          0.8889515995979309,
+          0.9816233813762665,
+          0.9959540218114853,
+          0.9978416383266449,
+          0.9996255040168762
+        ]
+      },
+      "pair_quantile_method": "65536 seeded uniform ordered non-self pairs; graph counts use every pair",
+      "thresholds": {
+        "0.9": {
+          "connected_components": 2437,
+          "singleton_rows": 2436,
+          "largest_component_sizes": [
+            6004,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 17066444,
+          "fraction_all_pairs_meeting_threshold": 0.47922515021377277,
+          "top_groups": [
+            {
+              "normalized_mean_length": 0.9826111123568463,
+              "mean_all_off_diagonal_cosine": 0.9655188550983611,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.8960075664888503,
+                  0.9049363722397947,
+                  0.9234786406693802,
+                  0.9777404511575711,
+                  0.9955853598180588,
+                  0.9962798772461656,
+                  0.9969523934304441,
+                  0.9972081761887592,
+                  0.9973989098274927
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 0.9980013324450366,
+                "0.95": 0.8712524983344437,
+                "0.99": 0.6840439706862091
+              },
+              "label": 0,
+              "size": 6004,
+              "row_ids_first16": [
+                133,
+                134,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                35618,
+                51934,
+                55617
+              ],
+              "row_id_min": 133,
+              "row_id_max": 127999,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.17230955040052082,
+                  0.17277830778435982,
+                  0.17317318798882358,
+                  0.17426740077340805,
+                  0.1752923258706619,
+                  0.1761301493830764,
+                  0.1828264174617671,
+                  0.18612610310083977,
+                  0.18970655878845896
+                ]
+              },
+              "minimum_within_group_cosine": 0.8125705122947693,
+              "all_pairs_meet_edge_threshold": false,
+              "rows_in_last4096_table_positions": 3145
+            },
+            {
+              "normalized_mean_length": 0.9999999992341116,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                26586
+              ],
+              "row_id_min": 26586,
+              "row_id_max": 26586,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999959461524,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                40186
+              ],
+              "row_id_min": 40186,
+              "row_id_max": 40186,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999978098916,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                45922
+              ],
+              "row_id_min": 45922,
+              "row_id_max": 45922,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000085940388,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                50988
+              ],
+              "row_id_min": 50988,
+              "row_id_max": 50988,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000055679046,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                54265
+              ],
+              "row_id_min": 54265,
+              "row_id_max": 54265,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.000000005989434,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343,
+                  1.0000000059894343
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                61052
+              ],
+              "row_id_min": 61052,
+              "row_id_max": 61052,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338,
+                  0.23774205058834338
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998807907104,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.00000000092821,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104,
+                  1.0000000009282104
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                61121
+              ],
+              "row_id_min": 61121,
+              "row_id_max": 61121,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471,
+                  0.2080532541716471
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998211860657,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        },
+        "0.95": {
+          "connected_components": 3210,
+          "singleton_rows": 3209,
+          "largest_component_sizes": [
+            5231,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 12724558,
+          "fraction_all_pairs_meeting_threshold": 0.3573051432948694,
+          "top_groups": [
+            {
+              "normalized_mean_length": 0.9908631436044784,
+              "mean_all_off_diagonal_cosine": 0.9818062912981762,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9439926102455571,
+                  0.9507627599970699,
+                  0.9605326199893272,
+                  0.9936196883016745,
+                  0.9963678620405385,
+                  0.9970078924378323,
+                  0.9975823755327305,
+                  0.9978185140377471,
+                  0.9980009744839471
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 0.9929267826419422,
+                "0.99": 0.7822596061938444
+              },
+              "label": 0,
+              "size": 5231,
+              "row_ids_first16": [
+                133,
+                134,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                55617,
+                63524,
+                63527
+              ],
+              "row_id_min": 133,
+              "row_id_max": 127999,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.17230955040052082,
+                  0.17276089151944427,
+                  0.17312383748024385,
+                  0.17412656130296883,
+                  0.17506282175181084,
+                  0.17576912257812408,
+                  0.17759800837550271,
+                  0.1795229637324576,
+                  0.18430208822911906
+                ]
+              },
+              "minimum_within_group_cosine": 0.899642825126648,
+              "all_pairs_meet_edge_threshold": false,
+              "rows_in_last4096_table_positions": 3133
+            },
+            {
+              "normalized_mean_length": 0.9999999992341116,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                26586
+              ],
+              "row_id_min": 26586,
+              "row_id_max": 26586,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000030522471,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                35618
+              ],
+              "row_id_min": 35618,
+              "row_id_max": 35618,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998807907104,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999959461524,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                40186
+              ],
+              "row_id_min": 40186,
+              "row_id_max": 40186,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999978098916,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                45922
+              ],
+              "row_id_min": 45922,
+              "row_id_max": 45922,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000085940388,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                50988
+              ],
+              "row_id_min": 50988,
+              "row_id_max": 50988,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999983865866,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                51934
+              ],
+              "row_id_min": 51934,
+              "row_id_max": 51934,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998807907104,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000055679046,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                54265
+              ],
+              "row_id_min": 54265,
+              "row_id_max": 54265,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        },
+        "0.99": {
+          "connected_components": 4268,
+          "singleton_rows": 4267,
+          "largest_component_sizes": [
+            4173,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 7444275,
+          "fraction_all_pairs_meeting_threshold": 0.20903498145879912,
+          "top_groups": [
+            {
+              "normalized_mean_length": 0.9965063143869908,
+              "mean_all_off_diagonal_cosine": 0.9930231627134828,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.982419776338812,
+                  0.9872804963720306,
+                  0.9920556543450267,
+                  0.9963264568301915,
+                  0.9970205587014073,
+                  0.9975936442852811,
+                  0.9980273292297505,
+                  0.9982481325228707,
+                  0.9984531539086375
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 0.9678888090103044
+              },
+              "label": 0,
+              "size": 4173,
+              "row_ids_first16": [
+                133,
+                134,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195,
+                196,
+                63524,
+                63527,
+                63528
+              ],
+              "row_id_min": 133,
+              "row_id_max": 127999,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.17230955040052082,
+                  0.1727356665480699,
+                  0.17306770920371067,
+                  0.17395987166137766,
+                  0.17481874403682077,
+                  0.17552679312127703,
+                  0.17605883528422786,
+                  0.17629096578953363,
+                  0.17681606732049235
+                ]
+              },
+              "minimum_within_group_cosine": 0.9703342318534851,
+              "all_pairs_meet_edge_threshold": false,
+              "rows_in_last4096_table_positions": 3108
+            },
+            {
+              "normalized_mean_length": 0.9999999992341116,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112,
+                  0.999999999234112
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                26586
+              ],
+              "row_id_min": 26586,
+              "row_id_max": 26586,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501,
+                  0.24801349818114501
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000030522471,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476,
+                  1.0000000030522476
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                35618
+              ],
+              "row_id_min": 35618,
+              "row_id_max": 35618,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638,
+                  0.18200246681943638
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998807907104,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999959461524,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526,
+                  0.9999999959461526
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                40186
+              ],
+              "row_id_min": 40186,
+              "row_id_max": 40186,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186,
+                  0.23492196784336186
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999978098916,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918,
+                  0.9999999978098918
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                45922
+              ],
+              "row_id_min": 45922,
+              "row_id_max": 45922,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151,
+                  0.2488538607775151
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000085940388,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393,
+                  1.0000000085940393
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                50988
+              ],
+              "row_id_min": 50988,
+              "row_id_max": 50988,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462,
+                  0.24127292333564462
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999983865866,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869,
+                  0.9999999983865869
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                51934
+              ],
+              "row_id_min": 51934,
+              "row_id_max": 51934,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226,
+                  0.1840431081774226
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998807907104,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000055679046,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048,
+                  1.0000000055679048
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                54265
+              ],
+              "row_id_min": 54265,
+              "row_id_max": 54265,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477,
+                  0.2018022179189477
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        }
+      }
+    },
+    "other_rows_reference": {
+      "normalized_mean_length": 0.1422006535303921,
+      "mean_all_off_diagonal_cosine": 0.02010492455221377,
+      "direction_defined": true,
+      "cosine_to_centroid": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.26705222994049116,
+          -0.027277717601101648,
+          0.03653453019873586,
+          0.10362662048767685,
+          0.13688580885019042,
+          0.1707070526095896,
+          0.26607870674497586,
+          0.43526091838090825,
+          0.5559364416943451
+        ]
+      },
+      "fraction_with_centroid_cosine_at_least": {
+        "0.9": 0.0,
+        "0.95": 0.0,
+        "0.99": 0.0
+      },
+      "rows": 8440,
+      "row_norms": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          0.25022043283314904,
+          0.31414781223948124,
+          0.5467931764998013,
+          0.7859827313221798,
+          0.86430099896347,
+          0.9290006198027516,
+          1.0111146761939418,
+          1.0730236811259795,
+          1.3258745313831843
+        ]
+      },
+      "sampled_pair_cosines": {
+        "probabilities": [
+          0,
+          0.01,
+          0.05,
+          0.25,
+          0.5,
+          0.75,
+          0.95,
+          0.99,
+          1
+        ],
+        "quantiles": [
+          -0.17565612494945526,
+          -0.045023366808891296,
+          -0.02419920777902007,
+          0.0009917929419316351,
+          0.018420579843223095,
+          0.03679170925170183,
+          0.06849846243858337,
+          0.10560875385999681,
+          0.7235101461410522
+        ]
+      },
+      "pair_quantile_method": "65536 seeded uniform ordered non-self pairs; graph counts use every pair",
+      "thresholds": {
+        "0.9": {
+          "connected_components": 8440,
+          "singleton_rows": 8440,
+          "largest_component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 0,
+          "fraction_all_pairs_meeting_threshold": 0.0,
+          "top_groups": [
+            {
+              "normalized_mean_length": 1.00000000026743,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 0,
+              "size": 1,
+              "row_ids_first16": [
+                7
+              ],
+              "row_id_min": 7,
+              "row_id_max": 7,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.99999999996379,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                8
+              ],
+              "row_id_min": 8,
+              "row_id_max": 8,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000025874023,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                23
+              ],
+              "row_id_min": 23,
+              "row_id_max": 23,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999995203532,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                35
+              ],
+              "row_id_min": 35,
+              "row_id_max": 35,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999966114814,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                57
+              ],
+              "row_id_min": 57,
+              "row_id_max": 57,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.000000000452033,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                66
+              ],
+              "row_id_min": 66,
+              "row_id_max": 66,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999976806728,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                78
+              ],
+              "row_id_min": 78,
+              "row_id_max": 78,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998211860657,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000069090271,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                83
+              ],
+              "row_id_min": 83,
+              "row_id_max": 83,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        },
+        "0.95": {
+          "connected_components": 8440,
+          "singleton_rows": 8440,
+          "largest_component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 0,
+          "fraction_all_pairs_meeting_threshold": 0.0,
+          "top_groups": [
+            {
+              "normalized_mean_length": 1.00000000026743,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 0,
+              "size": 1,
+              "row_ids_first16": [
+                7
+              ],
+              "row_id_min": 7,
+              "row_id_max": 7,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.99999999996379,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                8
+              ],
+              "row_id_min": 8,
+              "row_id_max": 8,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000025874023,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                23
+              ],
+              "row_id_min": 23,
+              "row_id_max": 23,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999995203532,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                35
+              ],
+              "row_id_min": 35,
+              "row_id_max": 35,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999966114814,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                57
+              ],
+              "row_id_min": 57,
+              "row_id_max": 57,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.000000000452033,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                66
+              ],
+              "row_id_min": 66,
+              "row_id_max": 66,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999976806728,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                78
+              ],
+              "row_id_min": 78,
+              "row_id_max": 78,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998211860657,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000069090271,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                83
+              ],
+              "row_id_min": 83,
+              "row_id_max": 83,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        },
+        "0.99": {
+          "connected_components": 8440,
+          "singleton_rows": 8440,
+          "largest_component_sizes": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "pairs_meeting_threshold": 0,
+          "fraction_all_pairs_meeting_threshold": 0.0,
+          "top_groups": [
+            {
+              "normalized_mean_length": 1.00000000026743,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305,
+                  1.0000000002674305
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 0,
+              "size": 1,
+              "row_ids_first16": [
+                7
+              ],
+              "row_id_min": 7,
+              "row_id_max": 7,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576,
+                  0.9672455360501576
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.99999999996379,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902,
+                  0.9999999999637902
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 1,
+              "size": 1,
+              "row_ids_first16": [
+                8
+              ],
+              "row_id_min": 8,
+              "row_id_max": 8,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047,
+                  1.1002088206916047
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000025874023,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023,
+                  1.0000000025874023
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 2,
+              "size": 1,
+              "row_ids_first16": [
+                23
+              ],
+              "row_id_min": 23,
+              "row_id_max": 23,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406,
+                  1.088214882863406
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999995203532,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535,
+                  0.9999999995203535
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 3,
+              "size": 1,
+              "row_ids_first16": [
+                35
+              ],
+              "row_id_min": 35,
+              "row_id_max": 35,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097,
+                  1.1715468363802097
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999966114814,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816,
+                  0.9999999966114816
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 4,
+              "size": 1,
+              "row_ids_first16": [
+                57
+              ],
+              "row_id_min": 57,
+              "row_id_max": 57,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216,
+                  0.9474170699860216
+                ]
+              },
+              "minimum_within_group_cosine": 1.0,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.000000000452033,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033,
+                  1.000000000452033
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 5,
+              "size": 1,
+              "row_ids_first16": [
+                66
+              ],
+              "row_id_min": 66,
+              "row_id_max": 66,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386,
+                  0.914328750380386
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 0.9999999976806728,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733,
+                  0.9999999976806733
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 6,
+              "size": 1,
+              "row_ids_first16": [
+                78
+              ],
+              "row_id_min": 78,
+              "row_id_max": 78,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968,
+                  1.0371508780792968
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999998211860657,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            },
+            {
+              "normalized_mean_length": 1.0000000069090271,
+              "mean_all_off_diagonal_cosine": 1.0,
+              "direction_defined": true,
+              "cosine_to_centroid": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271,
+                  1.0000000069090271
+                ]
+              },
+              "fraction_with_centroid_cosine_at_least": {
+                "0.9": 1.0,
+                "0.95": 1.0,
+                "0.99": 1.0
+              },
+              "label": 7,
+              "size": 1,
+              "row_ids_first16": [
+                83
+              ],
+              "row_id_min": 83,
+              "row_id_max": 83,
+              "row_norms": {
+                "probabilities": [
+                  0,
+                  0.01,
+                  0.05,
+                  0.25,
+                  0.5,
+                  0.75,
+                  0.95,
+                  0.99,
+                  1
+                ],
+                "quantiles": [
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997,
+                  0.9986843975132997
+                ]
+              },
+              "minimum_within_group_cosine": 0.9999999403953552,
+              "all_pairs_meet_edge_threshold": true,
+              "rows_in_last4096_table_positions": 0
+            }
+          ],
+          "qualification": "Connectivity is single linkage; minimum pair similarity checks whether a connected group is actually compact."
+        }
+      }
+    }
+  },
+  "limits": [
+    "Norm cutoff is exploratory, inherited from step1",
+    "Similarity thresholds describe geometry, not semantic equivalence or defects",
+    "No tokenizer labels or behavioral data were accessed",
+    "The reference population is sampled; the low-norm population and within-population graph counts are exhaustive"
+  ],
+  "elapsed_s": 4.315519399009645,
+  "checkpoint_sha256_after": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "arrays_sha256": "f811858b19ebba9dabf75afa1442ae818689464f2249e383091b8c93ec21e4e9"
+}

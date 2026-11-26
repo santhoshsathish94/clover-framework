@@ -1,0 +1,405 @@
+{
+  "native": [
+    {
+      "family": "unrelated",
+      "gold_letter": "A",
+      "id": "unrelated-000",
+      "max_new_tokens": 24,
+      "modality": "text",
+      "options": [
+        "Tokyo",
+        "Rome",
+        "Lima",
+        "Cairo"
+      ],
+      "prompt": "Which is the capital of Japan?\nA. Tokyo\nB. Rome\nC. Lima\nD. Cairo\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "family": "unrelated",
+      "gold_letter": "B",
+      "id": "unrelated-001",
+      "max_new_tokens": 24,
+      "modality": "text",
+      "options": [
+        "Au",
+        "O",
+        "Na",
+        "Fe"
+      ],
+      "prompt": "Which chemical symbol denotes oxygen?\nA. Au\nB. O\nC. Na\nD. Fe\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "family": "unrelated",
+      "gold_letter": "C",
+      "id": "unrelated-002",
+      "max_new_tokens": 24,
+      "modality": "text",
+      "options": [
+        "100",
+        "50",
+        "0",
+        "-100"
+      ],
+      "prompt": "At standard pressure, water freezes at which Celsius temperature?\nA. 100\nB. 50\nC. 0\nD. -100\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "family": "unrelated",
+      "gold_letter": "D",
+      "id": "unrelated-003",
+      "max_new_tokens": 24,
+      "modality": "text",
+      "options": [
+        "9",
+        "21",
+        "27",
+        "29"
+      ],
+      "prompt": "Which is a prime number?\nA. 9\nB. 21\nC. 27\nD. 29\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "gold_letter": "A",
+      "id": "vision-000",
+      "image": "image-000.png",
+      "max_new_tokens": 24,
+      "modality": "vision",
+      "options": [
+        "red",
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "gold_letter": "B",
+      "id": "vision-001",
+      "image": "image-001.png",
+      "max_new_tokens": 24,
+      "modality": "vision",
+      "options": [
+        "red",
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "prompt": "What color is the square?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "gold_letter": "A",
+      "id": "video-000",
+      "max_new_tokens": 24,
+      "modality": "video",
+      "options": [
+        "red",
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+      "reversed_pair": 0,
+      "split": "regression",
+      "video": "video-000.npy"
+    },
+    {
+      "gold_letter": "B",
+      "id": "video-001",
+      "max_new_tokens": 24,
+      "modality": "video",
+      "options": [
+        "red",
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "prompt": "Which color does the square have first in the video?\nA. red\nB. green\nC. blue\nD. yellow\nAnswer with only the correct letter.",
+      "reversed_pair": 0,
+      "split": "regression",
+      "video": "video-001.npy"
+    },
+    {
+      "audio": "speech-input-000.wav",
+      "gold_text": "MISTER QUILTER IS THE APOSTLE OF THE MIDDLE CLASSES AND WE ARE GLAD TO WELCOME HIS GOSPEL",
+      "id": "asr-000",
+      "max_new_tokens": 96,
+      "modality": "audio_asr",
+      "split": "regression",
+      "system": "Perform ASR in English."
+    },
+    {
+      "audio": "speech-input-001.wav",
+      "gold_text": "NOR IS MISTER QUILTER'S MANNER LESS INTERESTING THAN HIS MATTER",
+      "id": "asr-001",
+      "max_new_tokens": 96,
+      "modality": "audio_asr",
+      "split": "regression",
+      "system": "Perform ASR in English."
+    },
+    {
+      "audio": "nonspeech-000.wav",
+      "gold_letter": "A",
+      "id": "audio-control-000",
+      "max_new_tokens": 24,
+      "modality": "audio",
+      "options": [
+        "silence",
+        "a steady tone",
+        "a spoken sentence",
+        "applause"
+      ],
+      "prompt": "What can be heard in this recording?\nA. silence\nB. a steady tone\nC. a spoken sentence\nD. applause\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "audio": "nonspeech-001.wav",
+      "gold_letter": "B",
+      "id": "audio-control-001",
+      "max_new_tokens": 24,
+      "modality": "audio",
+      "options": [
+        "silence",
+        "a steady tone",
+        "a spoken sentence",
+        "applause"
+      ],
+      "prompt": "What can be heard in this recording?\nA. silence\nB. a steady tone\nC. a spoken sentence\nD. applause\nAnswer with only the correct letter.",
+      "split": "regression"
+    },
+    {
+      "generation_mode": "audio",
+      "id": "tts-000",
+      "max_new_tokens": 96,
+      "modality": "speech",
+      "prompt": "Good morning.",
+      "split": "regression",
+      "system": "Perform TTS in American English using a female voice."
+    },
+    {
+      "generation_mode": "audio",
+      "id": "tts-001",
+      "max_new_tokens": 96,
+      "modality": "speech",
+      "prompt": "The meeting starts at nine.",
+      "split": "regression",
+      "system": "Perform TTS in American English using a female voice."
+    },
+    {
+      "generation_mode": "audio",
+      "id": "tts-002",
+      "max_new_tokens": 96,
+      "modality": "speech",
+      "prompt": "Please close the window.",
+      "split": "regression",
+      "system": "Perform TTS in American English using a female voice."
+    },
+    {
+      "generation_mode": "audio",
+      "id": "tts-003",
+      "max_new_tokens": 96,
+      "modality": "speech",
+      "prompt": "There are three green cups.",
+      "split": "regression",
+      "system": "Perform TTS in American English using a female voice."
+    }
+  ],
+  "pipeline": [
+    {
+      "gold": [
+        "41"
+      ],
+      "id": "question-00",
+      "text": "What is 14 plus 27?"
+    },
+    {
+      "gold": [
+        "54"
+      ],
+      "id": "question-01",
+      "text": "What is 83 minus 29?"
+    },
+    {
+      "gold": [
+        "156"
+      ],
+      "id": "question-02",
+      "text": "What is 12 multiplied by 13?"
+    },
+    {
+      "gold": [
+        "9"
+      ],
+      "id": "question-03",
+      "text": "What is 81 divided by 9?"
+    },
+    {
+      "gold": [
+        "15"
+      ],
+      "id": "question-04",
+      "text": "What is three quarters of 20?"
+    },
+    {
+      "gold": [
+        "2.5"
+      ],
+      "id": "question-05",
+      "text": "Convert 250 centimeters to meters. Give only the number."
+    },
+    {
+      "gold": [
+        "24"
+      ],
+      "id": "question-06",
+      "text": "A box holds 6 pens. How many pens do 4 boxes hold?"
+    },
+    {
+      "gold": [
+        "23"
+      ],
+      "id": "question-07",
+      "text": "I had 31 tickets and gave away 8. How many remain?"
+    },
+    {
+      "gold": [
+        "Paris"
+      ],
+      "id": "question-08",
+      "text": "What is the capital of France?"
+    },
+    {
+      "gold": [
+        "Tokyo"
+      ],
+      "id": "question-09",
+      "text": "What is the capital of Japan?"
+    },
+    {
+      "gold": [
+        "Canberra"
+      ],
+      "id": "question-10",
+      "text": "What is the capital of Australia?"
+    },
+    {
+      "gold": [
+        "O"
+      ],
+      "id": "question-11",
+      "text": "What is the chemical symbol for oxygen?"
+    },
+    {
+      "gold": [
+        "6",
+        "six"
+      ],
+      "id": "question-12",
+      "text": "How many sides does a hexagon have?"
+    },
+    {
+      "gold": [
+        "Jupiter"
+      ],
+      "id": "question-13",
+      "text": "Which is the largest planet in the Solar System?"
+    },
+    {
+      "gold": [
+        "0"
+      ],
+      "id": "question-14",
+      "text": "At standard pressure, what is water's freezing point in Celsius? Give only the number."
+    },
+    {
+      "gold": [
+        "120"
+      ],
+      "id": "question-15",
+      "text": "How many minutes are in two hours?"
+    },
+    {
+      "gold": [
+        "children"
+      ],
+      "id": "question-16",
+      "text": "Write the plural of child."
+    },
+    {
+      "gold": [
+        "cold"
+      ],
+      "id": "question-17",
+      "text": "Write the opposite of hot."
+    },
+    {
+      "gold": [
+        "cba"
+      ],
+      "id": "question-18",
+      "text": "Reverse the letters in abc."
+    },
+    {
+      "gold": [
+        "2, 5, 9"
+      ],
+      "id": "question-19",
+      "text": "Sort these numbers from smallest to largest: 9, 2, 5."
+    },
+    {
+      "gold": [
+        "B"
+      ],
+      "id": "question-20",
+      "text": "Which is prime: A) 21 B) 23 C) 25 D) 27? Reply with only the letter."
+    },
+    {
+      "gold": [
+        "HELLO"
+      ],
+      "id": "question-21",
+      "text": "Convert the word hello to uppercase."
+    },
+    {
+      "gold": [
+        "blue"
+      ],
+      "id": "question-22",
+      "text": "Nora has a blue folder. Ravi has a red folder. What color is Nora's folder?"
+    },
+    {
+      "gold": [
+        "true"
+      ],
+      "id": "question-23",
+      "text": "In JSON, which lowercase literal represents Boolean truth?"
+    },
+    {
+      "id": "format-prose",
+      "text": "The meeting starts at 09:30 in room 214. Bring the signed form."
+    },
+    {
+      "id": "format-list",
+      "text": "- Load the document.\n- Check all three totals.\n- Report any difference."
+    },
+    {
+      "id": "format-code",
+      "text": "```python\ndef add(left, right):\n    return left + right\n```"
+    },
+    {
+      "id": "format-table",
+      "text": "| Item | Count |\n| Pen | 12 |\n| Book | 3 |"
+    },
+    {
+      "id": "format-long",
+      "text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box."
+    },
+    {
+      "id": "format-empty",
+      "text": ""
+    }
+  ]
+}

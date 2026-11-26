@@ -1,0 +1,177 @@
+{
+  "model_id": "LiquidAI/LFM3-Omni-2B",
+  "revision": "21d75123f86c1f7ffb4bef1ea202710c4e7ebe67",
+  "safetensors": {
+    "parameters": {
+      "BF16": 2166928384
+    },
+    "total": 2166928384
+  },
+  "files": [
+    {
+      "rfilename": ".gitattributes",
+      "size": 1722,
+      "lfs": null
+    },
+    {
+      "rfilename": "LICENSE",
+      "size": 10574,
+      "lfs": null
+    },
+    {
+      "rfilename": "README.md",
+      "size": 76824,
+      "lfs": null
+    },
+    {
+      "rfilename": "assets/lfm3-omni-architecture-light.png",
+      "size": 188029,
+      "lfs": {
+        "sha256": "950e15b1f21ab682b461375b1be91ef8422de1f00c5bf064f2c9ea28d556d4bc",
+        "size": 188029,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "assets/lfm3-omni-family-radar-light.png",
+      "size": 208009,
+      "lfs": {
+        "sha256": "0a90156e50907d71e7fe7e352c428eeaad863a425052250e115d10e903ae1d6d",
+        "size": 208009,
+        "pointerSize": 131
+      }
+    },
+    {
+      "rfilename": "audio_tokenizer/config.json",
+      "size": 512,
+      "lfs": null
+    },
+    {
+      "rfilename": "audio_tokenizer/model.safetensors",
+      "size": 147143540,
+      "lfs": {
+        "sha256": "45984a872fdcf0b94cd0ec68822bbf26f0c6fcb580cfaba0f7fa3ee60355137f",
+        "size": 147143540,
+        "pointerSize": 134
+      }
+    },
+    {
+      "rfilename": "chat_template.jinja",
+      "size": 13513,
+      "lfs": null
+    },
+    {
+      "rfilename": "config.json",
+      "size": 5912,
+      "lfs": null
+    },
+    {
+      "rfilename": "configuration_lfm3.py",
+      "size": 6113,
+      "lfs": null
+    },
+    {
+      "rfilename": "configuration_lfm3_omni.py",
+      "size": 14598,
+      "lfs": null
+    },
+    {
+      "rfilename": "configuration_lfm3_vl.py",
+      "size": 9158,
+      "lfs": null
+    },
+    {
+      "rfilename": "configuration_liquid_codec.py",
+      "size": 5401,
+      "lfs": null
+    },
+    {
+      "rfilename": "feature_extraction_lfm3_omni.py",
+      "size": 8935,
+      "lfs": null
+    },
+    {
+      "rfilename": "generation_config.json",
+      "size": 392,
+      "lfs": null
+    },
+    {
+      "rfilename": "image_processing_lfm3_vl.py",
+      "size": 12036,
+      "lfs": null
+    },
+    {
+      "rfilename": "lfm3_conv.py",
+      "size": 8532,
+      "lfs": null
+    },
+    {
+      "rfilename": "model.safetensors",
+      "size": 4333941640,
+      "lfs": {
+        "sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+        "size": 4333941640,
+        "pointerSize": 135
+      }
+    },
+    {
+      "rfilename": "modeling_lfm3.py",
+      "size": 42359,
+      "lfs": null
+    },
+    {
+      "rfilename": "modeling_lfm3_omni.py",
+      "size": 98277,
+      "lfs": null
+    },
+    {
+      "rfilename": "modeling_lfm3_vl.py",
+      "size": 45019,
+      "lfs": null
+    },
+    {
+      "rfilename": "modeling_liquid_codec.py",
+      "size": 17884,
+      "lfs": null
+    },
+    {
+      "rfilename": "processing_lfm3_omni.py",
+      "size": 39031,
+      "lfs": null
+    },
+    {
+      "rfilename": "processing_lfm3_vl.py",
+      "size": 12152,
+      "lfs": null
+    },
+    {
+      "rfilename": "processor_config.json",
+      "size": 2374,
+      "lfs": null
+    },
+    {
+      "rfilename": "tokenizer.json",
+      "size": 17908634,
+      "lfs": {
+        "sha256": "41927bd314d17d7d7fadb44e10cd0919f7b71528d7741596d8cbd15c6945ec44",
+        "size": 17908634,
+        "pointerSize": 133
+      }
+    },
+    {
+      "rfilename": "tokenizer_config.json",
+      "size": 674,
+      "lfs": null
+    },
+    {
+      "rfilename": "video_preprocessor_config.json",
+      "size": 706,
+      "lfs": null
+    },
+    {
+      "rfilename": "video_processing_lfm3_vl.py",
+      "size": 17161,
+      "lfs": null
+    }
+  ]
+}

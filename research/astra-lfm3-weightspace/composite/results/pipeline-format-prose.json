@@ -1,0 +1,64 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "6d007d677bd0504b5bf2ad9f4c0138dd3a0b67227850eaf79e49de8d65266c23",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+      "trace": {
+        "codes": 47,
+        "fallbacks": [
+          false
+        ],
+        "levels": 5,
+        "ncm_z_sha256": "dda266f96749da4beb3d50779f009000d2337326980ec60027df17753be43a71",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+  "composite_s": 0.6937310679350048,
+  "echoes_input": true,
+  "exact": true,
+  "id": "format-prose",
+  "input": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+  "reference": "The meeting starts at 09:30 in room 214. Bring the signed form.",
+  "reference_s": 0.9198345670010895,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 47,
+    "fallbacks": [
+      false
+    ],
+    "levels": 5,
+    "ncm_z_sha256": "36f0a4909e436353bb4bce89c41e704505e933ddc09becdf58e096391eea9771",
+    "zero_ncm": false
+  }
+}

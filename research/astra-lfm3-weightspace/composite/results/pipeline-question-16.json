@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the plural of child.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "822bdbdfddb1861eff2421b0879cc4e70104c0e7aeb05c634877b37af0360f47",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the plural of child.",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "3ef3a8f199343a9b4fd0ec7ff55576bb8a28f16ab11f20dc284d5aea87f5cf61",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "Write the plural of child.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "Write the plural of child.",
+  "composite_correct": false,
+  "composite_s": 0.4149841460166499,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "children"
+  ],
+  "id": "question-16",
+  "input": "Write the plural of child.",
+  "native_correct": true,
+  "native_text": "Children",
+  "reference": "Write the plural of child.",
+  "reference_s": 0.5255283300066367,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "08581264ad32f67dad6f273514dbbf56f84525baa67a843c81f741f46334e9f0",
+    "zero_ncm": false
+  }
+}

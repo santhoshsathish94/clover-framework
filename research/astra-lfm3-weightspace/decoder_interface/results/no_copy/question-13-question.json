@@ -1,0 +1,40 @@
+{
+  "canonical_gold_missing_tokens": {
+    "Jupiter": [
+      50,
+      23917
+    ]
+  },
+  "correct": false,
+  "decoder_trace": {
+    "codes": 27,
+    "fallbacks": [
+      true
+    ],
+    "levels": 4,
+    "ncm_z_sha256": "3c41d1e8377a2e6690d0a4f7dc0d2a090de527a04d3909093947612171f99d7a",
+    "zero_ncm": false
+  },
+  "gold": [
+    "Jupiter"
+  ],
+  "id": "question-13",
+  "input": "Which is the largest planet in the Solar System?",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "bridges": "Lfm3ComboBridge(2048->384) + Lfm3ExpertBridge(2048->384)",
+    "codes": 27,
+    "decoder": "11-level VQ-VAE + 12L NextConceptTransformer + 3L LexicalPointerDecoder",
+    "layer": "ncm",
+    "levels": 4,
+    "s": 0.13,
+    "window_tokens": 512,
+    "windows": 1
+  },
+  "policy": "no_copy",
+  "raw_trace": [],
+  "seconds": 0.12778372899629176,
+  "text": "Which is the largest planet in the Solar System?",
+  "upstream_ncm_unchanged": true
+}

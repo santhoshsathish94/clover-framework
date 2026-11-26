@@ -1,0 +1,21 @@
+{
+  "decoder_trace": {
+    "fallbacks": [],
+    "zero_ncm": false
+  },
+  "id": "format-empty",
+  "input": "",
+  "input_mode": "question",
+  "input_preserved": true,
+  "metadata": {
+    "codes": 0,
+    "layer": "ncm",
+    "s": 0.0,
+    "windows": 0
+  },
+  "policy": "raw_restricted",
+  "raw_trace": [],
+  "seconds": 7.124035619199276e-06,
+  "text": "",
+  "upstream_ncm_unchanged": true
+}

@@ -1,0 +1,181 @@
+{
+  "all_trials_restored": true,
+  "artifact_hashes": {
+    "OBSERVATION.json": "972cc47fb5b53dd15c86d9f796fa28c2bb1d5edbeb87a6d1bd04d8b3318d47ab",
+    "RUNTIME_INPUTS.json": "fab148d016b377c171a5c3a7734137dd46165c7c3b43de57e5e64c65a99dec72",
+    "copies/c2-least_squares/PATCH_AUDIT.json": "5d05934edec76282855653660462419505e5b71190f0cf3379b7716c54e9579b",
+    "copies/c2-least_squares/REVERSAL.json": "a9a1fac8a2984ecf9929e9d129592276329886bafceeeaf41bb9d9facbeb1752",
+    "copies/c2-norm_match/PATCH_AUDIT.json": "0e0c70ec1319c7bf517dc78ea8741b7257e75f241377478592b209c312c67d92",
+    "copies/c2-norm_match/REVERSAL.json": "d3b8d70634e97d2cdf656c3761890ae2acbede0d7c6dde8994083fbd543adf59",
+    "copies/c2-original/PATCH_AUDIT.json": "7b4c7d7ceae723734c3a5226a7d3d344b3ee5eb177b783ef29f4122ca325acef",
+    "copies/c2-original/REVERSAL.json": "49e9045ae27890df2cbe2f11dc25feb6ad2e6625030807bc0c36f70f647c883a",
+    "copies/c3-0.5/PATCH_AUDIT.json": "26b2ee1d0f320077d5aa5cc236ff6b1cc0474dff69f5d068a3bc7faa6754184a",
+    "copies/c3-0.5/REVERSAL.json": "7f0cd3adfcf2218449395122ec81dac5da197ed3047cdb601ef76c492a8f155a",
+    "copies/c3-1.0/PATCH_AUDIT.json": "55088670056737e283ecc47bdc0de07de099874a53ab35d2e2ed83cc111f556a",
+    "copies/c3-1.0/REVERSAL.json": "a3a636985b78ad1a7875af0d751fa84ca018c07139a1c2c9739b6457235a6b33",
+    "copies/c3-2.0/PATCH_AUDIT.json": "295cca3f643ad4dc33caa8f5148ba7a9314db3d3b216dca245ab1b16f7f5f706",
+    "copies/c3-2.0/REVERSAL.json": "8bcc1384d3d4706921a3386396f056edbca655485ed8b922b5fee7df7e3ac961",
+    "frozen/HYPOTHESIS.json": "7008c597d832bdf84bb54a2fbdca0d8a486cbb540115209c8288abec9b8e757c",
+    "frozen/MANIFEST.json": "c27ec2639898212a3c4de327a193fbd746c52a5b940e97cf7fb7db756b52e5f0",
+    "frozen/PROTOCOL.json": "d4303d7ea2071747d0115cfcc6533a7b23a7ab3aad0cbad96ffc9bc4fb6882fb",
+    "frozen/cases.json": "d83013624ed769b31f82f6c60f51f6c0882704fd5c01eb4771277b577cec01bc",
+    "planner_probe/PROTOCOL.json": "19d07d04308ea56f05e3c75c53332ac3de489de05eb68723e54aee1013931025",
+    "planner_probe/SUMMARY.json": "1daf6525fc5fb710d6e2ee14bec44090c8602c581d29101849a5215e8828874d",
+    "planner_probe/norm_match-0.json": "e4d95334ae10157e51924dd30f8d5abe463b6a494a67bfe7407b5c616de3cdf9",
+    "planner_probe/norm_match-1.json": "17bc123bb21822e5068629fae2fc7d64fbde0291ea4445eb42093d83edfefac2",
+    "planner_probe/original-0.json": "9e461d2ed4d722c46214284bf9d7b778ba8937aefd624c4080bbf29ebc9dbeb4",
+    "planner_probe/original-1.json": "51030db61985c0bfbfe88715706d3583498fd6f382ad5f3d6f8528e87e0d7828",
+    "results/C2_SELECTION.json": "4a6faaa145c6d3944734d5e6fbdeca4848088edd43eda21ad2a9ab431ebda1c1",
+    "results/C3_SELECTION.json": "a6a9ef420609d61e3eaa26ccf792d8ab5d9374cfef70bfc567675ba347b54b06",
+    "results/SUMMARY.json": "33cd2adf5399a5a42c37afc15a423bcc64b3671b6d881311fc865669f68ed0c5",
+    "results/c2-discovery-least_squares.json": "73ce61ff0dfa7701ea201a084f23e8064ded8d204c6635adbaceee2cd93e4e84",
+    "results/c2-discovery-norm_match.json": "c8d5dc6fd93ccad807fc1551cbb7bf7c06e69c7ec32d2e595ede9580dfe597ca",
+    "results/c2-discovery-original.json": "e22aa995df94d4dda2ee4ad073321288d0ecdfea875c21b0764d7f9e64408745",
+    "results/c2-heldout-norm_match.json": "68de8856f24bf81a8e96c91c546f84be7d34ed8f64b15365f6e423cdccdbdd0d",
+    "results/c2-heldout-original.json": "6e075d7c43f1746dabdc85f25aca9b1e687c3ce90af4ccf1bd19709af104fc90",
+    "results/c2-heldout-true_token.json": "3d78ba4b1a4182e92bd51090269aedc8e5cfd5fd3484565db0705d063e837c1d",
+    "results/c2-heldout-zero_input.json": "b28f0fe2cd4e52136e3d25b6273b14797b981f6bd6681af0155817c964be29cd",
+    "results/c3-discovery-0.5.json": "29f195f0fdce944ba616570b5304bd75d18b492d1a4b31d0d7a9857153a8d6d3",
+    "results/c3-discovery-1.0.json": "2341ad60baf47a943ad25e813ea13e926328010194df6307ee136ee91e72be1b",
+    "results/c3-discovery-2.0.json": "c9212bebe6f0816afb006e44ad6b1811ad94e84ab5dbff01ddc5b287596b65fb",
+    "results/c3-heldout-1.0.json": "9bcceb3035f673787551d5d1f3940f47b93d785abb7c308a1d03097629978e08",
+    "results/c3-heldout-2.0.json": "1b31baadb9fb7692104442d12edf41ac15e02a13f5d00fc289a833134915e3bf"
+  },
+  "planner_usage": {
+    "comparisons": [
+      {
+        "end_reasons": [
+          "eos",
+          "eos"
+        ],
+        "latent_steps": [
+          0,
+          0
+        ],
+        "outputs_equal": true,
+        "question": "What is 17 plus 26?"
+      },
+      {
+        "end_reasons": [
+          "eos",
+          "eos"
+        ],
+        "latent_steps": [
+          0,
+          0
+        ],
+        "outputs_equal": true,
+        "question": "Which city is the capital of Italy?"
+      }
+    ],
+    "gate_reopened": false
+  },
+  "source_and_copy_records_unchanged": 18,
+  "summary": {
+    "c2": {
+      "gains": {
+        "least_squares": 0.00836701995998099,
+        "norm_match": 0.023507801815867424,
+        "original": 1.0
+      },
+      "heldout_mean_nll": {
+        "norm_match": 5.343870448693633,
+        "original": 11.498324370384216,
+        "true_token": 0.08853011302553568,
+        "zero_input": 8.065744395554066
+      },
+      "paired_tests": {
+        "original": {
+          "better": 19,
+          "one_sided_p": 2.002716064453125e-05,
+          "ties": 0,
+          "worse": 1
+        },
+        "zero_input": {
+          "better": 14,
+          "one_sided_p": 0.057659149169921875,
+          "ties": 0,
+          "worse": 6
+        }
+      },
+      "passes_feedback_gate": false,
+      "selected": "norm_match"
+    },
+    "c3": {
+      "generated_tokens": {
+        "1.0": {
+          "correct": 118,
+          "oracle_correct": 171,
+          "total": 231
+        },
+        "2.0": {
+          "correct": 124,
+          "oracle_correct": 171,
+          "total": 231
+        }
+      },
+      "heldout_mean_code_nll": {
+        "1.0": 1.2971288472414018,
+        "2.0": 1.3191018849611282
+      },
+      "paired_test": {
+        "better": 5,
+        "one_sided_p": 0.9940910339355469,
+        "ties": 0,
+        "worse": 15
+      },
+      "passes_gate": false,
+      "selected_bridge_factor": "2.0"
+    },
+    "qualification": "Held out from this calibration, not an end-to-end planning or broad language-quality validation. No deployment."
+  },
+  "trial_audits": [
+    {
+      "changed_tensors": [
+        "post_ln.weight",
+        "post_ln.bias"
+      ],
+      "factor": 0.00836701995998099,
+      "restored": true,
+      "trial": "c2-least_squares"
+    },
+    {
+      "changed_tensors": [
+        "post_ln.weight",
+        "post_ln.bias"
+      ],
+      "factor": 0.023507801815867424,
+      "restored": true,
+      "trial": "c2-norm_match"
+    },
+    {
+      "changed_tensors": [],
+      "factor": 1.0,
+      "restored": true,
+      "trial": "c2-original"
+    },
+    {
+      "changed_tensors": [
+        "lfm3_combo_bridge.scale"
+      ],
+      "factor": 0.5,
+      "restored": true,
+      "trial": "c3-0.5"
+    },
+    {
+      "changed_tensors": [],
+      "factor": 1.0,
+      "restored": true,
+      "trial": "c3-1.0"
+    },
+    {
+      "changed_tensors": [
+        "lfm3_combo_bridge.scale"
+      ],
+      "factor": 2.0,
+      "restored": true,
+      "trial": "c3-2.0"
+    }
+  ],
+  "verified": true
+}

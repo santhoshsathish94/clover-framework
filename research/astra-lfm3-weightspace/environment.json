@@ -1,0 +1,23 @@
+{
+  "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+  "python": "3.12.3",
+  "packages": {
+    "torch": "2.11.0+cpu",
+    "transformers": "5.20.2",
+    "safetensors": "0.8.0",
+    "numpy": "2.5.4",
+    "huggingface_hub": "2.2.0",
+    "pillow": "13.0.0",
+    "scipy": null,
+    "soundfile": null,
+    "librosa": null
+  },
+  "loadavg": [
+    0.119140625,
+    0.1318359375,
+    0.1142578125
+  ],
+  "meminfo": "MemTotal:       130982160 kB\nMemFree:        16233704 kB\nMemAvailable:   83646452 kB\nBuffers:          267904 kB\nCached:         67182040 kB\nSwapCached:         1664 kB\nActive:         24374144 kB\nInactive:       88334456 kB\nActive(anon):   11499768 kB\nInactive(anon): 33768916 kB\nActive(file):   12874376 kB\nInactive(file): 54565540 kB\nUnevictable:       27424 kB\nMlocked:           27424 kB\nSwapTotal:       4189180 kB\nSwapFree:        4004860 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:               380 kB\nWriteback:             0 kB\nAnonPages:      45284512 kB\nMapped:         26643208 kB\nShmem:              1268 kB\nKReclaimable:    1217788 kB\nSlab:            1520368 kB\nSReclaimable:    1217788 kB\nSUnreclaim:       302580 kB\nKernelStack:       14768 kB\nPageTables:       193448 kB\nSecPageTables:        52 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    69680260 kB\nCommitted_AS:   58146100 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       62516 kB\nVmallocChunk:          0 kB\nPercpu:            52864 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:   8753152 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      543524 kB\nDirectMap2M:    34181120 kB\nDirectMap1G:    98566144 kB\n",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 97\nmodel name\t: AMD Ryzen 9 7950X3D 16-Core Processor\nstepping\t: 2\nmicrocode\t: 0xa60120a\ncpu MHz\t\t: 3767.011\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 32\ncore id\t\t: 0\ncpu cores\t: 16\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 16\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good amd_lbr_v2 nopl nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb cat_l3 cdp_l3 hw_pstate ssbd mba perfmon_v2 ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local user_shstk avx512_bf16 clzero irperf xsaveerptr rdpru wbnoinvd cppc amd_ibpb_ret arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold avic vgif x2avic v_spec_ctrl vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid overflow_recov succor smca fsrm flush_l1d ibpb_exit_to_user\nbugs\t\t: sysret_ss_attrs spectre_v1 spectre_v2 spec_store_bypass srso tsa vmscape\nbogomips\t: 8383.69\nTLB size\t: 3584 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management: ts ttp tm hwpstate cpb eff_freq_ro [13] [14]",
+  "disk_free_bytes": 752973938688
+}

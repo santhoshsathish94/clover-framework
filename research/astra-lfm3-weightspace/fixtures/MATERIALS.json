@@ -1,0 +1,143 @@
+{
+  "case_count": 112,
+  "cases_sha256": "04eb461297b88dd8b748dc5ecc9f95d60f90b6d5476eb77e5e05e466865b1386",
+  "files": [
+    {
+      "file": "cases.json",
+      "sha256": "04eb461297b88dd8b748dc5ecc9f95d60f90b6d5476eb77e5e05e466865b1386"
+    },
+    {
+      "file": "image-000.png",
+      "sha256": "70935817b8acf9a19a1919294bcdee3e65a617b140acdb01a6c6a003bbdd7584"
+    },
+    {
+      "file": "image-001.png",
+      "sha256": "d4382888bf0304cb7e7144b7147c43542ab323458b28e2097ee77fedcbbcad50"
+    },
+    {
+      "file": "image-002.png",
+      "sha256": "95979a76840781a529096178d0624ab65e6b904bcca4863baca793669a653d8f"
+    },
+    {
+      "file": "image-003.png",
+      "sha256": "68aaf1f050e70af67c5cc9fdaea9c6cec4a3cc308a48ce1d60b9c3d8a355635a"
+    },
+    {
+      "file": "image-004.png",
+      "sha256": "bc9b645a97f4074618a88619550683d6384ba5dbc48ac66edd6ff2cc3ada89d0"
+    },
+    {
+      "file": "image-005.png",
+      "sha256": "b95541b2f6ce34d441f15161cc4efd0445e2099f50ab35cc3784526c92f2b4d0"
+    },
+    {
+      "file": "image-006.png",
+      "sha256": "f3fdb6f56d9d2ec3035567f442d44866335e68ce78f134b69860027bfe24bfeb"
+    },
+    {
+      "file": "image-007.png",
+      "sha256": "f10526e7fadd6bc10e76dedbdd0206bc07019d1d794d91330bd22b722efb2637"
+    },
+    {
+      "file": "image-008.png",
+      "sha256": "b296cbd37101af7678e84c22934f3e214b1fbc368db48ae8630a2a0d7e4be336"
+    },
+    {
+      "file": "image-009.png",
+      "sha256": "ef68798eb0b05559b48bd5b1904d366e7a841e1c2f951bce1a700b9d50f9f3a8"
+    },
+    {
+      "file": "image-010.png",
+      "sha256": "c726e638163fbc7180ed1f47a6b1d0efa6f4451e8da779635945815a5595a8bb"
+    },
+    {
+      "file": "image-011.png",
+      "sha256": "7e360a66da47eae37942215add8884fb8786a8897acf19100dca072c6d741c85"
+    },
+    {
+      "file": "nonspeech-000.wav",
+      "sha256": "eac9274944f7b8a2e0bad9b13585cde94cf08e1da0dd2ea9494fd124cfdac7b5"
+    },
+    {
+      "file": "nonspeech-001.wav",
+      "sha256": "9f6fa30ef7b7f72b4998d8d9e087d2c65f095599d69ab8e7ce219d7781a6bf46"
+    },
+    {
+      "file": "pilot-cases.json",
+      "sha256": "e4c7734a9df8e60717fcbbfbe31b398d27150efaac915a150929f8a9d696ea24"
+    },
+    {
+      "file": "speech-input-000.wav",
+      "sha256": "6b26916afdbcce5b044bae73a98932074a073f79296a503de01bdc875023dc09"
+    },
+    {
+      "file": "speech-input-001.wav",
+      "sha256": "fdd15300d8157794d4fa927e5f606d3dc01e0b74a80de1bbd3222130e63e08d6"
+    },
+    {
+      "file": "speech-input-002.wav",
+      "sha256": "2a50c0d4713f46aba52b242a3db0c143bca9adca8dcedfe018d60ae8a5aabc28"
+    },
+    {
+      "file": "speech-input-003.wav",
+      "sha256": "1b5fe936e81c013ab806492df6e1d0b055e0f8943f69ce1279960023c8672210"
+    },
+    {
+      "file": "speech-input-004.wav",
+      "sha256": "4a4fb47ee4d8ad734bc410fc501f7d4938fd7389dedd4d1b600a7ba864b55de2"
+    },
+    {
+      "file": "speech-input-005.wav",
+      "sha256": "c3eb5a689382ebaf249d395f3bfd6beae2adc68f1ecce7d0fd5d2d22069e6bd4"
+    },
+    {
+      "file": "speech-input-006.wav",
+      "sha256": "d281478a74aefad413f61c6b3a037cbe594f1b5766125e3e372f8cee32744d61"
+    },
+    {
+      "file": "speech-provenance.json",
+      "sha256": "e0d8442002508555dd52b0d2e43d8d52852ab5fb5523182cd59d5d2e057cf466"
+    },
+    {
+      "file": "video-000.npy",
+      "sha256": "d71dca6e6b24565cc27f5828a526a5c787910f9b699a70cb513ba143d9574e67"
+    },
+    {
+      "file": "video-001.npy",
+      "sha256": "f79e7fbfb19683a750e076a25a7e46fb0202248b85a80b85908266b881555c9e"
+    },
+    {
+      "file": "video-002.npy",
+      "sha256": "10200f241dc0754513fcc01d626edf9513f1077f0880073574adabf1de225904"
+    },
+    {
+      "file": "video-003.npy",
+      "sha256": "95d297da1ecf603880991a849d0bac26ed9772632fe4eb035d061f4278c90618"
+    },
+    {
+      "file": "video-004.npy",
+      "sha256": "36b05271af87d714aece39749b91561dc6255e59f79b8e32a9c5cc952e9b1862"
+    },
+    {
+      "file": "video-005.npy",
+      "sha256": "d6eb2f4a3927b309d20e177b0cf6d5dca155ad844dd2c57a4605ae4626e10509"
+    },
+    {
+      "file": "video-006.npy",
+      "sha256": "5575e46a2ea7b8af1e7d34742db72132aa701aed93d99395a523fada0b9b71ae"
+    },
+    {
+      "file": "video-007.npy",
+      "sha256": "74a732eea5d6e08787fc8deaa6a8f7bd965ba1a6c4a769f5475f900a311756dc"
+    }
+  ],
+  "counts": {
+    "text": 80,
+    "vision": 12,
+    "video": 8,
+    "audio_asr": 6,
+    "audio": 2,
+    "speech": 4
+  },
+  "qualification": "Cases/material frozen; runtime/scorer/protocol seal occurs after API pilot and before baseline."
+}

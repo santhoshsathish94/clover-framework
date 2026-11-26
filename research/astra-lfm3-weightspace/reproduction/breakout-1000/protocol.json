@@ -1,0 +1,27 @@
+{
+  "engine": {
+    "version": "1.0.15",
+    "source_ast_matches_published_prompt": true,
+    "installed_source_sha256": "35fd842751f4314a427623da24c3ca36dc07dfcbbd979e9c72c1079b933bcf5d",
+    "prompt_sha256": "766ee251d59a7893ed86d5eaea99ddb847529ab2092afc69f90f55fb0a22e876"
+  },
+  "episodes": 1000,
+  "max_steps": 10000,
+  "action_selection": "sample all six softmax logits, float64 probabilities",
+  "sticky_action_prob": 0.1,
+  "environment_seeds": [
+    0,
+    999
+  ],
+  "action_rng": "NumPy RandomState(1000000 + episode_seed)",
+  "reference_sha256": "6e8d42658aed3704c7bf6fb67015e9468cc03f1d67cb8a4fd192e6534fcccb4a",
+  "numpy": "2.5.4",
+  "published_score": {
+    "mean": 517.411,
+    "se": 7.416952829044303,
+    "episodes": 1000,
+    "max": 800.0,
+    "mean_length": 7417.202
+  },
+  "qualification": "Published seed schedule/evaluator not released; same disclosed settings, new seeded independent evaluator."
+}

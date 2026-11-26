@@ -1,0 +1,14 @@
+{
+  "discovery24": {
+    "count": 24,
+    "sha256": "9c02f35d6aa6f22d611177f0eff5a603b2063e6515540ae30f72910f051b8eeb"
+  },
+  "eval32": {
+    "count": 32,
+    "sha256": "37187b53a96ecca601e195beb05e3146da80e7c16fdd557a60e1e4b9e8a0ff96"
+  },
+  "heldout32": {
+    "count": 32,
+    "sha256": "89c9fe2193ba1a714db97c9726f1a383ee8dbe0cca08df020d201aa9c627503e"
+  }
+}

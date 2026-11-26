@@ -1,0 +1,17 @@
+{
+  "anchor_exits": 0,
+  "checkpoint_sha256": "f5f3ee236dfcc4ffb895726960824ae28f2201c998da88d39fdcdcc83035fd05",
+  "end_reason": "eos",
+  "forced_exits": 0,
+  "generation_steps": 21,
+  "latent_spans": 0,
+  "latent_steps": 0,
+  "output": "</think>The sum of 17 and 26 is 43.\n\n**Final answer: 43**<|im_end|>",
+  "python_calls": 0,
+  "question": "What is 17 plus 26?",
+  "search_calls": 0,
+  "seconds": 3.8796372413635254,
+  "tool_requests": 0,
+  "turns": 1,
+  "variant": "original"
+}

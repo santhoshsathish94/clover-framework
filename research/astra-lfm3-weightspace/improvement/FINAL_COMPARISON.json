@@ -1,0 +1,552 @@
+{
+  "selected": {
+    "name": "layer22-followup-a4",
+    "layer": 22,
+    "strength": 4.0,
+    "totals": {
+      "arithmetic_mcq": {
+        "correct": 79,
+        "total": 144
+      },
+      "arithmetic_free": {
+        "correct": 32,
+        "total": 36
+      },
+      "selection": {
+        "correct": 48,
+        "total": 48
+      }
+    },
+    "results_sha256": "3cd12690729bf874ef6646de789e03b867060176f5edab50eacfeb893c2341ee",
+    "followup": true,
+    "hypothesis_sha256": "26581fb3093f97a1418d54f5e8bdd8779c7c98875ddbb54a70b927ece3202d54"
+  },
+  "final_comparison": {
+    "underlying_questions": 72,
+    "better_questions": 12,
+    "worse_questions": 13,
+    "one_sided_exact_sign_p": 0.6549810171127319,
+    "fixed_answers": [
+      "final-0-001-r2",
+      "final-0-009-r2",
+      "final-0-017-r2",
+      "final-0-017-r3",
+      "final-1-009-r2",
+      "final-1-013-r2",
+      "final-1-013-r3",
+      "final-1-021-r2",
+      "final-1-022-r1",
+      "final-2-009-r3",
+      "final-2-013-r2",
+      "final-2-021-r2",
+      "final-3-005-r2",
+      "final-3-005-r3",
+      "final-3-006-r2",
+      "final-3-012-r2",
+      "final-3-012-r3",
+      "final-3-014-r2"
+    ],
+    "broken_answers": [
+      "final-0-006-r0",
+      "final-0-010-r0",
+      "final-0-022-r0",
+      "final-1-002-r1",
+      "final-1-005-r1",
+      "final-1-010-r0",
+      "final-1-016-r0",
+      "final-1-018-r0",
+      "final-1-020-r0",
+      "final-1-022-r0",
+      "final-2-002-r0",
+      "final-2-006-r0",
+      "final-3-004-r0",
+      "final-3-006-r0",
+      "final-3-009-r1"
+    ],
+    "original_correct": 134,
+    "edited_correct": 137,
+    "total_responses": 288,
+    "per_question": {
+      "0": {
+        "original": 3,
+        "edited": 3,
+        "cases": 4
+      },
+      "1": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "2": {
+        "original": 3,
+        "edited": 3,
+        "cases": 4
+      },
+      "4": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "5": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "6": {
+        "original": 4,
+        "edited": 3,
+        "cases": 4
+      },
+      "8": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "9": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "10": {
+        "original": 2,
+        "edited": 1,
+        "cases": 4
+      },
+      "12": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "13": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "14": {
+        "original": 4,
+        "edited": 4,
+        "cases": 4
+      },
+      "16": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "17": {
+        "original": 2,
+        "edited": 4,
+        "cases": 4
+      },
+      "18": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "20": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "21": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "22": {
+        "original": 4,
+        "edited": 3,
+        "cases": 4
+      },
+      "24": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "25": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "26": {
+        "original": 1,
+        "edited": 0,
+        "cases": 4
+      },
+      "28": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "29": {
+        "original": 2,
+        "edited": 1,
+        "cases": 4
+      },
+      "30": {
+        "original": 4,
+        "edited": 4,
+        "cases": 4
+      },
+      "32": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "33": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "34": {
+        "original": 1,
+        "edited": 0,
+        "cases": 4
+      },
+      "36": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "37": {
+        "original": 2,
+        "edited": 4,
+        "cases": 4
+      },
+      "38": {
+        "original": 0,
+        "edited": 0,
+        "cases": 4
+      },
+      "40": {
+        "original": 1,
+        "edited": 0,
+        "cases": 4
+      },
+      "41": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "42": {
+        "original": 4,
+        "edited": 3,
+        "cases": 4
+      },
+      "44": {
+        "original": 1,
+        "edited": 0,
+        "cases": 4
+      },
+      "45": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "46": {
+        "original": 3,
+        "edited": 3,
+        "cases": 4
+      },
+      "48": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "49": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "50": {
+        "original": 3,
+        "edited": 2,
+        "cases": 4
+      },
+      "52": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "53": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "54": {
+        "original": 3,
+        "edited": 2,
+        "cases": 4
+      },
+      "56": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "57": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "58": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "60": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "61": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "62": {
+        "original": 3,
+        "edited": 3,
+        "cases": 4
+      },
+      "64": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "65": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "66": {
+        "original": 0,
+        "edited": 0,
+        "cases": 4
+      },
+      "68": {
+        "original": 3,
+        "edited": 3,
+        "cases": 4
+      },
+      "69": {
+        "original": 2,
+        "edited": 3,
+        "cases": 4
+      },
+      "70": {
+        "original": 4,
+        "edited": 4,
+        "cases": 4
+      },
+      "72": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "73": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "74": {
+        "original": 0,
+        "edited": 0,
+        "cases": 4
+      },
+      "76": {
+        "original": 1,
+        "edited": 0,
+        "cases": 4
+      },
+      "77": {
+        "original": 2,
+        "edited": 4,
+        "cases": 4
+      },
+      "78": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "80": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "81": {
+        "original": 2,
+        "edited": 1,
+        "cases": 4
+      },
+      "82": {
+        "original": 4,
+        "edited": 4,
+        "cases": 4
+      },
+      "84": {
+        "original": 1,
+        "edited": 3,
+        "cases": 4
+      },
+      "85": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "86": {
+        "original": 3,
+        "edited": 4,
+        "cases": 4
+      },
+      "88": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "89": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "90": {
+        "original": 4,
+        "edited": 4,
+        "cases": 4
+      },
+      "92": {
+        "original": 1,
+        "edited": 1,
+        "cases": 4
+      },
+      "93": {
+        "original": 2,
+        "edited": 2,
+        "cases": 4
+      },
+      "94": {
+        "original": 0,
+        "edited": 0,
+        "cases": 4
+      }
+    }
+  },
+  "initial_totals": {
+    "arithmetic_mcq": {
+      "correct": 134,
+      "total": 288
+    },
+    "arithmetic_free": {
+      "correct": 61,
+      "total": 72
+    },
+    "selection": {
+      "correct": 96,
+      "total": 96
+    }
+  },
+  "final_totals": {
+    "arithmetic_mcq": {
+      "correct": 137,
+      "total": 288
+    },
+    "arithmetic_free": {
+      "correct": 61,
+      "total": 72
+    },
+    "selection": {
+      "correct": 96,
+      "total": 96
+    }
+  },
+  "regression": {
+    "newly_broken_previously_correct": [],
+    "speech_code_streams_changed": [
+      "tts-000",
+      "tts-001",
+      "tts-002",
+      "tts-003"
+    ],
+    "speech_quality_limit": "Waveform integrity only; changed speech needs independent assessment."
+  },
+  "regression_summary": {
+    "discovery:text": {
+      "cases": 32,
+      "scored_cases": 32,
+      "correct": 17,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.902496273163706
+    },
+    "regression:audio": {
+      "cases": 2,
+      "scored_cases": 2,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 0.6935646679485217
+    },
+    "regression:audio_asr": {
+      "cases": 6,
+      "scored_cases": 6,
+      "correct": 1,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 14.324263536953367,
+      "corpus_word_error_rate": 0.07,
+      "asr_exact": 1
+    },
+    "regression:speech": {
+      "cases": 4,
+      "scored_cases": 0,
+      "correct": 0,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 10.581466744071804,
+      "speech_waveforms_nonempty": 4,
+      "speech_intelligibility": "not independently evaluated"
+    },
+    "regression:text": {
+      "cases": 16,
+      "scored_cases": 16,
+      "correct": 16,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 3.9458252320764586
+    },
+    "regression:video": {
+      "cases": 8,
+      "scored_cases": 8,
+      "correct": 8,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.521542661823332
+    },
+    "regression:vision": {
+      "cases": 12,
+      "scored_cases": 12,
+      "correct": 12,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 4.577340753050521
+    },
+    "validation:text": {
+      "cases": 32,
+      "scored_cases": 32,
+      "correct": 13,
+      "errors": 0,
+      "limit_hits": 0,
+      "generation_s": 7.946136506507173
+    }
+  },
+  "asr_worse": false,
+  "measured_retention_gate_passed": false,
+  "decision": "reject",
+  "original_checkpoint_sha256": "76c0ec2c3e27832fb19f886d5eb0afe37f03c5c32c4a796a7ce08cef119d2763",
+  "candidate_checkpoint_sha256": "0e428fe5808efa47e7f588078b8d348b8363001354a500e97df5a61110fa6078",
+  "candidate_path": "/opt/clover-k3/astra-weightspace-20261111/improvement/copies/final-candidate",
+  "no_deployment": true,
+  "limits": [
+    "Constructed arithmetic/selection validation, not universal model quality",
+    "Prior regression set is not a fresh generalization benchmark",
+    "Speech naturalness/intelligibility not established by waveform checks"
+  ]
+}

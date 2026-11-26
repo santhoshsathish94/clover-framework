@@ -1,0 +1,73 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many minutes are in two hours?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "a542ec1e700bc133d7dda2e45878787f3b0b82fab9918ab42019a5f80216abbb",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many minutes are in two hours?",
+      "trace": {
+        "codes": 13,
+        "fallbacks": [
+          false
+        ],
+        "levels": 3,
+        "ncm_z_sha256": "f073579a458d16a9439f9eb47e3cc7dfc0f6c8cc92203a77dff5c36788b39af7",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "correct": false,
+      "text": "How many minutes are in two hours?",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "How many minutes are in two hours?",
+  "composite_correct": false,
+  "composite_s": 0.7903043639380485,
+  "echoes_input": true,
+  "exact": true,
+  "gold": [
+    "120"
+  ],
+  "id": "question-15",
+  "input": "How many minutes are in two hours?",
+  "native_correct": true,
+  "native_text": "120",
+  "reference": "How many minutes are in two hours?",
+  "reference_s": 0.908987449016422,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 13,
+    "fallbacks": [
+      false
+    ],
+    "levels": 3,
+    "ncm_z_sha256": "64854bcb2fb01511311156331af7ba05a390c4be4c64543d71e0061981e4f0eb",
+    "zero_ncm": false
+  }
+}

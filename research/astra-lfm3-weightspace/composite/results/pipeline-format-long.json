@@ -1,0 +1,64 @@
+{
+  "ablations": {
+    "c1_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+      "trace": {
+        "codes": 313,
+        "fallbacks": [
+          false
+        ],
+        "levels": 11,
+        "ncm_z_sha256": "13d101d211ccd16aa7ec2a1e564be2ecc756210c47edb40acc8ec029b32fbbd5",
+        "zero_ncm": false
+      }
+    },
+    "c2_identity": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+      "trace": {
+        "codes": 313,
+        "fallbacks": [
+          false
+        ],
+        "levels": 11,
+        "ncm_z_sha256": "2b217e3a3d47c972f758199b4f45597f9e620de315100754045360793d8cf330",
+        "zero_ncm": false
+      }
+    },
+    "c3_zero": {
+      "changed_ncm_state": true,
+      "changed_output": false,
+      "text": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+      "trace": {
+        "codes": 0,
+        "fallbacks": [
+          false
+        ],
+        "levels": 0,
+        "ncm_z_sha256": "3a3ed164e42500a1c5b2d0093f0a813d27dc50d038f330cc100a7e70ece2e6e4",
+        "zero_ncm": true
+      }
+    }
+  },
+  "composite": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+  "composite_s": 1.9955964419059455,
+  "echoes_input": true,
+  "exact": true,
+  "id": "format-long",
+  "input": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+  "reference": "On Monday the team counted twelve red boxes and seven green boxes in the north room. On Tuesday they moved five red boxes to the south room and left every green box where it was. The shipping note lists the destination, the number of boxes, the packing date, the person responsible for checking each label, and the time at which the delivery driver should arrive. Nothing in the note authorizes changing the contents of any box.",
+  "reference_s": 2.7117661780212075,
+  "state_arrays": 6,
+  "trace": {
+    "codes": 313,
+    "fallbacks": [
+      false
+    ],
+    "levels": 11,
+    "ncm_z_sha256": "6ccae71447d6673b772f7b2634a9d92f231425391ee2bf84da0ab921fa4599bc",
+    "zero_ncm": false
+  }
+}
