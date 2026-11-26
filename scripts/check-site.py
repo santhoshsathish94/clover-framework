@@ -1,5 +1,6 @@
 """Validate all local site pages, navigation, versions and shared assets."""
 from html.parser import HTMLParser
+import json
 from pathlib import Path
 import re
 import sys
@@ -23,8 +24,11 @@ class Checker(HTMLParser):
         self.nav_link = None
         self.redirect = False
         self.standalone_app = False
+        self.code_depth = 0
 
     def handle_starttag(self, tag, attrs):
+        if tag in ("code", "pre", "script", "style"):
+            self.code_depth += 1
         attributes = dict(attrs)
         if tag == "body" and "clover-app-body" in attributes.get("class", "").split():
             self.standalone_app = True
@@ -52,8 +56,12 @@ class Checker(HTMLParser):
     def handle_data(self, data):
         if self.nav_link is not None:
             self.nav_link[1].append(data)
+        if self.code_depth == 0 and "**" in data:
+            self.errors.append("line %d: unrendered Markdown '**' in HTML text" % self.getpos()[0])
 
     def handle_endtag(self, tag):
+        if tag in ("code", "pre", "script", "style") and self.code_depth > 0:
+            self.code_depth -= 1
         if tag == "a" and self.nav_link is not None:
             target, pieces = self.nav_link
             self.navigation.append((target, " ".join("".join(pieces).split())))
@@ -153,6 +161,54 @@ def check_site(root):
                 errors.append("shared asset differs: " + copy.name)
         elif copy.name.startswith(("case-study-", "reference-")):
             errors.append("missing canonical shared asset: " + copy.name)
+
+    # Guard against withheld public app/download directories or binary installers in public/release folders
+    for forbidden_dir in ("clover-ai", "admin", "download"):
+        if (site / forbidden_dir).exists():
+            errors.append(f"forbidden public directory present in site/: {forbidden_dir}")
+    checked_bin_roots = [
+        p for p in (
+            site,
+            root / "download",
+            root / "release",
+            root / "clover-ai-system" / "mobile",
+            root / "clover-ai-system" / "studio" / "studio" / "dist",
+        )
+        if p.is_dir()
+    ]
+    skip_parts = {".git", ".venv", "venv", "node_modules", "__pycache__", "build", ".gradle"}
+    for scan_dir in checked_bin_roots:
+        for bin_ext in ("*.apk", "*.aab", "*.msix", "*.msixupload", "*.exe"):
+            for bad_bin in scan_dir.rglob(bin_ext):
+                if not (skip_parts & set(bad_bin.parts)):
+                    errors.append("withheld installer binary present in tree: " + bad_bin.relative_to(root).as_posix())
+
+    # Validate raw.githubusercontent.com paths in site/llms.txt when present
+    llms_txt = site / "llms.txt"
+    if llms_txt.is_file():
+        raw_pfx = "https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/"
+        for m_url in re.finditer(r"https://raw\.githubusercontent\.com/santhoshsathish94/clover-framework/main/([^\s)\]]+)", llms_txt.read_text(encoding="utf-8")):
+            rel_p = m_url.group(1)
+            if not (root / rel_p).is_file():
+                errors.append(f"llms.txt: missing repository file for {raw_pfx}{rel_p}")
+
+    # Validate byte-exact parity between root AGENTS.md and site/getting-started/index.html copy payload
+    agents_md = root / "AGENTS.md"
+    gs_html = site / "getting-started" / "index.html"
+    if agents_md.is_file() and gs_html.is_file():
+        gs_txt = gs_html.read_text(encoding="utf-8")
+        m_raw = re.search(r'var\s+RAW_AGENTS_MD\s*=\s*("(?:\\.|[^"\\])*");', gs_txt)
+        if not m_raw:
+            errors.append("getting-started/index.html: missing RAW_AGENTS_MD payload")
+        else:
+            try:
+                embedded = json.loads(m_raw.group(1)).replace("\r\n", "\n")
+                source_md = agents_md.read_text(encoding="utf-8").replace("\r\n", "\n")
+                if embedded != source_md:
+                    errors.append("getting-started/index.html: RAW_AGENTS_MD differs from root AGENTS.md")
+            except ValueError as exc:
+                errors.append(f"getting-started/index.html: invalid RAW_AGENTS_MD JSON literal ({exc})")
+
     return {"pages": len(pages), "navigation_pages": len(signatures),
             "shared_assets": assets_checked, "errors": errors}
 

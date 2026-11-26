@@ -384,7 +384,7 @@ class CloverLanguageModelChatProvider {
     }
 
     const cfg = vscode.workspace.getConfiguration("clover");
-    const endpointUrl = cfg.get("endpointUrl", "https://api.cloverframework.com/v1/chat/completions");
+    const endpointUrl = cfg.get("endpointUrl", "http://127.0.0.1:8790/v1/chat/completions");
     const defaultModel = cfg.get("defaultModel", "nemotron-3.5-super-vl");
     const apiKey = cfg.get("apiKey", "");
     const cands = cfg.get("candidates", 8);
@@ -421,6 +421,10 @@ class CloverLanguageModelChatProvider {
           continue;
         }
         const fn = tc.function && typeof tc.function === "object" ? tc.function : {};
+        const toolName = typeof fn.name === "string" ? fn.name.trim() : "";
+        if (!toolName) {
+          continue;
+        }
         let parsedArgs = {};
         try {
           parsedArgs =
@@ -435,7 +439,7 @@ class CloverLanguageModelChatProvider {
         progress.report(
           new vscode.LanguageModelToolCallPart(
             tc.id ? String(tc.id) : `call_${Date.now()}`,
-            fn.name ? String(fn.name) : "run_in_terminal",
+            toolName,
             parsedArgs
           )
         );

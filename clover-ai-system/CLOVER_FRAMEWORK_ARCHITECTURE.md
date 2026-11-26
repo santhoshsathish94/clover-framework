@@ -21,9 +21,9 @@ flowchart TB
     end
 
     subgraph Fleet["Interactive Hardware-Gated Model & Specialist Tiers (HG4-16R / K31H)"]
-        S_ANY["Small Tier (Runs Interactively on Any Phone, Laptop, or CPU)\n• LFM3-Omni-2B (0.98 GB HG4-16R)\n• Chronos-Bolt 0.2B & V-JEPA 2.1"]
-        S_24["1x 24 GB GPU Tier\n• Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, 17.4 GB, 35.8 tok/s)\n• Goedel-Prover-V2-32B (Lean 4, 16.4 GB) & Boltz-2 (3D folding)"]
-        S_72["Multi-GPU / 80 GB Escalation Tier\n• Nemotron 3.5 Super VL (120B-A12B HG4-16R, 60.2 GB, 1M context)\n• Kimi K3.1 Pro (2.8T K31H, 741 GB across >=780 GB same-rack GPU cluster)"]
+        S_ANY["Small Tier (Runs Interactively on Any Phone, Laptop, or CPU)\n• LFM3-Omni-2B (0.83 GiB HG4-16R)\n• Chronos-Bolt 0.2B (0.10 GiB) & V-JEPA 2.1 (0.51 GiB)"]
+        S_24["1x 24 GB GPU Tier\n• Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, 17.2 GiB, 168.4 tok/s 4090 JSON / 58.5 3090 CLI*)\n• Goedel-Prover-V2-32B (Lean 4, 15.8 GiB) & Boltz-2 (0.52 GiB, 3D folding)"]
+        S_72["Multi-GPU / 80 GB Escalation Tier\n• Nemotron 3.5 Super VL (120B-A12B HG4-16R-OP, 58.2 GiB, 1M context)\n• Kimi K3.1 Pro (2.8T K31H, 741 GB across >=780 GB same-rack GPU cluster)"]
     end
 
     H <-->|"Direction & Approvals"| Harness

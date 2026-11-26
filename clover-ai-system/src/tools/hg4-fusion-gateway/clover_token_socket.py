@@ -200,11 +200,16 @@ def _resolve_secret(explicit: str | None = None) -> bytes:
 class TokenSocketServer:
     """Dedicated binary `TCP_NODELAY` server streaming `4-byte` `int32` token IDs + kernel hardware proof counters."""
 
-    def __init__(self, router: Any, host: str = "0.0.0.0", port: int = 10100, secret: str | None = None) -> None:
+    def __init__(self, router: Any, host: str = "127.0.0.1", port: int = 10100, secret: str | None = None) -> None:
         self.router = router
         self.host = host
         self.port = port
         self.secret_bytes = _resolve_secret(secret)
+        if host not in ("127.0.0.1", "localhost", "::1") and not self.secret_bytes and os.environ.get("CLOVER_ALLOW_UNAUTH_TSOCK") != "1":
+            raise ValueError(f"Refusing unauthenticated TokenSocketServer on non-loopback host {host!r}; set CLOVER_GATEWAY_API_KEY or CLOVER_CLUSTER_SECRET.")
+        self._conn_sem = threading.BoundedSemaphore(64)
+        self._ip_mu = threading.Lock()
+        self._ip_counts: dict[str, int] = {}
         self._srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._srv.bind((host, port))
@@ -224,26 +229,66 @@ class TokenSocketServer:
     def _accept_loop(self) -> None:
         while not self._closed:
             try:
-                conn, _ = self._srv.accept()
+                conn, addr = self._srv.accept()
             except OSError:
                 break
-            threading.Thread(target=self._handle_client, args=(conn,), daemon=True).start()
+            peer_ip = str(addr[0]) if addr else "unknown"
+            hub_ip = (os.environ.get("CLOVER_HUB_IP") or "").strip()
+            ip_limit = 64 if peer_ip in ("127.0.0.1", "::1", hub_ip) else 16
+            with self._ip_mu:
+                if self._ip_counts.get(peer_ip, 0) >= ip_limit:
+                    try:
+                        conn.close()
+                    except OSError:
+                        pass
+                    continue
+                self._ip_counts[peer_ip] = self._ip_counts.get(peer_ip, 0) + 1
+            if not self._conn_sem.acquire(blocking=False):
+                with self._ip_mu:
+                    self._ip_counts[peer_ip] = max(0, self._ip_counts.get(peer_ip, 1) - 1)
+                try:
+                    conn.close()
+                except OSError:
+                    pass
+                continue
+            try:
+                threading.Thread(target=self._handle_client, args=(conn, peer_ip), daemon=True).start()
+            except Exception:
+                self._conn_sem.release()
+                with self._ip_mu:
+                    self._ip_counts[peer_ip] = max(0, self._ip_counts.get(peer_ip, 1) - 1)
+                try:
+                    conn.close()
+                except OSError:
+                    pass
 
-    def _handle_client(self, conn: socket.socket) -> None:
+    def _handle_client(self, conn: socket.socket, peer_ip: str = "unknown") -> None:
         from cluster_scheduler_mcp2 import HOP_CTX
 
-        conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         try:
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             if self.secret_bytes:
+                auth_deadline = time.monotonic() + 5.0
                 nonce = secrets.token_bytes(16)
+                conn.settimeout(5.0)
                 conn.sendall(nonce)
-                client_mac = _recv_exact(conn, 32)
+                buf_mac = bytearray()
+                while len(buf_mac) < 32:
+                    rem = auth_deadline - time.monotonic()
+                    if rem <= 0:
+                        raise TimeoutError("handshake deadline exceeded")
+                    conn.settimeout(rem)
+                    chunk = conn.recv(32 - len(buf_mac))
+                    if not chunk:
+                        raise ConnectionError("EOF during handshake")
+                    buf_mac.extend(chunk)
                 expected = hmac.new(self.secret_bytes, nonce, hashlib.sha256).digest()
-                if not hmac.compare_digest(client_mac, expected):
+                if not hmac.compare_digest(bytes(buf_mac), expected):
                     conn.sendall(struct.pack("<I", 1))
                     return
                 conn.sendall(struct.pack("<I", 0))
+            conn.settimeout(300.0)
 
             while not self._closed:
                 op, req_id, payload = _recv_frame(conn)
@@ -274,10 +319,18 @@ class TokenSocketServer:
                         if gen_ids:
                             tok_pack = struct.pack(f"<{len(gen_ids)}i", *gen_ids)
                             wire_tx += _send_frame(conn, OP_TOK_IDS, req_id, tok_pack)
+                        base_done_bytes = json.dumps({
+                            "content": comp.content,
+                            "tool_calls": comp.tool_calls,
+                            "finish_reason": comp.finish_reason,
+                            "usage": comp.usage,
+                            "token_count_streamed": len(gen_ids),
+                            "token_wire_bytes": len(gen_ids) * 4,
+                        }, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
                         hw_proof = meter.finish(
                             max(1, comp.usage.get("completion_tokens", len(gen_ids) or 1)),
                             wire_rx_bytes=wire_rx,
-                            wire_tx_bytes=wire_tx + 64,
+                            wire_tx_bytes=wire_tx + 12 + len(base_done_bytes),
                         )
                         done_obj = {
                             "content": comp.content,
@@ -288,6 +341,8 @@ class TokenSocketServer:
                             "token_wire_bytes": len(gen_ids) * 4,
                             "hw_proof": hw_proof,
                         }
+                        done_bytes = json.dumps(done_obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+                        done_obj["hw_proof"]["wire_tx_bytes"] = wire_tx + 12 + len(done_bytes)
                         done_bytes = json.dumps(done_obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
                         _send_frame(conn, OP_DONE, req_id, done_bytes)
                     except Exception as exc:
@@ -300,6 +355,13 @@ class TokenSocketServer:
         except (ConnectionError, ValueError, struct.error, OSError):
             pass
         finally:
+            self._conn_sem.release()
+            with self._ip_mu:
+                n_left = self._ip_counts.get(peer_ip, 1) - 1
+                if n_left <= 0:
+                    self._ip_counts.pop(peer_ip, None)
+                else:
+                    self._ip_counts[peer_ip] = n_left
             try:
                 conn.close()
             except OSError:
@@ -323,17 +385,23 @@ class TokenSocketPool:
                 s.settimeout(timeout_s)
                 return s
         s = socket.create_connection((host, port), timeout=timeout_s)
-        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        if secret_b:
-            nonce = _recv_exact(s, 16)
-            mac = hmac.new(secret_b, nonce, hashlib.sha256).digest()
-            s.sendall(mac)
-            (rc,) = struct.unpack("<I", _recv_exact(s, 4))
-            if rc != 0:
+        try:
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if secret_b:
+                nonce = _recv_exact(s, 16)
+                mac = hmac.new(secret_b, nonce, hashlib.sha256).digest()
+                s.sendall(mac)
+                (rc,) = struct.unpack("<I", _recv_exact(s, 4))
+                if rc != 0:
+                    raise PermissionError(f"TokenSocket {host}:{port} rejected HMAC secret (rc={rc})")
+            return s
+        except Exception:
+            try:
                 s.close()
-                raise PermissionError(f"TokenSocket {host}:{port} rejected HMAC secret (rc={rc})")
-        return s
+            except OSError:
+                pass
+            raise
 
     def _checkin(self, host: str, port: int, secret_b: bytes, sock: socket.socket) -> None:
         key = (host, port, secret_b)

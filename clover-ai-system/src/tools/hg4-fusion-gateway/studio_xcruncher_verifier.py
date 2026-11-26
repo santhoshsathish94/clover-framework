@@ -139,17 +139,19 @@ def compute_pow_exact(base: int, exp: int) -> tuple[int, str]:
     return res, backend
 
 
+_ADJ_OP_AHEAD = r"(?!\s*(?:[+\-*/%^!]|<<|>>))"
+_ADJ_OP_BEHIND = r"(?<!\*\*\s)(?<!\*\*)" + r"(?<!\^\s)(?<!\^)" + r"(?<!/\s)(?<!/)" + r"(?<!\*\s)(?<!\*)" + r"(?<!-\s)(?<!-)"
 _MERSENNE_MUL_RE = re.compile(
-    r"\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)\s*\*\s*\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)"
+    r"\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)\s*\*\s*\(\s*2\s*(?:\^|\*\*)\s*(\d{2,4})\s*-\s*1\s*\)" + _ADJ_OP_AHEAD
 )
-_BIG_MUL_RE = re.compile(r"(?<!\d)(\d{12,1200})\s*\*\s*(\d{12,1200})(?!\d)")
-_BIG_POW_RE = re.compile(r"(?<![\w\d.])(\d{1,30})\s*(?:\^|\*\*)\s*(\d{2,4})(?![\w\d]|\.\d)")
+_BIG_MUL_RE = re.compile(_ADJ_OP_BEHIND + r"(?<!\d)(\d{12,1200})\s*\*\s*(\d{12,1200})(?!\d)" + _ADJ_OP_AHEAD)
+_BIG_POW_RE = re.compile(_ADJ_OP_BEHIND + r"(?<![\w\d.])(\d{1,30})\s*(?:\^|\*\*)\s*(\d{2,4})(?![\w\d]|\.\d)" + _ADJ_OP_AHEAD)
 _FACTORIAL_RE = re.compile(
     r"(?:"
     r"`(\d{2,4})\s*!(?!=)`"
     r"|(?i:\b(?:compute|calculate|evaluate|state)\s+(?:only\s+)?(?:the\s+)?(?:exact\s+)?(?:decimal\s+)?(?:value\s+of\s+)?|\b(?:exact\s+(?:decimal\s+)?value\s+of|factorial\s+of)\s+|\bwhat\s+is\s+)(\d{2,4})\s*!(?!=)"
     r"|(?<![\w\d])(\d{2,4})\s*!(?!=)(?:[ \t]*(?:\(\s*\d+\s+(?i:factorial)\s*\)|=)|[ \t]+(?:with\s+no\s+commas\b|in\s+decimal\b|exactly\s*(?:[?.]|$)))"
-    r")"
+    r")" + _ADJ_OP_AHEAD
 )
 _PI_HEX_RE = re.compile(
     r"(?:exact\s+)?(\d{1,2})\s+(?:uppercase\s+|lowercase\s+)?hex(?:adecimal)?\s+digits\s+of\s+(?:the\s+fractional\s+part\s+of\s+)?pi\b.*?(?:offset|index|position)\s*[`'\"]?(\d{1,12})[`'\"]?",

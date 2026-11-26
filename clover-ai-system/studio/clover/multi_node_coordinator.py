@@ -251,36 +251,19 @@ class K3MultiNodeCoordinator:
             req = urllib.request.Request(
                 f"{self.gx10_worker_url}/api/gx10/multimodal",
                 data=raw_req,
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": "application/json", "X-Clover-Hop": "k3-coordinator"},
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=90) as resp:
-                return json.loads(resp.read().decode("utf-8", errors="replace"))
-        except Exception:
-            import k3_host_engine
-            hdrs = {"Content-Type": "application/json", "User-Agent": "CloverStudio/1.0"}
-            k_tok = k3_host_engine.k3_host_key(self.base_dir)
-            if k_tok:
-                hdrs["X-Clover-Key"] = k_tok
-            req_k3 = urllib.request.Request(
-                "https://api.cloverframework.com/api/multi-node/turn",
-                data=raw_req,
-                headers=hdrs,
-                method="POST",
-            )
-            with urllib.request.urlopen(req_k3, timeout=90) as resp_k3:
-                k3_wrap = json.loads(resp_k3.read().decode("utf-8", errors="replace"))
-            steps = k3_wrap.get("executed_steps") or []
-            gx_step = next((s for s in steps if s.get("node") == "gx10"), {})
+                return json.loads(resp.read(4_194_304).decode("utf-8", errors="replace"))
+        except Exception as exc:
             return {
-                "ok": True,
+                "ok": False,
                 "node": "gx10-gpu-worker",
-                "stateless_zero_personal_data": gx_step.get("stateless_zero_personal_data", True),
-                "modalities": gx_step.get("modalities", {}),
-                "c1": gx_step.get("c1", {}),
-                "c2": gx_step.get("c2", {}),
-                "c3": gx_step.get("c3", {}),
-                "reply": k3_wrap.get("reply", ""),
+                "stateless_zero_personal_data": True,
+                "error": f"GX10 multimodal worker unreachable: {type(exc).__name__}: {exc}",
+                "modalities": {},
+                "reply": "",
             }
 
     @staticmethod
@@ -385,9 +368,15 @@ class K3MultiNodeCoordinator:
         line = json.dumps(entry, ensure_ascii=False)
         entry["sha256"] = hashlib.sha256(line.encode("utf-8")).hexdigest()[:16]
         with self.lock:
+            if self.offline_sync_journal.is_file() and self.offline_sync_journal.stat().st_size > 5_000_000:
+                try:
+                    tail_lines = self.offline_sync_journal.read_text(encoding="utf-8", errors="replace").splitlines()[-200:]
+                    self.offline_sync_journal.write_text("\n".join(tail_lines) + ("\n" if tail_lines else ""), encoding="utf-8")
+                except OSError:
+                    pass
             with open(self.offline_sync_journal, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-            sess_file = self.conversations_dir / f"{re.sub(r'[^A-Za-z0-9_-]', '_', session_id)}.json"
+            sess_file = self.conversations_dir / f"{re.sub(r'[^A-Za-z0-9_-]', '_', session_id)[:80]}.json"
             hist = []
             if sess_file.is_file():
                 try:
@@ -401,7 +390,7 @@ class K3MultiNodeCoordinator:
     def sync_client_offline_events(self, events: list[dict[str, Any]]) -> dict[str, Any]:
         """Ingest offline client turns (`LFM3-Omni-2B` on Laptop/Phone) into `k3`'s source-of-truth journal & memory."""
         ingested = 0
-        for ev in events or ():
+        for ev in list(events or ())[:100]:
             if not isinstance(ev, dict):
                 continue
             sid = str(ev.get("session_id") or "client-offline")

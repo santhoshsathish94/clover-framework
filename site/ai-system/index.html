@@ -167,13 +167,13 @@
         <div class="studio-card">
           <span class="studio-tag studio-tag--ready">Part 1 &middot; AGENTS.md</span>
           <h3>1. Human Steering &amp; Epistemic Boundaries</h3>
-          <p>Enforces <em>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</em> in code, pauses with <code>STOP_AND_ASK</code> before irreversible or underspecified actions, and applies a Tier-0 tool-exposure gate so small <code>2B</code> models are never flooded with unrequested planning schemas.</p>
+          <p>Enforces <em>Context &rarr; Direction &rarr; Execution &rarr; Outcome &rarr; Growth</em> in code, halts destructive or stagnant runs with <code>STOP_AND_ASK</code>, and applies a Tier-0 tool-exposure gate so small <code>2B</code> models are never flooded with unrequested planning schemas.</p>
         </div>
 
         <div class="studio-card">
           <span class="studio-tag studio-tag--ready">Part 2 &middot; mcp.json</span>
           <h3>2. Computed <code>0B</code> Specialists First</h3>
-          <p>Never asks neural weights to guess what an algorithm computes exactly: built-in <code>x-cruncher</code> big-integer arithmetic (<code>A&times;B</code>, <code>A^B</code> past <code>6,000+</code> digits, <code>N!</code>, BBP hexadecimal &pi;), a <code>0B</code> Periodogram + Split-Conformal forecaster (<code>&lt;50 ms</code> CPU), a <code>0B</code> Defeasible Rule Resolver, and AST code checks &mdash; plus optional <code>HG4</code> GPU specialists over <code>MCP 2.0</code>.</p>
+          <p>Never asks neural weights to guess what an algorithm computes: built-in <code>x-cruncher</code> big-integer arithmetic (<code>A&times;B</code>, <code>A^B</code> past <code>6,000+</code> digits, <code>N!</code>, BBP hexadecimal &pi;), a <code>0B</code> Periodogram + Split-Conformal forecaster (<code>&lt;110 ms</code> CPU), a <code>0B</code> Defeasible Rule Resolver, and AST code checks &mdash; plus optional <code>HG4</code> GPU specialists over <code>MCP 2.0</code>.</p>
         </div>
 
         <div class="studio-card">
@@ -200,8 +200,8 @@
       <div class="studio-card" style="margin-top:1.2rem;border-left:4px solid var(--accent)">
         <span class="studio-tag studio-tag--ready">Myth 2 &amp; Myth 3 Applied &middot; Bandwidth Multiplies Across Small Machines</span>
         <h3 style="margin-bottom:0.45rem">One giant GPU server does not give faster decoding &mdash; multiple smaller right-sized GPUs do</h3>
-        <p style="margin-bottom:0.65rem"><strong>Memory size (<code>GB</code>) only decides whether a model fits; decoding speed comes strictly from memory-highway bandwidth (<code>GB/s</code>).</strong> Paying for one giant <code>80 GB&ndash;192 GB</code> enterprise server to run a <code>17.4 GB</code> model adds <strong><code>+0.0 tok/s</code></strong>, and putting four workers behind one shared bus stalls at <code>16.0 tok/s</code>. By contrast, <strong>four right-sized <code>24 GB RTX 3090</code> cards bring four independent <code>936 GB/s</code> memory highways (<code>3,744 GB/s</code> aggregate)</strong> &mdash; delivering <strong><code>234.1 decode tok/s</code> (<code>14.6&times;</code> faster)</strong> across concurrent users and pooling four buses together to decode <code>58.2 GB</code> <code>Nemotron 120B</code> at <code>38.4&ndash;55+ tok/s</code> (<a href="../hg-format/#myth-3-machines">see Myth 1, 2 &amp; 3 proofs &rarr;</a>).</p>
-        <p style="margin:0"><strong>Full multi-user batching &amp; clubbing, honest per-user reporting:</strong> Every Clover <code>RTX 3090</code> server supports multiple concurrent users, dynamic batching (reusing one VRAM weight read across active requests), and <code>T = 0</code> request clubbing in <code>gateway.py</code> &mdash; while the table below reports true <strong>per-user autoregressive decode (<code>batch = 1 tok/s</code>)</strong> separately from summed multi-user totals so you always see real single-stream responsiveness.</p>
+        <p style="margin-bottom:0.65rem"><strong>Memory size (<code>GB</code>) only decides whether a model fits; decoding speed comes strictly from memory-highway bandwidth (<code>GB/s</code>).</strong> Paying for one giant <code>80 GB&ndash;192 GB</code> enterprise server to run a <code>17.2 GiB</code> model adds <strong><code>~0 tok/s</code></strong>, and putting four workers behind one shared CPU bus stalls at <code>16.0 tok/s</code><sup>&dagger;</sup>. By contrast, <strong>four right-sized <code>24 GB RTX 3090</code> cards bring four independent <code>936 GB/s</code> memory highways (<code>3,744 GB/s</code> aggregate)</strong> &mdash; delivering <strong><code>4 &times; 58.5 = 234.1 decode tok/s</code><sup>&dagger;</sup> (<code>14.6&times;</code> faster)</strong> across four parallel streams (<code>4 &times; 168.4 = 673.4 tok/s</code> on <code>4&times; 4090</code> JSON) and pooling four buses together to decode <code>58.2 GiB</code> <code>Nemotron 120B</code> at <code>172.2 tok/s</code> on <code>4&times; 4090</code> MTP JSON / <code>38.4 tok/s</code> on <code>4&times; 3090</code> CLI<sup>&dagger;</sup> (<a href="../hg-format/#myth-3-machines">see Myth 1, 2 &amp; 3 proofs &rarr;</a>).</p>
+        <p style="margin:0"><strong>Full multi-user batching &amp; clubbing, honest per-user reporting:</strong> Every Clover GPU server supports multiple concurrent users, dynamic batching (reusing one VRAM weight read across active requests), and <code>T = 0</code> request clubbing in <code>gateway.py</code> &mdash; while the table below reports true <strong>per-user autoregressive decode (<code>batch = 1</code>)</strong> with explicit GPU provenance (<code>RTX 3090</code> vs. <code>RTX 4090</code>). <em>Note: current pure-C <code>HG4</code> text engines run text-only (<code>sees_image_pixels_on_current_engine = false</code>); visual/audio sensory bridges are tracked in <a href="#ambitious-research">Five-Senses Research</a> below.</em></p>
       </div>
 
       <div class="hw-wrap">
@@ -211,67 +211,68 @@
               <th>Model / Specialist</th>
               <th>HG4 Footprint</th>
               <th>Minimum Required Hardware / Servers</th>
-              <th>Measured RTX 3090 Decode Speed (batch = 1)</th>
+              <th>Measured Single-User Speed (batch = 1, Provenance)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>0B Computed Pack</strong><br><small><code>x-cruncher</code> + Conformal Forecaster + Defeasible Resolver</small></td>
-              <td><code>0 MB</code></td>
+              <td><code>0 MiB</code></td>
               <td>Any phone, laptop, or CPU machine (<code>0</code> GPUs)</td>
-              <td><span class="studio-tag studio-tag--ready">0 GPUs</span><br><small><strong><code>0.02&ndash;52 ms</code></strong> exact on CPU</small></td>
+              <td><span class="studio-tag studio-tag--ready">0 GPUs</span><br><small><strong><code>0.02&ndash;105 ms</code></strong> exact on CPU</small></td>
             </tr>
             <tr>
-              <td><strong>LFM3-Omni-2B &amp; Small Drafters</strong><br><small>Everyday multimodal assistant (<code>HG4-16R</code>) &amp; <code>5L-DSpark</code></small></td>
-              <td><code>0.85 GB</code></td>
+              <td><strong>LFM3-Omni-2B</strong><br><small>Fast text assistant (<code>HG4-16R</code>, <code>87/87</code> exact)</small></td>
+              <td><code>0.83 GiB</code><br><small>(<code>853.9 MiB</code>)</small></td>
               <td>Any phone, laptop, CPU, or <code>1&times;</code> GPU</td>
-              <td><span class="studio-tag studio-tag--ready">~250 tok/s on 1&times; 3090</span><br><small><strong><code>240&ndash;288 decode tok/s</code></strong> GPU &middot; <code>50.3 tok/s</code> CPU &middot; <code>33.4 tok/s</code> S23 phone</small></td>
+              <td><span class="studio-tag studio-tag--ready">240.2 tok/s (1&times; 4090)</span><br><small><code>35.7 tok/s</code> e2e 3090 &middot; <code>50.3 tok/s</code> CPU &middot; <code>33.4 tok/s</code> S23 phone</small></td>
             </tr>
             <tr>
-              <td><strong>Chronos-Bolt 0.2B</strong><br><small>Probabilistic time-series specialist (<code>HG4</code>)</small></td>
-              <td><code>0.10 GB</code></td>
+              <td><strong>Chronos-Bolt 0.2B</strong><br><small>Probabilistic time-series specialist (<code>HG4-16R</code>)</small></td>
+              <td><code>0.10 GiB</code><br><small>(<code>102 MiB</code>)</small></td>
               <td>Any phone, laptop, CPU, or <code>1&times;</code> GPU</td>
-              <td><span class="studio-tag studio-tag--ready">191 tok/s on 1&times; 3090</span><br><small><strong><code>187&ndash;191 decode tok/s</code></strong> (<code>0.37 s</code>/series) &middot; <code>&lt;52 ms</code> <code>0B</code> Conformal</small></td>
+              <td><span class="studio-tag studio-tag--ready">187&ndash;191 steps/s (1&times; 3090)</span><br><small><code>151.9</code> mean (<code>0.80 s</code> / 512&rarr;48) &middot; <code>&lt;110 ms</code> <code>0B</code> Conformal</small></td>
             </tr>
             <tr>
               <td><strong>V-JEPA 2.1</strong><br><small>Physical video dynamics &amp; surprise model (<code>HG4-16R</code>)</small></td>
-              <td><code>0.51 GB</code></td>
+              <td><code>0.51 GiB</code></td>
               <td>Any laptop, CPU, or <code>1&times;</code> GPU</td>
-              <td><span class="studio-tag studio-tag--ready">0.12 s on 1&times; 3090</span><br><small><strong><code>0.12 s</code></strong>/video clip (<code>1408-d</code> rollout) &middot; <code>0.9 s</code> CPU</small></td>
+              <td><span class="studio-tag studio-tag--ready">Verified on 1&times; 3090</span><br><small><code>64-frame</code> ViT-g &rarr; <code>1408-d</code> physics rollout (<code>stage45</code>)</small></td>
             </tr>
             <tr>
               <td><strong>Boltz-2</strong><br><small>3D protein/RNA/ligand structure folding (<code>HG4-16R</code>)</small></td>
-              <td><code>0.53 GB</code><br><small>(<code>~14 GB</code> w/ pairformer)</small></td>
+              <td><code>0.52 GiB</code><br><small>(<code>529.6 MiB</code>; <code>~14 GiB</code> resident)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 16 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><strong><code>~12 s</code></strong> per 3D <code>.cif</code> complex on <code>1&times; RTX 3090</code>; skipped on CPU</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><strong><code>39.6&ndash;40.6 s</code></strong> per 3D <code>.cif</code> on <code>1&times; RTX 3090</code> (<code>pLDDT 0.908 &amp; 0.926</code>); skipped on CPU</small></td>
             </tr>
             <tr>
               <td><strong>Goedel-Prover-V2-32B</strong><br><small>Formal <code>Lean 4</code> theorem proving specialist (<code>HG4-16R</code>)</small></td>
-              <td><code>15.8 GB</code><br><small>(<code>21.6 GB</code> w/ 16k KV)</small></td>
+              <td><code>15.8 GiB</code><br><small>(<code>21.6 GiB</code> w/ 16k KV)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small><strong><code>18.4&ndash;28.6 decode tok/s</code></strong> on <code>RTX 3090</code>; skipped on CPU (<code>0.9 tok/s</code>)</small></td>
+              <td><span class="studio-tag studio-tag--gpu">GPU Required</span><br><small>Fits <code>1&times; 24 GB RTX 3090</code>; skipped on CPU (<code>0.93 tok/s</code> measured on <code>k3</code>)</small></td>
             </tr>
             <tr>
               <td><strong>Clover-35B-A3B Coordinator</strong><br><small><code>Qwen3.6-35B-A3B + Clover-Harness-LoRA</code> (<code>HG4-16R-OP</code>)</small></td>
-              <td><code>17.4 GB</code><br><small>(<code>20.2 GB</code> w/ 32k KV)</small></td>
+              <td><code>17.2 GiB</code><br><small>(<code>17.4 GiB</code> w/ LoRA; <code>20.2 GiB</code> w/ KV)</small></td>
               <td><code>1&times;</code> GPU server with <code>&ge; 24 GB</code> VRAM (<code>1&times; RTX 3090</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">58.5 tok/s on 1&times; 3090</span><br><small><strong><code>58.5 decode tok/s</code></strong> native CUDA (<code>35.8 tok/s</code> HTTP); <code>4&times;</code> GPUs add <code>+0.0 tok/s</code></small></td>
+              <td><span class="studio-tag studio-tag--gpu">168.4 tok/s (1&times; 4090 JSON)</span><br><small><code>20.8&ndash;22.9 tok/s</code> e2e 3090 JSON &middot; <code>58.5 tok/s</code> 1&times; 3090 CLI<sup>&dagger;</sup></small></td>
             </tr>
             <tr>
-              <td><strong>Nemotron 3.5 Super VL</strong><br><small><code>120B-A12B</code> <code>1M</code> context &amp; C-RADIO vision escalation (<code>HG4-16R</code>)</small></td>
-              <td><code>58.2 GB</code><br><small>(<code>68 GB</code> resident)</small></td>
+              <td><strong>Nemotron 3.5 Super VL</strong><br><small><code>120B-A12B</code> <code>1M</code> context text escalation (<code>HG4-16R-OP</code>)</small></td>
+              <td><code>58.2 GiB</code><br><small>(<code>4 &times; 14.6 GiB</code>)</small></td>
               <td><code>4&times; 24 GB RTX 3090</code> server or <code>1&times; 80 GB</code> GPU (<code>&ge; 72 GB</code> VRAM)</td>
-              <td><span class="studio-tag studio-tag--gpu">38&ndash;55+ tok/s on 4&times; 3090</span><br><small><strong><code>38.4&ndash;55+ decode tok/s</code></strong> (<code>2L-MTP</code>); <code>8&times;</code> GPUs add <code>+0.0 tok/s</code></small></td>
+              <td><span class="studio-tag studio-tag--gpu">71.3 / 172.2 MTP (4&times; 4090)</span><br><small><code>13.4&ndash;14.5 tok/s</code> e2e 3090 JSON &middot; <code>38.4 tok/s</code> 4&times; 3090 CLI<sup>&dagger;</sup></small></td>
             </tr>
             <tr>
               <td><strong>Kimi K3.1 Pro</strong><br><small><code>2.8T</code> MoE frontier derivation escalation (<code>K31H</code> two-tier <code>HG4 + HG2</code>)</small></td>
               <td><code>741 GB</code><br><small>(<code>~780 GB</code> resident)</small></td>
               <td>Same-rack GPU cluster with <code>&ge; 780 GB</code> aggregate VRAM (<code>5&times; 8-GPU RTX 3090</code> or <code>2&times; 8&times;80 GB</code>)</td>
-              <td><span class="studio-tag studio-tag--gpu">6&ndash;18 tok/s on 5&times; 8-GPU 3090</span><br><small><strong><code>6.0 decode tok/s</code></strong> (<code>T=1</code>) to <strong><code>~18 tok/s</code></strong> (<code>+DSpark</code>); skipped without cluster</small></td>
+              <td><span class="studio-tag studio-tag--gpu">7.89 tok/s (8&times; 4090 3-tier)</span><br><small><code>+ 288.4 tok/s DSpark</code> JSON &middot; <code>~6 tok/s</code> 3090 stage CLI<sup>&dagger;</sup>; skipped without cluster</small></td>
             </tr>
           </tbody>
         </table>
       </div>
+      <p style="font-size:0.84rem;color:var(--muted);margin-top:0.45rem"><sup>&dagger;</sup>JSON-badged figures are committed in <code>benchmarks/riemann-lean4/results/rtx4090_hg4_4models_benchmark.json</code> and <code>benchmarks/public-runs-20261126/*.json</code>; figures marked <sup>&dagger;</sup> are uncommitted interactive host CLI measurements recorded during bring-up (not in standalone JSON files in this repository).</p>
     </div>
   </section>
 
@@ -294,7 +295,7 @@
           <text x="150" y="123" text-anchor="middle" font-size="9.2" fill="#39424d">AGENTS.md · STOP_AND_ASK · Todo · &lt;id&gt;.md</text>
 
           <rect x="36" y="150" width="228" height="68" rx="7" fill="#ffffff" stroke="#0a6a5f" stroke-width="1.3"/>
-          <text x="150" y="169" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">Tier 0 · 0B Computed Tools (&lt;52 ms)</text>
+          <text x="150" y="169" text-anchor="middle" font-size="10.2" font-weight="700" fill="#0a6a5f">Tier 0 · 0B Computed Tools (&lt;110 ms)</text>
           <text x="150" y="185" text-anchor="middle" font-size="9.1" fill="#39424d">x-cruncher BigInt/Pi · 0B Conformal TS</text>
           <text x="150" y="200" text-anchor="middle" font-size="9.1" fill="#39424d">0B Defeasible Rules · Lean 4 &amp; AST Checks</text>
 
@@ -319,21 +320,21 @@
 
           <!-- Right Tier 1: Front-Door Coordinator (1x RTX 3090) -->
           <rect x="344" y="54" width="514" height="82" rx="9" fill="#f6fbfa" stroke="#0a6a5f" stroke-width="1.5"/>
-          <text x="360" y="75" font-size="10.5" font-weight="700" fill="#0a6a5f">TIER 1A · FRONT-DOOR COORDINATOR PETALS (1 × 24 GB RTX 3090 EACH)</text>
-          <text x="360" y="95" font-size="9.5" fill="#14181d">• Qwen3.6-35B-A3B + Clover-Harness-LoRA (17.4 GB HG4-16R-OP · 58.5 decode tok/s) — plans &amp; calls MCP tools</text>
-          <text x="360" y="113" font-size="9.5" fill="#39424d">• LFM3-Omni-2B (0.83 GB HG4-16R · 240–288 decode tok/s) — fast everyday single-turn queries</text>
+          <text x="360" y="75" font-size="10.5" font-weight="700" fill="#0a6a5f">TIER 1A · FRONT-DOOR COORDINATOR PETALS (1 × 24 GB GPU EACH)</text>
+          <text x="360" y="95" font-size="9.5" fill="#14181d">• Qwen3.6-35B-A3B + Clover-Harness-LoRA (17.4 GiB HG4-16R-OP · 168.4 tok/s 4090 JSON / 58.5 3090 CLI†)</text>
+          <text x="360" y="113" font-size="9.5" fill="#39424d">• LFM3-Omni-2B (0.83 GiB HG4-16R · 240.2 tok/s 4090 JSON · 35.7 e2e 3090 JSON · 33.4 S23†)</text>
 
           <!-- Right Tier 1B: Domain Specialist Petals (1x RTX 3090) -->
           <rect x="344" y="148" width="514" height="82" rx="9" fill="#f6fbfa" stroke="#0a6a5f" stroke-width="1.5"/>
           <text x="360" y="169" font-size="10.5" font-weight="700" fill="#0a6a5f">TIER 1B · DOMAIN SPECIALIST PETALS (1 × 24 GB RTX 3090, CALLED VIA mcp.json)</text>
-          <text x="360" y="189" font-size="9.5" fill="#14181d">• Goedel-Prover-V2-32B (15.8 GB · Lean 4 formal proofs: 66.7% MiniF2F w/ Cycle-2 compiler repair)</text>
-          <text x="360" y="207" font-size="9.5" fill="#39424d">• Boltz-2 (0.52 GB · 3D .cif folding pLDDT 0.931) · Chronos-Bolt (191 tok/s) · V-JEPA 2.1 (1408-d physics)</text>
+          <text x="360" y="189" font-size="9.5" fill="#14181d">• Goedel-Prover-V2-32B (15.8 GiB · Lean 4 formal proofs: 8/12 = 66.7% MiniF2F w/ Cycle-2 repair)</text>
+          <text x="360" y="207" font-size="9.5" fill="#39424d">• Boltz-2 (0.52 GiB · 3D .cif pLDDT 0.926) · Chronos-Bolt (187–191 steps/s) · V-JEPA 2.1 (1408-d physics)</text>
 
           <!-- Right Tier 2 & 3: Heavy Verifier-Gated Escalation -->
           <rect x="344" y="242" width="514" height="78" rx="9" fill="#fdf8ec" stroke="#d9be84" stroke-width="1.6"/>
           <text x="360" y="263" font-size="10.5" font-weight="700" fill="#8a5607">TIER 2 &amp; 3 · OBJECTIVE VERIFIER-GATED ESCALATION (ONLY WHEN TIER 1 FAILS CHECKS)</text>
-          <text x="360" y="283" font-size="9.5" fill="#14181d">• Nemotron 3.5 Super VL 120B (58.2 GB on 4 × RTX 3090 · 38–55+ tok/s · 1M context &amp; C-RADIO vision)</text>
-          <text x="360" y="301" font-size="9.5" fill="#39424d">• Kimi K3.1 Pro 2.8T (741 GB K31H pipeline across 5 × 8-GPU RTX 3090 · 6–18 tok/s · deep derivations)</text>
+          <text x="360" y="283" font-size="9.5" fill="#14181d">• Nemotron 3.5 Super VL 120B (58.2 GiB on 4 × 24 GB GPUs · 172.2 4090 MTP JSON / 38.4 3090 CLI†)</text>
+          <text x="360" y="301" font-size="9.5" fill="#39424d">• Kimi K3.1 Pro 2.8T (741 GB K31H pipeline · 7.89 tok/s 8×4090 JSON / ~6 tok/s 3090 stage CLI†)</text>
         </svg>
         <figcaption>One lightweight CPU hub (<code>k3</code>) orchestrates deterministic <code>0B</code> tools and right-sized <code>RTX 3090</code> petals — escalating to larger models only when objective verifiers prove it necessary.</figcaption>
       </figure>
@@ -342,7 +343,7 @@
         <div class="studio-card">
           <span class="studio-tag studio-tag--ready">Step 1 &middot; 0 ms on k3 CPU</span>
           <h3>Compute Deterministically Before Touching Any GPU</h3>
-          <p>Every request hits <code>k3</code> first. High-risk or ambiguous actions trigger <code>STOP_AND_ASK</code>; exact integer/factorial/&pi; math runs in <code>x-cruncher</code> (<code>0.02 ms</code>); periodic time-series run in the <code>0B</code> Periodogram+Conformal solver (<code>52 ms</code>); policy overrides run in the <code>0B</code> Defeasible Resolver &mdash; consuming <strong>zero GPU tokens</strong>.</p>
+          <p>Every request hits <code>k3</code> first. High-risk destructive commands trigger <code>STOP_AND_ASK</code>; exact integer/factorial/&pi; math runs in <code>x-cruncher</code> (<code>&lt;1 ms</code>); periodic time-series run in the <code>0B</code> Periodogram+Conformal solver (<code>&lt;110 ms</code>); policy overrides run in the <code>0B</code> Defeasible Resolver &mdash; consuming <strong>zero GPU tokens</strong>.</p>
         </div>
 
         <div class="studio-card">
@@ -367,8 +368,8 @@
               <th>Server Ran On</th>
               <th>SciCode<br><small>(288 Sealed Steps)</small></th>
               <th>HumanEval<br><small>(164 Python)</small></th>
-              <th>Lean 4 MiniF2F<br><small>(12 Theorems)</small></th>
-              <th>Riemann Lean 4<br><small>(23 Obligations)</small></th>
+              <th>Lean 4 Suite<br><small>(12 MiniF2F / 21 Total)</small></th>
+              <th>4-Tier RH + SWE<br><small>(23 Sealed Tasks)</small></th>
               <th>Time-Series<br><small>(512&rarr;48 MASE, lower=better)</small></th>
               <th>Exact Math, Rules &amp; Biology</th>
               <th>Discernment (19) &amp; Steering (6)</th>
@@ -382,101 +383,102 @@
               <td>&mdash;</td>
               <td><strong><code>6 / 12</code> (50.0%)</strong><br><small>10-line tactic cascade</small></td>
               <td>&mdash;</td>
-              <td><strong><code>0.3084</code> (#1)</strong><br><small><code>52 ms</code> CPU</small></td>
+              <td><strong><code>0.3084</code> (#1)</strong><br><small><code>&lt;110 ms</code> CPU</small></td>
               <td><strong><code>10/10</code> BigInt</strong><br><small><strong><code>180/180</code> Rules</strong></small></td>
-              <td><code>STOP_AND_ASK</code><br><small>Boundary gate</small></td>
+              <td><code>5 / 19</code> regex<br><small><code>STOP_AND_ASK</code> gate</small></td>
             </tr>
             <tr>
-              <td><strong>LFM3-Omni-2B</strong><br><small><code>HG4-16R</code> (<code>0.83 GB</code>)</small></td>
-              <td><code>1 &times; RTX 3090</code><br><small>(24 GB VRAM)</small></td>
+              <td><strong>LFM3-Omni-2B</strong><br><small><code>HG4-16R</code> (<code>0.83 GiB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>/ <code>k3</code> CPU</small></td>
               <td><code>17 / 288</code><br><small>(5.90%)</small></td>
-              <td><code>64 / 164</code><br><small>(39.02%)</small></td>
+              <td><code>64 / 164</code><br><small>(39.02% solo)</small></td>
               <td>&mdash;</td>
               <td><code>3 / 23</code><br><small>(13.04%)</small></td>
-              <td><code>Failed</code><br><small>(LLM text drift)</small></td>
-              <td><code>0/16</code> solo &rarr;<br><small><strong><code>16/16</code> w/ tool</strong></small></td>
-              <td>Tier-0 gate<br><small>prevents flooding</small></td>
+              <td><code>Failed</code><br><small>(10/48 parsed)</small></td>
+              <td>Delegates to<br><small><code>x-cruncher</code></small></td>
+              <td><code>12 / 19</code> binary<br><small>Tier-0 gate</small></td>
             </tr>
             <tr>
-              <td><strong>Chronos-Bolt 0.2B</strong><br><small><code>HG4-16R</code> (<code>0.10 GB</code>)</small></td>
+              <td><strong>Chronos-Bolt 0.2B</strong><br><small><code>HG4-16R</code> (<code>0.10 GiB</code>)</small></td>
               <td><code>1 &times; RTX 3090</code><br><small>(Shared VRAM)</small></td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>&mdash;</td>
-              <td><strong><code>0.4157</code></strong><br><small>(<code>0.37 s</code> GPU)</small></td>
+              <td><strong><code>0.4157</code></strong><br><small>(<code>0.80 s</code> GPU)</small></td>
               <td>&mdash;</td>
               <td><code>mcp.json</code><br><small>specialist</small></td>
             </tr>
             <tr>
-              <td><strong>Boltz-2 &amp; V-JEPA 2.1</strong><br><small><code>HG4-16R</code> (<code>0.52</code> &amp; <code>0.51 GB</code>)</small></td>
+              <td><strong>Boltz-2 &amp; V-JEPA 2.1</strong><br><small><code>HG4-16R</code> (<code>0.52</code> &amp; <code>0.51 GiB</code>)</small></td>
               <td><code>1 &times; RTX 3090</code><br><small>(Shared VRAM)</small></td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>&mdash;</td>
-              <td><strong><code>pLDDT 0.931</code></strong><br><small>3D <code>.cif</code> &middot; <code>1408-d</code></small></td>
+              <td><strong><code>pLDDT 0.926</code></strong> <small>(<code>40.6 s</code>)</small><br><small>&amp; <code>0.908</code> (<code>39.6 s</code>) &middot; <code>1408-d</code></small></td>
               <td><code>mcp.json</code><br><small>specialists</small></td>
             </tr>
             <tr>
-              <td><strong>Goedel-Prover-V2-32B</strong><br><small><code>HG4-16R</code> (<code>15.8 GB</code>) + Clover Cycle</small></td>
-              <td><code>1 &times; RTX 3090</code><br><small>+ <code>k3</code> Lean 4</small></td>
+              <td><strong>Goedel-Prover-V2-32B</strong><br><small><code>HG4-16R</code> (<code>15.8 GiB</code>) + Clover Cycle</small></td>
+              <td><code>k3</code> CPU<br><small>+ <code>Lean 4.33.1</code></small></td>
               <td>&mdash;</td>
               <td>&mdash;</td>
-              <td><strong><code>8 / 12</code> (66.7%, #1)</strong><br><small>3 Cycle-2 repairs</small></td>
+              <td><code>5/12</code> Turn-1 &rarr;<br><strong><code>8 / 12</code> (66.7%)</strong><br><small>3-cycle (<code>8/21</code> full)</small></td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>Kernel-verified<br><small><code>Lean 4.33.1</code></small></td>
               <td><code>mcp.json</code><br><small>prover tool</small></td>
             </tr>
             <tr>
-              <td><strong>Qwen3.6-35B-A3B (+ LoRA)</strong><br><small><code>Clover-35B-A3B</code> (<code>17.4 GB</code>)</small></td>
-              <td><code>1 &times; RTX 3090</code><br><small>(24 GB VRAM)</small></td>
-              <td><code>81 / 288</code><br><small>(28.12% &middot; 6 main)</small></td>
-              <td><strong><code>113 / 164</code></strong><br><small>(<strong>68.90%</strong>)</small></td>
+              <td><strong>Qwen3.6-35B-A3B</strong><br><small><code>Base</code> &amp; <code>+ Clover-LoRA</code> (<code>17.2 GiB</code>)</small></td>
+              <td><code>1 &times; RTX 3090</code><br><small>/ <code>k3</code> CPU</small></td>
+              <td><code>79</code> Turn-1 &rarr;<br><strong><code>81 / 288</code></strong> <small>(+Clover)</small></td>
+              <td><strong><code>113 / 164</code></strong> <small>Base (68.9%)</small><br><small><code>111/164</code> LoRA (67.7%)</small></td>
               <td>&mdash;</td>
               <td><code>11 / 23</code><br><small>(47.8% w/ 120B)</small></td>
               <td><code>Failed</code> solo &rarr;<br><small><strong><code>0.3084</code> w/ tool</strong></small></td>
-              <td><code>0%</code> solo &rarr;<br><small><strong><code>100%</code> w/ tool</strong></small></td>
+              <td><code>6 / 10</code> <small>(<code>stage45</code></small><br><small>pre-<code>A^B</code>; <code>6/6</code> N!/mul)</small></td>
               <td><strong><code>19 / 19</code></strong> binary<br><small>(<code>11/19</code> 4-way)</small></td>
             </tr>
             <tr>
-              <td><strong>Nemotron 3.5 Super VL 120B</strong><br><small><code>HG4-16R-OP</code> (<code>58.2 GB</code>)</small></td>
+              <td><strong>Nemotron 3.5 Super VL 120B</strong><br><small><code>HG4-16R-OP</code> (<code>58.2 GiB</code>)</small></td>
               <td><code>4 &times; RTX 3090</code><br><small>(96 GB VRAM)</small></td>
-              <td><code>99 / 288</code><br><small>(34.38% &middot; 6 main)</small></td>
+              <td><code>98</code> Turn-1 &rarr;<br><strong><code>99 / 288</code></strong> <small>(+Clover)</small></td>
               <td><small>Escalation tier</small></td>
-              <td><code>5 / 12</code><br><small>(41.7% solo)</small></td>
+              <td><code>5 / 12</code> (41.7%)<br><small>1-turn (<code>5/21</code> full)</small></td>
               <td><code>9 / 23</code><br><small>(39.13%)</small></td>
               <td><code>Failed</code> solo<br><small>(0/3 LLMs)</small></td>
-              <td>Passed <code>yoshida4</code><br><small>(<code>r1 = 15.999</code>)</small></td>
+              <td><code>7/10</code> Math solo<br><small><code>yoshida4</code> <code>1/4</code> (<code>T=0.6</code>)</small></td>
               <td><strong><code>19 / 19</code></strong> binary<br><small>(<strong><code>14/19</code></strong> 4-way)</small></td>
             </tr>
             <tr>
-              <td><strong>Kimi K3.1 Pro 2.8T</strong><br><small><code>K31H</code> (<code>741 GB</code>)</small></td>
-              <td><code>5 &times; (8&times; 3090)</code><br><small>/ API + <code>k3</code></small></td>
-              <td><strong><code>139 / 288</code></strong><br><small>(<strong>48.26%</strong> &middot; 14 main)</small></td>
+              <td><strong>Kimi K3.1 Pro 2.8T</strong><br><small><code>K31H</code> (<code>741 GB</code>) &amp; Cloud Ref</small></td>
+              <td><code>k3</code> native /<br><small>OpenRouter API*</small></td>
+              <td><code>139 / 288*</code><br><small>(48.26% API 1.8k cap)</small></td>
               <td><small>Frontier escalation</small></td>
               <td>&mdash;</td>
-              <td><strong><code>12 / 23</code></strong><br><small>(<strong>52.17%</strong>, #1)</small></td>
+              <td><strong><code>12 / 23</code></strong><br><small>(<strong>52.17%</strong> native K31H)</small></td>
               <td>&mdash;</td>
               <td>&mdash;</td>
               <td>Frontier<br><small>derivation tier</small></td>
             </tr>
             <tr style="background:rgba(10,106,95,0.05)">
-              <td><strong>Complete Clover v6.0 System</strong><br><small><code>k3</code> Hub + <code>RTX 3090</code> Mesh + Human</small></td>
+              <td><strong>Local HG Specialist Union</strong><br><small><code>k3</code> Hub + <code>RTX 3090</code> Mesh + Human</small></td>
               <td><code>k3</code> + Modular<br><small><code>RTX 3090</code> Petals</small></td>
-              <td><strong><code>28.1% &rarr; 48.3%</code></strong><br><small>verifier cascade</small></td>
-              <td><strong><code>68.9%+</code></strong><br><small>AST-verified</small></td>
-              <td><strong><code>8 / 12</code> (66.7%)</strong><br><small>beats 120B solo</small></td>
-              <td><strong><code>12 / 23</code> (52.2%)</strong></td>
+              <td><strong><code>115 / 288</code> (39.9%)</strong><br><small><code>35B &cup; 120B</code> oracle union</small></td>
+              <td><strong><code>113 / 164</code> (68.9%)</strong><br><small><code>35B Base</code> solo</small></td>
+              <td><strong><code>8 / 12</code> (66.7%)</strong><br><small><code>8/21</code> full suite</small></td>
+              <td><strong><code>12 / 23</code> (52.2%)</strong><br><small>native <code>K31H</code></small></td>
               <td><strong><code>0.3084</code></strong><br><small>beats Chronos &amp; LLMs</small></td>
-              <td><strong><code>100%</code> Math/Rules</strong><br><small><strong><code>0.931</code> pLDDT</strong></small></td>
+              <td><strong><code>10/10</code> Math</strong> &middot; <code>180/180</code><br><small><strong><code>0.926</code> pLDDT</strong></small></td>
               <td><strong><code>5 / 6</code> (83.3%)</strong><br><small>vs <code>0/6</code> AI alone (<code>-53%</code> tok)</small></td>
             </tr>
           </tbody>
         </table>
       </div>
+      <p style="font-size:0.86rem;color:var(--muted);margin-top:0.55rem">*<code>139 / 288</code> on <code>Kimi K3.1 Pro</code> was evaluated via OpenRouter cloud API with a <code>1,800</code>-token reasoning cap (<a href="https://github.com/santhoshsathish94/clover-framework/blob/main/benchmarks/riemann-lean4/results/scicode_kimik31_openrouter_capped1800_288_turn1.json"><code>scicode_kimik31_openrouter_capped1800_288_turn1.json</code></a>), whereas local <code>HG4</code> runs achieved <code>81 / 288</code> (<code>35B</code>), <code>99 / 288</code> (<code>120B</code>), and <code>115 / 288</code> (<code>39.9%</code> 2-model verified oracle union).</p>
     </div>
   </section>
 

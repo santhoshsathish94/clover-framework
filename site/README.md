@@ -8,8 +8,8 @@ The public site for Clover:
 
 ## Current maintenance contract
 
-All eight HTML files are in scope: seven primary pages, including Clover K3, and
-the security redirect. Use the [repository checks](../docs/repository-organization.md#validation)
+All eight HTML files are in scope: eight primary pages (`index`, `hg-format`, `ai-system`,
+`getting-started`, `governance`, `privacy`, `glossary`, and `author`). Use the [repository checks](../docs/repository-organization.md#validation)
 for every content or navigation change. Keep public copy consistent with maintained
 references rather than treating historical journals as current specifications.
 
@@ -36,11 +36,9 @@ site/
   index.html                             the framework: one cycle, at any scale
   hg-format/                             AI Mythbuster: 6 AI myths broken with stories, live hardware proofs, REPRODUCE_AGENTS.md, golden 5-leaf + center steering wheel SVG, and Clover HG4 (convert_to_hg.py)
   ai-system/                             AI Studio (v6.0): 4-Part Steerable Clover System, 0B Computed Specialists, single-user decode tok/s hardware table, and 5-Senses research horizon
-  getting-started/                       the AGENTS.md menu page: read-only access, the agent file, multi-cycle verification, a first cycle
-  governance/                            governance: vertical storyline on access, attribution, approvals, delegated execution, and k3 allowlist security
-  privacy/                               privacy policy: on-device inference, local Git logging, encrypted vault, and opt-in GitHub collective learning
-  clover-ai/                             full-viewport interactive Clover AI studio
-  admin/                                 GitHub-authenticated owner console for managing the k3 model allowlist
+  getting-started/                       AGENTS.md: complete unabridged AGENTS.md (22 chapters) + chapter jump TOC & 1-click Copy Full AGENTS.md
+  governance/                            governance: runtime enforcement (STOP_AND_ASK, deterministic verifiers outside the model, self-hosted local audit trail)
+  privacy/                               privacy policy: self-hosted local runtime (--base), encrypted vault, WIP standalone apps, and signed GitHub collective learning
   glossary/                              searchable terms
   author/                                who wrote this, in the first person
   assets/                                the peacock feather, and the four evidence diagrams (SVG)
@@ -52,14 +50,14 @@ site/
   .nojekyll
 ```
 
-## Website Object-Oriented Reduction & Role-Prefix Naming (`site/website-interaction-controllers.js`, `site/clover-ai/index.html`, `site/botanical-design-system.css`)
+## Website Object-Oriented Reduction & Role-Prefix Naming (`site/website-interaction-controllers.js`, `clover-ai-system/studio/clover/web/app.html`, `site/botanical-design-system.css`)
 
 Following the repository-wide [Object-Oriented Reduction (`398 → 88 → 24 → 12 → 5`)](../research/object-oriented-reduction/README.md), all files, folders, JavaScript, and CSS in `site/` use explicit complete-English hyphenated names and role prefixes that map directly onto the 5 stages of the Clover Cycle (`Context → Direction → Execution → Outcome → Growth`):
 
-| Website File | OOP Domain Classes (`class_*`) | Role-Prefix Convention | Maps to Canonical 12 Objects & 5 Stages |
+| Website / Studio File | OOP Domain Classes (`class_*`) | Role-Prefix Convention | Maps to Canonical 12 Objects & 5 Stages |
 |---|---|---|---|
 | `site/website-interaction-controllers.js` | `class_viewport_scroll_navigator`, `class_five_stage_clover_mark_controller`, `class_site_navigation_drawer_controller`, `class_accessible_tab_and_glossary_controller` | `class_*`, `function_*`, `variable_*`, `flag_*`, `constant_*` | `TaskDirection` (`Direction`), `ModalityCodec` (`Execution`), `VerifiedKnowledgeGraph` (`Context`), `CloverCycleCoordinator` (`Context → Growth`) |
-| `site/clover-ai/index.html` | `class_browser_conversation_session_store`, `class_multimodal_attachment_and_speech_codec`, `class_markdown_and_media_reply_renderer`, `class_clover_interactive_studio_coordinator` | `class_*`, `function_*`, `variable_*`, `flag_*`, `constant_*` | `ConversationSession` (`Context`), `ModalityCodec` (`Execution`), `CloverCycleCoordinator` (`Context → Direction → Execution → Outcome → Growth`) |
+| `clover-ai-system/studio/clover/web/app.html` | `class_browser_conversation_session_store`, `class_multimodal_attachment_and_speech_codec`, `class_markdown_and_media_reply_renderer`, `class_clover_interactive_studio_coordinator` | `class_*`, `function_*`, `variable_*`, `flag_*`, `constant_*` | `ConversationSession` (`Context`), `ModalityCodec` (`Execution`), `CloverCycleCoordinator` (`Context → Direction → Execution → Outcome → Growth`) |
 | `site/botanical-design-system.css` | Botanical design tokens & `.storyline` / `.storyline__item` vertical stem components | `--constant-*` complete-English CSS custom properties | Visualizes the 5-leaf Clover cycle (`.pinned__mark`) and the vertical chronological storyline (`Origin`, `Governance`, `Evidence`) |
 
 The page is one continuous argument rather than one section per stage.

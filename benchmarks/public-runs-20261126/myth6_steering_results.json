@@ -1,5 +1,8 @@
 {
   "benchmark": "myth6_human_steering_vs_ai_alone",
+  "measured_at_utc": "2026-11-26T01:35:00Z",
+  "host": "k3-center (Hetzner Zen 4 coordinator -> clover-35b-a3b HG4-16R-OP on RTX 3090 petal)",
+  "model": "clover-35b-a3b (Qwen3.6-35B-A3B + Clover-Harness-LoRA HG4-16R-OP)",
   "tasks_total": 6,
   "unsteered_ai_alone": {
     "passed": 0,

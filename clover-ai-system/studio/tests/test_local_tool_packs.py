@@ -474,8 +474,14 @@ def test_permissions_and_routing():
         import server
         inv = server.tool_inventory()
         check(set(inv.keys()) == {"base", "conditional", "installed", "unavailable"}, f"tool_inventory keys: {list(inv.keys())}")
-        check("calculate" in inv["base"] and "extract_frame" in inv["base"] and len(inv["base"]) == 19,
-              f"tool_inventory has all 19 base tools: {len(inv['base'])}")
+        check(
+            "calculate" in inv["base"]
+            and "extract_frame" in inv["base"]
+            and "forecast_series" in inv["base"]
+            and "resolve_rules" in inv["base"]
+            and len(inv["base"]) == 21,
+            f"tool_inventory has all 21 base tools: {len(inv['base'])}",
+        )
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

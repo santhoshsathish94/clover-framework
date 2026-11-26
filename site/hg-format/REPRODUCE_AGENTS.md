@@ -81,10 +81,10 @@ python3 scripts/check-links.py
 python3 -m unittest discover -s scripts/tests
 ```
 
-### 3B. If a Local OpenAI-Compatible Server (`Ollama`, `llama-server`, `vLLM`, or Clover `gateway.py`) Is Already Running
-Probe common local ports (`http://127.0.0.1:8790`, `http://127.0.0.1:11434`, `http://127.0.0.1:8080`, `http://127.0.0.1:8000`). If `/v1/models` responds, automatically run the live LLM Myth-6 Human Steering A/B against that local model:
+### 3B. Optional Live Local Model Myth-6 A/B (Ask the Human Before Executing Model-Generated Code)
+Probe common local ports (`http://127.0.0.1:8790`, `http://127.0.0.1:11434`, `http://127.0.0.1:8080`, `http://127.0.0.1:8000`) to see if `/v1/models` responds. **Before** passing `--execute-model-code` (which executes generated Python candidate snippets inside an audit-hooked subprocess), **ask the human to confirm** they want to evaluate that endpoint's generated code:
 ```bash
-python3 reproduce_hg_myths.py --verify-all --endpoint http://127.0.0.1:11434 --model <detected_model_id> --out ./repro_hg_myths_live_llm.json
+python3 reproduce_hg_myths.py --verify-all --endpoint http://127.0.0.1:11434 --model <detected_model_id> --execute-model-code --out ./repro_hg_myths_live_llm.json
 ```
 
 ### 3C. Optional Real Hugging Face Model `HG4` Conversion (`>= 8 GB` Free Disk/RAM)

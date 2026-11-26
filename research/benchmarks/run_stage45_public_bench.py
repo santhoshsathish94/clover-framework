@@ -336,6 +336,10 @@ def main() -> None:
     args = ap.parse_args()
 
     t0 = time.perf_counter()
+    try:
+        _http_json(f"{args.hub_url.rstrip('/')}/v1/clover/metrics/reset", payload={}, api_key=args.api_key)
+    except Exception:
+        pass
     s5 = run_stage5_specialists(args.hub_url.rstrip("/"), args.api_key)
     print("[Stage5] Specialists verified!", flush=True)
     s4b = run_stage4b_exact_math(args.hub_url.rstrip("/"), args.api_key)

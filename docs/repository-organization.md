@@ -49,24 +49,32 @@ docs/
 	experiments/            meaning formation, grounded execution, and developmental growth pilot
 	templates/              reusable orchestration brief template
 	runtime-enforcement/    executable container write-guard verification policy
-	runtime-context/        engine architecture, 11 foundational paper studies, and hardware data-movement ledgers
-	reference/              glossary, clover-origin, release-v4, and repository organization
+	runtime-context/        85 engineering context documents across 6 domain folders
+	reference/              glossary, clover-origin, release-v4, release-v6, and repository organization
 research/
 	ai-fire/                               dependency and concentration argument
 	ai-future/                             explicit hypothesis
+	benchmarks/                            v6.0 public-review A/B, Lean 4, Myth 6 steering, and reality probe runners
+	collective-learning/                   privacy-preserving collective problem-solving learning (CPSL) experiments
+	consciousness-and-subjective-experience/ 17 consciousness & interoception paper evaluations
+	curiosity-and-developmental-learning/  13 intrinsic motivation & curiosity paper evaluations
 	foundational-papers-1943-to-2017/      11 classic paper replications and mathematical verifiers
 	hardware-data-movement/                red-blue pebbling, eyeriss v1/v2, flashattention, and specmd studies
 	object-oriented-reduction/             398 -> 88 -> 24 -> 12 -> 5 complete-English OOP reduction
 	observe/                               reciprocal observation experiment
 	k3/                                    model derivation, experiments, measurements, and upstream records
 benchmarks/
+	public-runs-20261126/   v6.0 live cluster ledgers (tsock mesh, HumanEval-164, Lean 4 MiniF2F, Myth 6, reality probes)
+	riemann-lean4/          sealed 4-tier Lean 4 + SciCode 288-step + RTX 4090 HG4 benchmark ledgers
 	swebench-pro-v2/        multi-domain HARD-51 software engineering verification suite (Problems 1..5)
 	verified-runs/          70-task standardized AI benchmark runs (baseline, 8x RTX 3090 GPU, Ryzen 7950X3D CPU)
-clover-kimi-k3/
-	src/                    code, rust host-path crates, scripts, tools, and prompts; datasets and work are host only
+clover-ai-system/
+	src/                    HG4/K31H C11 & CUDA engines, HG4 Fusion Gateway, MCP 2.0 mesh, and training scripts
+	studio/                 self-hosted Clover AI Studio v6.0 server, 4-Part Coordinator, and WIP desktop packaging
+	mobile/                 shared semantics/memory core and WIP Android Studio project
 	vscode-extension/       standalone VS Code language model provider
 site/
-	index.html, ai/, ...    public website (cloverframework.com)
+	index.html, hg-format/, ai-system/, ...  public website (cloverframework.com)
 assets/
 	branding/               project identity and previews
 	evidence/               canonical evidence diagrams
@@ -89,7 +97,7 @@ The script was moved without content changes and was not executed. The historica
 `clover-k3/proof-campaign.sh` is in git history; its scope is described in
 [evidence methods](https://github.com/santhoshsathish94/clover-framework/blob/013cbc89a99ba506c567b081613049ac76d405a6/clover-k3/docs/evidence/evidence-methods.md).
 
-The runnable K3 engine is `clover-kimi-k3/`. The first version `clover-k3/` and the distributed experiment `clover-intelegence/` were removed from the working tree on 2026-10-19; both are in git history at commit 013cbc8, and links to them point there.
+The runnable v6.0 AI system lives in `clover-ai-system/`. The first version `clover-k3/`, `clover-kimi-k3/` (renamed into `clover-ai-system/`), and the distributed experiment `clover-intelegence/` were retired from the root working tree; early K3 derivation artifacts remain in git history at commit `013cbc8`, and links to them point there.
 Case studies, examples and templates already have small, coherent scopes; they do not
 need one extra folder per file. Website route directories and executable reference
 projects retain their working structure.

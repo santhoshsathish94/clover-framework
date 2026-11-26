@@ -1,7 +1,7 @@
 {
   "suite": "clover_hg4_and_6_ai_myths_reproducibility",
   "all_passed": true,
-  "wall_time_s": 1.519,
+  "wall_time_s": 2.967,
   "environment": {
     "os": "Windows-11-10.0.26200-SP0",
     "python": "3.14.7",
@@ -16,57 +16,62 @@
       "compression_ratio_x": 3.88,
       "naive_int4_output_cosine": 0.994108,
       "naive_int4_sqnr_db": 19.26,
-      "clover_hg4_output_cosine": 0.998516,
-      "clover_hg4_sqnr_db": 25.26,
-      "sqnr_gain_db": 6.0
+      "clover_hg4_output_cosine": 0.998911,
+      "clover_hg4_sqnr_db": 26.62,
+      "sqnr_gain_db": 7.36
     },
     "myth1_wire_bandwidth_4x_reduction": {
       "passed": true,
-      "bf16_weight_bytes": 33554432,
-      "hg4_weight_bytes": 8388608,
+      "bf16_weight_bytes": 134217728,
+      "hg4_weight_bytes": 33554432,
       "wire_bytes_reduction_x": 4.0,
-      "measured_fp32_matvec_ms": 4.63,
-      "measured_packed_bus_read_ms": 7.97,
-      "effective_host_ram_gbps": 14.49
+      "measured_bf16_dram_read_ms": 12.95,
+      "measured_hg4_packed_dram_read_ms": 2.76,
+      "measured_bus_haul_speedup_x": 4.69,
+      "effective_host_ram_gbps": 10.37
     },
     "myth2_and_3_bus_clubbing_throughput": {
       "passed": true,
-      "serial_4_hauls_ms": 13.96,
-      "clubbed_1_haul_ms": 6.35,
-      "throughput_gain_x": 2.2,
+      "serial_4_hauls_ms": 11.39,
+      "clubbed_1_haul_ms": 3.25,
+      "throughput_gain_x": 3.5,
       "max_numerical_diff": 9.918212890625e-05
     },
     "myth4_tsock_4byte_wire_vs_http_json": {
       "passed": true,
       "tokens_streamed": 128,
-      "tsock_total_bytes": 524,
+      "tsock_token_frame_bytes": 524,
+      "tsock_total_bytes": 621,
       "tsock_bytes_per_token": 4,
       "http_json_sse_bytes": 25870,
       "wire_bloat_reduction_x": 49.4,
-      "tsock_loopback_ms": 16.48,
-      "http_sse_loopback_ms": 92.38
+      "wire_total_reduction_with_done_x": 41.7,
+      "tsock_loopback_ms": 8.46,
+      "http_sse_loopback_ms": 38.37
     },
     "myth5_computed_0b_specialists_vs_prediction": {
       "passed": true,
-      "exact_bigint_obligations": "4/4 (0.011 ms)",
+      "used_shipped_clover_v6_module": true,
+      "exact_bigint_obligations": "10/10 (0.085 ms)",
       "0b_timeseries_forecaster": {
         "mase": 0.3084,
         "pinball_loss": 0.1212,
         "detected_period": 24.0,
-        "wall_ms": 105.15,
+        "wall_ms": 111.86,
         "vs_chronos_bolt_gpu_mase": 0.4157,
         "vs_llms_2b_35b_120b": "0/3 valid"
       },
       "0b_defeasible_rule_resolver": {
         "grid_passed": "180/180",
         "score": 1.0,
-        "wall_ms": 0.55
+        "wall_ms": 4.47
       }
     },
     "myth6_human_steering_wheel": {
       "passed": true,
-      "oracle_unsteered_default_guess": "0/3",
-      "oracle_human_steered": "3/3",
+      "mode": "oracle_spec_self_test",
+      "oracle_self_test_unsteered_default": "0/3",
+      "oracle_self_test_human_steered": "3/3",
       "published_cluster_6task_run": {
         "unsteered_ai_alone": "0/6 (0.0%, mean 595.0 completion tokens)",
         "human_steered_plus_ai": "5/6 (83.33%, mean 1.17 cycles, 277.5 completion tokens = -53% tokens)"
@@ -126,8 +131,9 @@
         "goedel_32b_plus_clover_4part": "8/12 (66.7%)"
       },
       "stage4b_exact_math_10": {
-        "llm_120b_solo": "0/10 exact on 50! & 18-digit products",
-        "xcruncher_0b_mcp": "10/10 (100% exact, <5 ms)"
+        "nemotron_120b_solo": "7/10 (70.0% \u2014 hallucinated 3^89, 7^61, 13^41 in stage45_public_results.json)",
+        "clover_35b_lora_pre_pow_fix": "6/10 (6/6 on N! & A*B; 0/4 on A^B prior to ad3bc481 A^B addition)",
+        "xcruncher_0b_post_ad3bc481": "10/10 (100% exact across all 10 Stage-4B obligations)"
       },
       "probe0_timeseries_512_to_48": {
         "llms_2b_35b_120b_valid": "0/3",
@@ -135,6 +141,7 @@
         "0b_periodogram_ols_conformal_mase": 0.3084
       },
       "probe6_implicit_discernment_19": {
+        "tier0_regex_0b_binary": "5/19",
         "router_0.6b_binary": "9/19",
         "lfm3_2b_binary": "12/19",
         "qwen36_35b_lora_binary": "19/19 (11/19 4-way)",
@@ -146,5 +153,5 @@
       }
     }
   },
-  "report_sha256": "c183c89f4e4b9052f20183e39802b9d3cf0a156eff1928ff8e94d9259cb7bf48"
+  "report_sha256": "a16a00822964763aa4ae1ec60d59dc53ea1d3a72e52f646e1a93e2365b99f817"
 }

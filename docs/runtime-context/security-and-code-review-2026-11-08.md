@@ -41,7 +41,7 @@ Per `AGENTS.md` (Sections 4, 8, 9, and 11), the audit evaluated every changed mo
 ## 4. Module-by-Module Review Summary
 
 ### 4.1 Authentication, Admin Console & Multi-User `k3` Allowlist
-- **Files**: [clover-ai-system/studio/clover/server.py](../../clover-ai-system/studio/clover/server.py), [clover-ai-system/studio/clover/manage_k3_users.py](../../clover-ai-system/studio/clover/manage_k3_users.py), [clover-ai-system/studio/clover/web/admin.html](../../clover-ai-system/studio/clover/web/admin.html), [site/admin/index.html](../../site/admin/index.html).
+- **Files**: [clover-ai-system/studio/clover/server.py](../../clover-ai-system/studio/clover/server.py), [clover-ai-system/studio/clover/manage_k3_users.py](../../clover-ai-system/studio/clover/manage_k3_users.py), [clover-ai-system/studio/clover/web/admin.html](../../clover-ai-system/studio/clover/web/admin.html) *(public `site/admin/index.html` retired in v6.0)*.
 - **Architecture**:
   - Admin authentication uses GitHub OAuth Device Flow (`/api/admin/github/device/start` & `/api/admin/github/device/poll`) or a GitHub Personal Access Token verified live against `https://api.github.com/user` and restricted to `OWNER_GITHUB_LOGIN` (`@santhoshsathish94`).
   - Admin tokens (`admin:<login>:<hmac>`) are domain-separated from user account tokens (`acct:<account>:<hmac>`) in the HMAC payload (`clover-admin:` vs `clover-acct:`), preventing privilege escalation from a user token to admin endpoints.

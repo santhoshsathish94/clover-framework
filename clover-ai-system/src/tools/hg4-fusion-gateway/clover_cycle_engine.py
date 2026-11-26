@@ -36,21 +36,39 @@ from pathlib import Path
 from typing import Any
 
 _PROTECTED_VERIFIER_FILE_RE = re.compile(
-    r"(?i)(?:^|[/\\]|[\s'\"=])("
-    r"test_[A-Za-z0-9_.-]+\.(?:py|ts|js|rs|go|lean)"
-    r"|[A-Za-z0-9_.-]+_test\.(?:py|ts|js|rs|go|lean)"
-    r"|verify_[A-Za-z0-9_.-]+\.py"
+    r"(?i)(?:^|[/\\\s\"'`=(])("
+    r"(?:tests?|__tests__|\.github[/\\]workflows)(?:[/\\][A-Za-z0-9_./\\*?\[\]${}-]+|(?=$|[/\\\s\"'`:;,)]))"
+    r"|\[[tT]\]ests?(?:[/\\][A-Za-z0-9_./\\*?\[\]${}-]*)?"
+    r"|t[?*\[]sts?(?:[/\\][A-Za-z0-9_./\\*?\[\]${}-]*)?"
+    r"|t\*s\b"
+    r"|test_[A-Za-z0-9_.*?\[\]-]+\.(?:py|ts|tsx|js|jsx|rs|go|rb|lean)"
+    r"|[A-Za-z0-9_.*?\[\]-]+_(?:test|spec)\.(?:py|ts|tsx|js|jsx|rs|go|rb|lean)"
+    r"|[A-Za-z0-9_.*?\[\]-]+\.(?:test|spec)\.(?:py|ts|tsx|js|jsx|rs|go|rb|lean)"
+    r"|verify_[A-Za-z0-9_.*?\[\]-]+\.py"
     r"|[A-Za-z0-9_.-]*oracle[A-Za-z0-9_.-]*\.(?:py|json|h5|lean)"
-    r"|test_data\.h5|conftest\.py|pytest\.ini"
-    r")\b"
+    r"|test_data\.h5|conftest\.py|pytest\.ini|tox\.ini|noxfile\.py|setup\.cfg|Makefile|GNUmakefile"
+    r"|(?:jest|vitest|playwright)\.config\.[A-Za-z0-9]+"
+    r"|pyproject\.toml|package\.json"
+    r")(?=$|[/\\\s\"'`:;,)])"
 )
 
 _SHELL_MUTATE_RE = re.compile(
-    r"(?i)\b(?:sed\s+-i|perl\s+-pi|rm|mv|cp|unlink|truncate|tee|chmod|git\s+checkout\s+--)(?=\s)|(?<![0-9&])>{1,2}\s*\S"
+    r"(?i)\b(?:sed\s+-i\S*|perl\s+-[A-Za-z]*i\S*|awk\s+-i|python3?|node|ruby|pwsh|powershell|"
+    r"rm|rmdir|del|erase|mv|move|cp|copy|ln|unlink|truncate|tee|chmod|chown|dd|install|patch|rsync|tar|unzip|xargs|"
+    r"Set-Content|Add-Content|Out-File|Clear-Content|Remove-Item|Copy-Item|Move-Item|New-Item|Rename-Item|"
+    r"WriteAllText|WriteAllLines|WriteAllBytes|AppendAllText|StreamWriter|"
+    r"sc|ac|ri|ni|mi|cpi|rni|clc|"
+    r"git\s+(?:checkout|restore|reset|clean|apply|am|mv|rm|stash))\b"
+    r"|(?i:find\b[^\n;|&]*\s-(?:delete|exec|execdir)\b)"
+    r"|(?i:\[(?:System\.)?IO\.File\])"
+    r"|(?<![0-9&])>{1,2}\s*\S"
 )
 
-_HUMAN_ALLOWS_TEST_EDIT_RE = re.compile(
-    r"(?i)\b(?:update|edit|modify|add|write|fix|change|create|refactor)\b.{0,48}\b(?:test|tests|test_[A-Za-z0-9_]+|conftest|fixture|spec)\b"
+_CODE_DIRECT_MUTATE_RE = re.compile(
+    r"(?i)\b(?:write_text|write_bytes|writeFileSync|appendFileSync|writeFile|appendFile|unlinkSync|rmSync|"
+    r"unlink|remove|rmtree|rename|replace|move|copy|copy2|copyfile|truncate|chmod|symlink_to|hardlink_to|"
+    r"makedirs|mkdir|rmdir|system|popen|Popen|run|check_call|check_output|execSync|spawnSync|O_WRONLY|O_RDWR|O_CREAT|O_TRUNC)\b"
+    r"|(?is:\bopen\s*\(.*?(?:,\s*['\"][rwa+x]*[wax+][rwa+xb]*['\"]|\bmode\s*=\s*['\"][rwa+x]*[wax+]))"
 )
 
 _READ_ONLY_TOOLS = frozenset({
@@ -427,35 +445,133 @@ class CloverCycleEngine:
             return False, None
         # Strip embedded mock/tool/code blocks from user messages so pasted evidence is never treated as authority (AGENTS.md §8)
         human_prose_parts: list[str] = []
-        for m in messages:
-            if m.get("role") == "user":
-                raw_u = _msg_text(m).split("MOCK_TOOL_RAW:", 1)[0].split("[Clover Context -> Growth Handoff", 1)[0]
-                raw_u = re.sub(r"```.*?```", " ", raw_u, flags=re.DOTALL)
-                human_prose_parts.append(raw_u)
-        if _HUMAN_ALLOWS_TEST_EDIT_RE.search("\n".join(human_prose_parts)):
+        if os.environ.get("CLOVER_ALLOW_TEST_EDITS") == "1":
             return False, None
 
+        code_exec_tools = {"python", "run_python", "exec", "eval", "node", "ruby"}
+        shell_like_tools = {
+            "bash", "sh", "zsh", "shell", "powershell", "pwsh", "cmd", "terminal",
+            "run_in_terminal", "run_command", "run_shell", "run_powershell", "execute_command",
+        }
         for tc in tool_calls:
             fn = (tc.get("function") or {}) if isinstance(tc, dict) else {}
-            name = str(fn.get("name") or "").lower()
+            name = str(fn.get("name") or "").lower().strip()
+            if not name or name in _READ_ONLY_TOOLS:
+                continue
             raw_args = str(fn.get("arguments") or "")
             try:
                 args_obj = json.loads(raw_args) if raw_args else {}
             except ValueError:
                 args_obj = {}
 
-            if name in ("write", "edit", "patch", "apply_patch", "create", "delete", "str_replace_editor"):
-                path_vals = [
-                    str(v) for k, v in (args_obj.items() if isinstance(args_obj, dict) else [])
-                    if any(tok in k.lower() for tok in ("path", "file", "target", "patch"))
-                ]
-                target = " ".join(path_vals) if path_vals else raw_args
-                m = _PROTECTED_VERIFIER_FILE_RE.search(target)
-                if m:
-                    return True, m.group(1)
-            elif name in ("bash", "sh", "shell", "powershell", "cmd", "terminal"):
-                cmd = str(args_obj.get("command") or args_obj.get("cmd") or raw_args)
+            if name in code_exec_tools:
+                code_s = str((args_obj.get("code") or args_obj.get("script") or args_obj.get("command") or raw_args) if isinstance(args_obj, dict) else raw_args)
+                m_c = _PROTECTED_VERIFIER_FILE_RE.search(code_s)
+                if m_c and _CODE_DIRECT_MUTATE_RE.search(code_s):
+                    return True, Path(m_c.group(1)).name or m_c.group(1)
+                if re.search(r"(?i)(?:\b(?:base64|b64decode|codecs\.decode|fromhex|chr)\b|\bbytes\s*\(\s*\[)", code_s) and _CODE_DIRECT_MUTATE_RE.search(code_s):
+                    return True, "obfuscated_code_mutation"
+                continue
+
+            is_shell_tool = name in shell_like_tools or any(k in name for k in ("shell", "terminal", "command", "powershell", "bash"))
+            if is_shell_tool:
+                cmd = str((args_obj.get("command") or args_obj.get("cmd") or args_obj.get("code") or raw_args) if isinstance(args_obj, dict) else raw_args)
+                if re.search(r"(?i)\bgit\s+clean\b", cmd):
+                    return True, "git_clean"
                 m = _PROTECTED_VERIFIER_FILE_RE.search(cmd)
                 if m and _SHELL_MUTATE_RE.search(cmd):
-                    return True, m.group(1)
+                    return True, Path(m.group(1)).name or m.group(1)
+                # Catch obfuscated pipelines (`base64 -d | xargs rm -rf`, `$'\x74ests'`, `$(printf ...)`)
+                if re.search(r"(?i)(?:\b(?:base64\s+-d|xxd\s+-r|openssl\s+enc)\b|\$'\\x|\$\(\s*printf\b)", cmd) and _SHELL_MUTATE_RE.search(cmd):
+                    return True, "obfuscated_shell_mutation"
+                # Catch indirect shell variable/glob indirection (`f=tests/test_core; mv x $f.py`, `rm -rf [t]ests`, `rm -rf t*s`, `patch -p1`)
+                if _SHELL_MUTATE_RE.search(cmd) and re.search(r"(?i)(?:\b(?:tests?|specs?|__tests__)\b|\[[tT]\]ests?|t[?*\[]sts?|\bt\*s\b|\bpatch\b|\bgit\s+apply\b)", cmd):
+                    m_dir = re.search(r"(?i)((?:tests?|specs?|__tests__|\[[tT]\]ests?|t[?*\[]sts?|t\*s)[A-Za-z0-9_./\\*?\[\]${}-]*|patch|git\s+apply)", cmd)
+                    if m_dir:
+                        return True, Path(m_dir.group(1)).name or m_dir.group(1)
+            else:
+                path_vals = [
+                    str(v) for k, v in (args_obj.items() if isinstance(args_obj, dict) else [])
+                    if any(tok in k.lower() for tok in ("path", "file", "target", "patch", "uri"))
+                ]
+                target = " ".join(path_vals) + " " + raw_args
+                m = _PROTECTED_VERIFIER_FILE_RE.search(target)
+                if m:
+                    return True, Path(m.group(1)).name or m.group(1)
         return False, None
+
+    @staticmethod
+    def snapshot_protected_files(workspace_root: str | Path) -> dict[str, tuple[str, bytes | None]]:
+        """Authoritative filesystem tamper snapshot (AGENTS.md §4): records `(sha256, raw_bytes)` for every
+        protected verifier/test/CI file in `workspace_root` (`raw_bytes` kept for files <= 2 MiB to enable byte-exact rollback).
+        Note: for remote stateless `/v1/chat/completions` clients (OpenCode/VS Code), tools run on the client host so
+        pre-call regex screening is a best-effort heuristic; server-side tool execution (`Clover4PartAgent.solve` &
+        Studio `lfm3_native.execute_tool`) enforces this filesystem hash + rollback control directly on disk."""
+        root = Path(workspace_root)
+        if not root.is_dir():
+            return {}
+        always_prune = {
+            ".git", "__pycache__", "node_modules", ".venv", "venv",
+            "site-packages", "dist-packages", ".tox", ".nox",
+            ".pytest_cache", ".mypy_cache", ".ruff_cache", ".gradle",
+        }
+        root_only_prune = {"build", "dist", "target", "out"}
+        snap: dict[str, tuple[str, bytes | None]] = {}
+        for dirpath, dirnames, filenames in os.walk(root):
+            dp = Path(dirpath)
+            is_top = dp == root
+            dirnames[:] = sorted(
+                d for d in dirnames
+                if d not in always_prune
+                and not d.startswith(".venv")
+                and not (is_top and d in root_only_prune)
+                and not (dp / d / "pyvenv.cfg").is_file()
+            )
+            for fname in sorted(filenames):
+                p = dp / fname
+                rel = p.relative_to(root).as_posix()
+                if _PROTECTED_VERIFIER_FILE_RE.search(rel):
+                    try:
+                        data = p.read_bytes()
+                        snap[rel] = (hashlib.sha256(data).hexdigest(), data if len(data) <= 2_097_152 else None)
+                    except OSError:
+                        pass
+        return snap
+
+    @staticmethod
+    def snapshot_protected_hashes(workspace_root: str | Path) -> dict[str, str]:
+        return {k: v[0] for k, v in CloverCycleEngine.snapshot_protected_files(workspace_root).items()}
+
+    @staticmethod
+    def verify_protected_hashes_unchanged(workspace_root: str | Path, before: dict[str, str]) -> list[str]:
+        """Return list of protected verifier/test files modified, deleted, or injected since `before`."""
+        after = CloverCycleEngine.snapshot_protected_hashes(workspace_root)
+        changed = [k for k, h in before.items() if after.get(k) != h]
+        added = [k for k in after if k not in before]
+        return sorted(set(changed + added))
+
+    @staticmethod
+    def restore_and_verify_protected_files(workspace_root: str | Path, before_files: dict[str, tuple[str, bytes | None]]) -> list[str]:
+        """Detect any modified, deleted, or newly injected protected test/verifier file in `workspace_root`.
+        Restores pre-existing modified/deleted protected files byte-for-byte on disk, NEVER deletes newly created
+        files on disk (reports & refuses instead so user files are never destroyed), and returns tampered paths."""
+        root = Path(workspace_root)
+        if not root.is_dir():
+            return []
+        after = CloverCycleEngine.snapshot_protected_files(root)
+        tampered: list[str] = []
+        for rel, (old_sha, old_bytes) in before_files.items():
+            cur = after.get(rel)
+            if cur is None or cur[0] != old_sha:
+                tampered.append(rel)
+                if old_bytes is not None:
+                    dst = root / rel
+                    try:
+                        dst.parent.mkdir(parents=True, exist_ok=True)
+                        dst.write_bytes(old_bytes)
+                    except OSError:
+                        pass
+        for rel in after:
+            if rel not in before_files:
+                tampered.append(rel)
+        return sorted(set(tampered))

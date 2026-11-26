@@ -1785,7 +1785,7 @@ def kv_switch(sid):
     return info
 
 
-def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="chat", media=(), ask_text=None, docs=()):
+def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="chat", media=(), ask_text=None, docs=(), record_v6_telemetry=True):
     """ask_text: what the user typed (without attached file contents), to see which tools they asked for and whether
     they say the last answer was not right. docs: documents saved for this message (save_documents)."""
     import clover_cycle as C
@@ -2181,14 +2181,16 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
     if smart_routed is not None:
         res["smart_routed"] = smart_routed
     try:
-        if S.args and getattr(S.args, "base", None):
+        if record_v6_telemetry and S.args and getattr(S.args, "base", None):
             import clover_v6_system
             v6 = clover_v6_system.for_base(S.args.base)
             ran_tools = [str(tc.get("tool")) for tc in (res.get("tool_calls") or []) if tc.get("ran") and tc.get("tool")]
             for tn in ran_tools:
                 v6.metrics.record_tool_call(task_id=sid, tool_name=tn, instance="studio-local", cycle=1, elapsed_ms=0.0, ok=True)
             ans_txt = str(res.get("reply") or res.get("answer") or "")
-            comp_toks = max(1, len(ans_txt.split())) if ans_txt else 0
+            gen_list = res.get("generation") or []
+            gen_toks = sum(int(g.get("tokens") or 0) for g in gen_list if isinstance(g, dict))
+            comp_toks = gen_toks if gen_toks > 0 else (max(1, round(len(ans_txt) / 4.0)) if ans_txt else 0)
             cyc_used = int(res.get("cycles") or res.get("cycle") or 1)
             ent_url = str((getattr(eng, "entry", None) or {}).get("url") or "")
             inst_lbl = (
@@ -2201,7 +2203,7 @@ def lfm3_turn(sid, prompt, body, on_event=None, ask=None, cancel=None, kind="cha
                 model=str(m_id),
                 instance=inst_lbl,
                 cycle=cyc_used,
-                prompt_tokens=max(1, len(str(prompt or "").split())),
+                prompt_tokens=max(1, round(len(str(prompt or "")) / 4.0)),
                 completion_tokens=comp_toks,
                 elapsed_ms=float(res["wall_ms"]),
                 ok=not bool(res.get("error")),
@@ -2507,8 +2509,14 @@ def allowed_accounts(base=None):
 
 def _auth_secret():
     import k3_host_engine
-    s = S.token or k3_host_engine.k3_host_key()
-    return s.encode("utf-8") if s else _FALLBACK_AUTH_SECRET
+    explicit_hmac = (os.environ.get("CLOVER_HMAC_SECRET") or "").strip()
+    if explicit_hmac:
+        raw = explicit_hmac.encode("utf-8")
+    else:
+        s = S.token or k3_host_engine.k3_host_key()
+        raw = s.encode("utf-8") if s else _FALLBACK_AUTH_SECRET
+    # Domain-separate HMAC signing key from bearer token so knowing a bearer key never yields the raw HMAC key
+    return hmac.new(raw, b"clover-v6-hmac-signing-key", hashlib.sha256).digest()
 
 
 def make_account_token(account):
@@ -2561,9 +2569,9 @@ def verify_admin_token(token):
     return None
 
 
-def verify_k3_credential(credential, account_hint="", base=None):
+def verify_k3_credential(credential, account_hint="", base=None, *, _trusted_oauth_flow: bool = False):
     """Verifies a k3 credential (signed `acct:...` token, owner key, per-user key, GitHub Personal Access Token, or
-    Google OAuth2/OIDC ID token) against the approved allowlist (`allowed_accounts`).
+    audience-verified Google OIDC token) against the approved allowlist (`allowed_accounts`).
     Returns (ok, matched_account_or_error, status_code)."""
     import k3_host_engine
     import urllib.error
@@ -2612,8 +2620,11 @@ def verify_k3_credential(credential, account_hint="", base=None):
             if not acct or acct == cached[0]:
                 return True, cached[0], 200
 
-    # 4. GitHub Personal Access Token (`ghp_...`, `github_pat_...`, `gho_...`, `ghu_...`)
-    if secret_in.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
+    # 4. GitHub Personal Access Token (`ghp_...`, `github_pat_...`); OAuth `gho_`/`ghu_` accepted ONLY when
+    # returned directly from our own server-side OAuth/Device-Flow exchange (`_trusted_oauth_flow=True`) to prevent confused-deputy replay.
+    if secret_in.startswith(("gho_", "ghu_")) and not _trusted_oauth_flow:
+        return False, "Third-party GitHub OAuth tokens are not accepted directly; use Sign in with GitHub or a Personal Access Token.", 403
+    if secret_in.startswith(("ghp_", "github_pat_")) or (_trusted_oauth_flow and secret_in.startswith(("gho_", "ghu_"))):
         req = urllib.request.Request(
             "https://api.github.com/user",
             headers={
@@ -2624,7 +2635,7 @@ def verify_k3_credential(credential, account_hint="", base=None):
         )
         try:
             with urllib.request.urlopen(req, timeout=10) as r:
-                gh_user = json.loads(r.read().decode("utf-8", "replace"))
+                gh_user = json.loads(r.read(262_144).decode("utf-8", "replace"))
             gh_login = str(gh_user.get("login") or "").strip().lower()
             gh_email = str(gh_user.get("email") or "").strip().lower()
             candidates = [c for c in (gh_login, gh_email) if c]
@@ -2639,7 +2650,7 @@ def verify_k3_credential(credential, account_hint="", base=None):
                         },
                     )
                     with urllib.request.urlopen(req_em, timeout=8) as r_em:
-                        for em_obj in json.loads(r_em.read().decode("utf-8", "replace")) or ():
+                        for em_obj in json.loads(r_em.read(262_144).decode("utf-8", "replace")) or ():
                             if isinstance(em_obj, dict) and em_obj.get("verified") and em_obj.get("email"):
                                 candidates.append(str(em_obj["email"]).strip().lower())
                 except Exception:
@@ -2655,14 +2666,19 @@ def verify_k3_credential(credential, account_hint="", base=None):
         except Exception:
             return False, "Could not verify GitHub token right now.", 502
 
-    # 5. Google / Gmail OAuth2 or OIDC ID token (`eyJ...` JWT or `ya29....` access token)
-    if secret_in.startswith("ya29.") or (secret_in.count(".") == 2 and secret_in.startswith("eyJ")):
+    # 5. Google / Gmail OIDC ID token (`eyJ...`) — strictly require audience (`aud`/`azp`) match against CLOVER_GOOGLE_CLIENT_ID
+    google_cid = (os.environ.get("CLOVER_GOOGLE_CLIENT_ID") or "").strip()
+    if google_cid and (secret_in.startswith("ya29.") or (secret_in.count(".") == 2 and secret_in.startswith("eyJ"))):
         q_param = "access_token" if secret_in.startswith("ya29.") else "id_token"
         try:
             t_url = f"https://oauth2.googleapis.com/tokeninfo?{q_param}={urllib.parse.quote(secret_in)}"
             req_g = urllib.request.Request(t_url, headers={"Accept": "application/json", "User-Agent": "CloverStudio/1.0"})
             with urllib.request.urlopen(req_g, timeout=10) as rg:
-                g_info = json.loads(rg.read().decode("utf-8", "replace"))
+                g_info = json.loads(rg.read(65_536).decode("utf-8", "replace"))
+            aud = str(g_info.get("aud") or "").strip()
+            azp = str(g_info.get("azp") or "").strip()
+            if aud != google_cid and azp != google_cid:
+                return False, "Google token audience does not match this Clover server.", 403
             g_email = str(g_info.get("email") or "").strip().lower()
             em_ok = str(g_info.get("email_verified") or "").lower() in ("true", "1")
             if g_email and em_ok and g_email in accts and (not acct or acct == g_email):
@@ -2812,6 +2828,12 @@ class Handler(BaseHTTPRequestHandler):
             return xff
         return str((self.client_address or ("127.0.0.1", 0))[0])
 
+    def _is_web_owner(self) -> bool:
+        if not paths.WEB:
+            return True
+        acct = getattr(self, "_authed_account", None)
+        return bool(acct and acct in (OWNER_GITHUB_LOGIN, OWNER_EMAIL, DEFAULT_ALLOWED_ACCOUNTS[0]))
+
     def _require_admin(self) -> str | None:
         got = self._request_token()
         if not got:
@@ -2819,7 +2841,7 @@ class Handler(BaseHTTPRequestHandler):
         adm = verify_admin_token(got)
         if adm:
             return adm
-        if got.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
+        if got.startswith(("ghp_", "github_pat_")):
             ok, matched, _ = verify_k3_credential(got, account_hint=OWNER_GITHUB_LOGIN)
             if ok and matched in (OWNER_GITHUB_LOGIN, OWNER_EMAIL):
                 return OWNER_GITHUB_LOGIN
@@ -2995,7 +3017,7 @@ class Handler(BaseHTTPRequestHandler):
             back, gh_token, err = S.gh_web.finish(q.get("state"), q.get("code"), q.get("error"))
             back = back or web_return(None)
             if gh_token:  # read who signed in, then drop the token: the website keeps no GitHub token
-                ok, acct, _ = verify_k3_credential(gh_token)
+                ok, acct, _ = verify_k3_credential(gh_token, _trusted_oauth_flow=True)
                 gh_token = None
                 if ok:
                     return self._send(302, b"", "text/plain", {"Location": back + "#gh_login=" + S.gh_web.issue(acct)})
@@ -3020,9 +3042,11 @@ class Handler(BaseHTTPRequestHandler):
         if not paths.WEB and not self._token_ok():
             return self._send(403, {"error": "token required"})
         if path == "/api/multi-node/status":
-            import importlib
+            if paths.WEB and not self._token_ok():
+                return self._send(401, {"error": "Sign in with an approved account to view topology status.", "auth_required": True})
+            if not self._is_web_owner():
+                return self._send(403, {"error": "Only the host owner can view shared k3 multi-node topology."})
             import multi_node_coordinator
-            importlib.reload(multi_node_coordinator)
             base_dir = Path(S.args.base) if S.args else HERE.parent
             coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
             return self._send(200, coord.topology_status())
@@ -3149,6 +3173,8 @@ class Handler(BaseHTTPRequestHandler):
                 limit=lim,
             ))
         if path in ("/api/clover/metrics", "/v1/clover/metrics"):
+            if not self._is_web_owner():
+                return self._send(403, {"error": "Only the host owner can read shared Web Studio telemetry."})
             import clover_v6_system
             v6 = clover_v6_system.for_base(S.args.base)
             return self._send(200, v6.metrics.summary())
@@ -3269,6 +3295,8 @@ class Handler(BaseHTTPRequestHandler):
                 t_obj = S.active.get(tid) or S.recent_turns.get(tid)
                 if not t_obj:
                     return self._send(404, {"error": "unknown turn_id"})
+                if paths.WEB and not self._is_web_owner() and t_obj.get("account") != getattr(self, "_authed_account", None):
+                    return self._send(403, {"error": "cannot read events for another user's turn"})
                 evs = [e for e in t_obj["events"] if int(e.get("seq") or 0) > after]
                 return self._send(200, {
                     "turn_id": tid,
@@ -3289,26 +3317,6 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok() or self._cross_site():
             return self._send(403, {"error": "cross-site requests are not accepted"})
         path = self.path.split("?", 1)[0]
-        if path in ("/api/multi-node/turn", "/api/multi-node/sync", "/api/multi-node/client-turn"):
-            import importlib
-            import multi_node_coordinator
-            importlib.reload(multi_node_coordinator)
-            try:
-                body = self._read_json(CHAT_BODY)
-            except Exception as exc:
-                return self._send(400, {"ok": False, "error": str(exc)})
-            base_dir = Path(S.args.base) if S.args else HERE.parent
-            coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
-            if path == "/api/multi-node/sync":
-                return self._send(200, coord.sync_client_offline_events(body.get("events") or []))
-            if path == "/api/multi-node/turn":
-                return self._send(200, coord.run_coordinated_turn(body))
-            router = multi_node_coordinator.ClientNodeRouter(
-                base_dir,
-                k3_coordinator=coord if paths.WEB else None,
-                k3_url="" if paths.WEB else "https://api.cloverframework.com",
-            )
-            return self._send(200, router.run_client_turn(body, k3_reachable=bool(body.get("k3_reachable", True))))
         if path == "/api/admin/github/device/start":
             if not _check_auth_rate_limit(self._client_ip()):
                 return self._send(429, {"ok": False, "error": "Too many authentication requests. Please wait a minute and try again."})
@@ -3330,10 +3338,12 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:
                 return self._send(502, {"ok": False, "error": f"Could not start GitHub Device Flow: {exc}"})
         if path == "/api/admin/github/device/poll":
+            if not _check_auth_rate_limit(self._client_ip()):
+                return self._send(429, {"ok": False, "error": "Too many polling requests. Please wait and try again."})
             import urllib.parse
             import urllib.request
             try:
-                body = self._read_json(MAX_BODY)
+                body = self._read_json(4096)
             except Exception as exc:
                 return self._send(400, {"error": str(exc)})
             dev_code = str(body.get("device_code") or "").strip()
@@ -3400,7 +3410,7 @@ class Handler(BaseHTTPRequestHandler):
             adm = verify_admin_token(key_in)
             gh_name = OWNER_GITHUB_LOGIN
             gh_avatar = ""
-            if not adm and key_in.startswith(("ghp_", "github_pat_", "gho_", "ghu_")):
+            if not adm and key_in.startswith(("ghp_", "github_pat_")):
                 import urllib.request
                 req_u = urllib.request.Request(
                     "https://api.github.com/user",
@@ -3493,10 +3503,10 @@ class Handler(BaseHTTPRequestHandler):
             tok = make_account_token(msg_or_acct)
             return self._send(200, {"ok": True, "account": msg_or_acct, "token": tok})
         if path in ("/api/auth/github/finish", "/api/auth/github/device/start", "/api/auth/github/device/poll") and paths.WEB:
-            if path != "/api/auth/github/device/poll" and not _check_auth_rate_limit(self._client_ip()):
+            if not _check_auth_rate_limit(self._client_ip()):
                 return self._send(429, {"error": "Too many sign-in attempts. Please wait a minute and try again.", "auth_required": True})
             try:
-                body = self._read_json(MAX_BODY)
+                body = self._read_json(4096)
             except Exception as exc:
                 return self._send(400, {"error": str(exc)})
             if path.endswith("/finish"):  # the one-time code from GitHub's redirect -> this page's session
@@ -3512,7 +3522,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(502 if exc.code == "unreachable" else 400, {"status": "error", "error": str(exc)})
             if res.get("status") != "ok":
                 return self._send(200, res)
-            ok, acct, code = verify_k3_credential(res["token"]["access_token"])
+            ok, acct, code = verify_k3_credential(res["token"]["access_token"], _trusted_oauth_flow=True)
             if not ok:
                 return self._send(code, {"status": "error", "error": acct, "auth_required": True})
             return self._send(200, {"status": "ok", "account": acct, "token": make_account_token(acct)})
@@ -3524,11 +3534,30 @@ class Handler(BaseHTTPRequestHandler):
             )
         try:
             body = self._read_json(CHAT_BODY if path in ("/api/chat/stream", "/api/worker/lfm3", "/api/worker/chat",
-                                                         "/v1/chat/completions", "/chat/completions")
+                                                         "/v1/chat/completions", "/chat/completions",
+                                                         "/api/multi-node/turn", "/api/multi-node/sync", "/api/multi-node/client-turn")
                                    else MAX_BODY)
         except Exception as exc:
             return self._send(400, {"error": str(exc)})
         try:
+            if path in ("/api/multi-node/turn", "/api/multi-node/sync", "/api/multi-node/client-turn"):
+                if self.headers.get("X-Clover-Hop"):
+                    return self._send(400, {"ok": False, "error": "refusing recursive multi-node hop"})
+                if not self._is_web_owner():
+                    return self._send(403, {"ok": False, "error": "Only the host owner can invoke shared k3 multi-node coordination routes."})
+                import multi_node_coordinator
+                base_dir = Path(S.args.base) if S.args else HERE.parent
+                coord = multi_node_coordinator.K3MultiNodeCoordinator(base_dir)
+                if path == "/api/multi-node/sync":
+                    return self._send(200, coord.sync_client_offline_events(body.get("events") or []))
+                if path == "/api/multi-node/turn":
+                    return self._send(200, coord.run_coordinated_turn(body))
+                router = multi_node_coordinator.ClientNodeRouter(
+                    base_dir,
+                    k3_coordinator=coord if paths.WEB else None,
+                    k3_url="" if paths.WEB else "https://api.cloverframework.com",
+                )
+                return self._send(200, router.run_client_turn(body, k3_reachable=bool(body.get("k3_reachable", True))))
             if path == "/api/auth/k3-unlock" and not paths.WEB:
                 import k3_host_engine
                 res_u = k3_host_engine.try_unlock_k3_with_credential(
@@ -3768,6 +3797,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, eng.tts(str(body.get("text") or ""), voice=voice), "audio/wav")
             if path == "/api/decision":
                 turn = S.active.get(str(body.get("turn_id") or ""))
+                if turn and paths.WEB and not self._is_web_owner() and turn.get("account") != getattr(self, "_authed_account", None):
+                    return self._send(403, {"error": "cannot answer permission prompt for another user's turn"})
                 pend = turn and turn["pending"].get(str(body.get("request_id") or ""))
                 if not pend:
                     return self._send(404, {"error": "no such permission request"})
@@ -3777,11 +3808,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": True})
             if path in ("/api/cancel", "/api/stop"):
                 tid = str(body.get("turn_id") or "").strip()
+                caller_acct = getattr(self, "_authed_account", None)
+                is_owner = self._is_web_owner()
                 cancelled_ids = []
                 with S.turns_lock:
-                    targets = [S.active[tid]] if (tid and tid != "all" and tid in S.active) else (
-                        list(S.active.values()) if not tid or tid == "all" else []
-                    )
+                    if tid and tid != "all":
+                        cand_t = S.active.get(tid)
+                        targets = [cand_t] if (cand_t and (is_owner or cand_t.get("account") == caller_acct)) else []
+                    elif is_owner:
+                        targets = list(S.active.values())
+                    elif paths.WEB and caller_acct:
+                        targets = [t_o for t_o in S.active.values() if t_o.get("account") == caller_acct]
+                    else:
+                        targets = []
                 for t_obj in targets:
                     t_obj["cancel"].set()
                     for pend in list(t_obj["pending"].values()):
@@ -3796,9 +3835,10 @@ class Handler(BaseHTTPRequestHandler):
                 if S.mode == "lfm3":
                     media = save_media(body.get("media"))
                     docs = save_documents(body.get("documents"))
-                    tid_c = str(body.get("turn_id") or uuid.uuid4().hex)
-                    t_c = {"turn_id": tid_c, "session_id": sid, "cancel": threading.Event(), "pending": {}, "events": [], "seq": 0, "done": False}
+                    req_tid = re.sub(r"[^A-Za-z0-9_\-]", "", str(body.get("turn_id") or ""))[:64]
                     with S.turns_lock:
+                        tid_c = req_tid if (req_tid and not paths.WEB and req_tid not in S.active) else uuid.uuid4().hex
+                        t_c = {"turn_id": tid_c, "session_id": sid, "account": getattr(self, "_authed_account", None), "cancel": threading.Event(), "pending": {}, "events": [], "seq": 0, "done": False}
                         S.active[tid_c] = t_c
                     try:
                         return self._send(200, lfm3_turn(sid, build_prompt(prompt, body.get("attached_files"), docs), body,
@@ -3944,15 +3984,22 @@ class Handler(BaseHTTPRequestHandler):
                 device_actions.log_debug("jepa", "autonomous_cycle_and_self_train", out_auto, base_dir=base_p)
                 return self._send(200, out_auto)
             if path in ("/api/clover/metrics/reset", "/v1/clover/metrics/reset"):
+                if not self._is_web_owner():
+                    return self._send(403, {"error": "Only the host owner can reset shared telemetry."})
                 import clover_v6_system
                 return self._send(200, clover_v6_system.for_base(S.args.base).metrics.reset())
             if path in ("/api/clover/mcp", "/v1/clover/mcp"):
+                if not self._is_web_owner():
+                    return self._send(403, {"error": "Only the host owner can invoke shared MCP server tools on Web."})
                 import clover_v6_system
                 import vault
                 v6 = clover_v6_system.for_base(S.args.base)
                 t_name = str(body.get("tool") or body.get("name") or "").strip()
                 if not t_name:
                     return self._send(400, {"error": "tool name is required"})
+                allowed_mcp_names = {t["name"] for t in clover_v6_system.MCP_TOOL_CATALOG}
+                if t_name not in allowed_mcp_names:
+                    return self._send(403, {"error": f"MCP tool '{t_name}' is not in the allowed Clover v6 catalog."})
                 return self._send(
                     200,
                     v6.call_mcp_tool(
@@ -3969,11 +4016,20 @@ class Handler(BaseHTTPRequestHandler):
                 if not q_solve:
                     return self._send(400, {"error": "prompt is required"})
                 m_req = str(body.get("model") or (S.settings.get().get("model") if S.settings else "omni") or "omni")
-                tid_s = str(body.get("task_id") or f"v6_{uuid.uuid4().hex[:8]}")
+                raw_tid = re.sub(r"[^A-Za-z0-9_\-]", "_", str(body.get("task_id") or f"v6_{uuid.uuid4().hex[:8]}"))[:48]
+                if paths.WEB and not self._is_web_owner():
+                    acct_tag = re.sub(r"[^A-Za-z0-9_\-]", "_", str(getattr(self, "_authed_account", None) or "user"))[:24]
+                    tid_s = f"u_{acct_tag}_{raw_tid}"
+                else:
+                    tid_s = raw_tid
+                try:
+                    max_cyc = max(1, min(16, int(body.get("max_cycles") or 2)))
+                except (TypeError, ValueError):
+                    max_cyc = 2
 
                 def _gen_turn(p_txt, _cyc):
                     if S.mode == "lfm3" and engine_for(m_req) is not None:
-                        r_t = lfm3_turn(tid_s, p_txt, {"model": m_req}, ask_text=p_txt)
+                        r_t = lfm3_turn(tid_s, p_txt, {"model": m_req}, ask_text=p_txt, record_v6_telemetry=False)
                         return str(r_t.get("reply") or r_t.get("answer") or "")
                     return ""
 
@@ -3981,8 +4037,10 @@ class Handler(BaseHTTPRequestHandler):
                 ent_u = str((getattr(eng_s, "entry", None) or {}).get("url") or "")
                 inst_s = urllib.parse.urlparse(ent_u).hostname if ent_u else ("k3" if paths.WEB else "local")
                 gen_callable = _gen_turn if bool(body.get("use_model", True)) and eng_s is not None else None
-                return self._send(200, v6.solve_4part(q_solve, model=m_req, instance=inst_s or "local", task_id=tid_s, generate_fn=gen_callable, max_cycles=int(body.get("max_cycles") or 2)))
+                return self._send(200, v6.solve_4part(q_solve, model=m_req, instance=inst_s or "local", task_id=tid_s, generate_fn=gen_callable, max_cycles=max_cyc))
             if path in ("/api/clover/setup/plan", "/v1/clover/setup/plan", "/api/clover/setup/apply", "/v1/clover/setup/apply"):
+                if not self._is_web_owner():
+                    return self._send(403, {"error": "Only the host owner can plan or apply shared Web Studio server changes."})
                 import clover_v6_system
                 import vault
                 v6 = clover_v6_system.for_base(S.args.base)
@@ -4004,8 +4062,6 @@ class Handler(BaseHTTPRequestHandler):
                             is_android=paths.ANDROID, is_web=paths.WEB,
                         ),
                     )
-                if paths.WEB and (getattr(self, "_authed_account", None) or DEFAULT_ALLOWED_ACCOUNTS[0]) != DEFAULT_ALLOWED_ACCOUNTS[0]:
-                    return self._send(403, {"error": "Only the host owner can apply shared Web Studio server changes."})
                 applied = v6.apply_system_setup(
                     sel_m, raw_sv, plan_id=plan_id, include_local=inc_loc, api_key=ak, hardware_hint=hw_hint,
                     is_android=paths.ANDROID, is_web=paths.WEB,
@@ -4327,6 +4383,8 @@ class Handler(BaseHTTPRequestHandler):
                 after_seq = 0
             with S.turns_lock:
                 prev_turn = S.active.get(resume_tid) or S.recent_turns.get(resume_tid)
+                if prev_turn is not None and paths.WEB and not self._is_web_owner() and prev_turn.get("account") != getattr(self, "_authed_account", None):
+                    prev_turn = None
                 replay_evs = [e for e in (prev_turn["events"] if prev_turn else []) if int(e.get("seq") or 0) > after_seq]
             if prev_turn is not None:
                 self.send_response(200)
@@ -4345,6 +4403,7 @@ class Handler(BaseHTTPRequestHandler):
         turn = {
             "turn_id": turn_id,
             "session_id": sid,
+            "account": getattr(self, "_authed_account", None),
             "cancel": threading.Event(),
             "pending": {},
             "seq": 0,
@@ -4671,9 +4730,13 @@ def main():
     S.httpd.daemon_threads = True
     disable_power_throttling()
     S.token = os.environ.pop("CLOVER_TOKEN", "")
-    if paths.WEB and not S.token:
-        import k3_host_engine
-        S.token = os.environ.get("CLOVER_HOST_KEY") or k3_host_engine.k3_host_key()
+    if paths.WEB:
+        if not S.token:
+            import k3_host_engine
+            S.token = (os.environ.get("CLOVER_HOST_KEY") or k3_host_engine.k3_host_key() or "").strip()
+        if len(S.token) < 32:
+            print("FATAL: Web mode requires CLOVER_HOST_KEY or vault/k3_host.key (>= 32 random chars).", file=sys.stderr, flush=True)
+            sys.exit(2)
     if not paths.WEB:
         S.setup = Setup(base)
     if setup_needed():

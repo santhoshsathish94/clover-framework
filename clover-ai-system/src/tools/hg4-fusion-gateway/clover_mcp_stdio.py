@@ -59,11 +59,20 @@ def main() -> None:
                     sys.stdout.flush()
         except urllib.error.HTTPError as hexc:
             raw_err = hexc.read().decode("utf-8", errors="ignore").strip()
+            req_id = rpc.get("id") if isinstance(rpc, dict) else None
             try:
                 parsed_err = json.loads(raw_err)
-                sys.stdout.write(json.dumps(parsed_err, ensure_ascii=False) + "\n")
+                if isinstance(parsed_err, dict) and parsed_err.get("jsonrpc") == "2.0" and "id" in parsed_err:
+                    out_rpc = parsed_err
+                else:
+                    err_msg = (
+                        ((parsed_err.get("error") or {}).get("message") if isinstance(parsed_err.get("error"), dict) else parsed_err.get("error"))
+                        if isinstance(parsed_err, dict)
+                        else raw_err[:240]
+                    )
+                    out_rpc = {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": f"HTTP {hexc.code}: {err_msg}"}}
+                sys.stdout.write(json.dumps(out_rpc, ensure_ascii=False) + "\n")
             except ValueError:
-                req_id = rpc.get("id") if isinstance(rpc, dict) else None
                 sys.stdout.write(
                     json.dumps({"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": f"HTTP {hexc.code}: {raw_err[:240]}"}}) + "\n"
                 )

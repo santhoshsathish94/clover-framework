@@ -30,17 +30,17 @@ Instead of forcing every request through heavyweight post-inference neural layer
 
 In **Settings → Model → Clover System Setup** (or on first launch via *Choose models / Use server*), users can deploy **1 model**, a **custom subset**, or the **complete Clover AI System** across their own device and any GPU servers they provide (`GET /api/clover/setup/catalog`, `POST /api/clover/setup/plan`, `POST /api/clover/setup/apply`):
 
-| Model / Specialist | `HG4` Footprint | Minimum Required Hardware / Servers | Measured `RTX 3090` Single-User Decode (`batch = 1`) |
+| Model / Specialist | `HG4` Footprint | Minimum Required Hardware / Servers | Measured Single-User Speed (`batch = 1`, Provenance) |
 | :--- | :--- | :--- | :--- |
-| **`0B` Computed Pack** | `0 MB` | Any phone, laptop, or CPU machine (`0` GPUs) | **`0.02–52 ms`** exact on CPU (`0` GPUs) |
-| **`LFM3-Omni-2B` & Small Drafters** (`HG4-16R` & `5L-DSpark`) | `0.85 GB` | Any phone, laptop, CPU, or `1×` GPU | **`240–288 decode tok/s`** on `1× 3090` · `50.3 tok/s` CPU |
-| **`Chronos-Bolt 0.2B`** (`HG4`) | `0.10 GB` | Any phone, laptop, CPU, or `1×` GPU | **`187–191 decode tok/s`** (`0.37 s`) · `<52 ms` `0B` Conformal |
-| **`V-JEPA 2.1`** (`HG4-16R`) | `0.51 GB` | Any laptop, CPU, or `1×` GPU | **`0.12 s`/clip** (`1408-d` rollout) · `0.9 s` CPU |
-| **`Boltz-2`** (`HG4-16R` 3D folding) | `0.53 GB` (`~14 GB` resident) | `1×` GPU server `>= 16 GB` VRAM (`1× RTX 3090`) | **`~12 s`/complex** on `1× 3090` *(skipped on CPU)* |
-| **`Goedel-Prover-V2-32B`** (`HG4-16R`) | `15.8 GB` (`21.6 GB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | **`18.4–28.6 decode tok/s`** *(skipped on CPU: `0.9 tok/s`)* |
-| **`Clover-35B-A3B` Coordinator** (`HG4-16R-OP`) | `17.4 GB` (`20.2 GB` @ 32k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | **`58.5 decode tok/s`** CUDA (`35.8 tok/s` HTTP; `4×` GPUs add `+0.0 tok/s`) |
-| **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R`) | `58.2 GB` (`68 GB` resident) | `4× 24 GB RTX 3090` server or `1× 80 GB` GPU (`>= 72 GB` VRAM) | **`38.4–55+ decode tok/s`** (`2L-MTP`; `8×` GPUs add `+0.0 tok/s`) |
-| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 3090` or `2× 8×80 GB`) | **`6.0–18 decode tok/s`** (`T=1` to `+DSpark`; *skipped without cluster*) |
+| **`0B` Computed Pack** | `0 MiB` | Any phone, laptop, or CPU machine (`0` GPUs) | **`0.02–105 ms`** exact on CPU (`0` GPUs) |
+| **`LFM3-Omni-2B`** (`HG4-16R`, `87/87` exact) | `0.83 GiB` (`853.9 MiB`) | Any phone, laptop, CPU, or `1×` GPU | **`240.2 decode tok/s`** (`1× 4090`) · `35.7` e2e `3090` · `50.3` CPU |
+| **`Chronos-Bolt 0.2B`** (`HG4-16R`) | `0.10 GiB` (`102 MiB`) | Any phone, laptop, CPU, or `1×` GPU | **`187.1–191.5 steps/s`** `p50–max` (`151.9` mean, `0.80 s` on `1× 3090`) · `<110 ms` `0B` CPU |
+| **`V-JEPA 2.1`** (`HG4-16R`) | `0.51 GiB` | Any laptop, CPU, or `1×` GPU | `64-frame` ViT-g `1408-d` rollout verified on `1× 3090` |
+| **`Boltz-2`** (`HG4-16R` 3D folding) | `0.52 GiB` (`529.6 MiB`; `~14 GiB` resident) | `1×` GPU server `>= 16 GB` VRAM (`1× RTX 3090`) | **`39.6–40.6 s`/complex** on `1× 3090` (`pLDDT 0.908 & 0.926`; *skipped on CPU*) |
+| **`Goedel-Prover-V2-32B`** (`HG4-16R`) | `15.8 GiB` (`21.6 GiB` @ 16k KV) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | Fits `1× 24 GB 3090` in VRAM *(skipped on CPU: `0.93 tok/s` on `k3`)* |
+| **`Clover-35B-A3B` Coordinator** (`HG4-16R-OP`) | `17.2 GiB` (`17.4 GiB` w/ LoRA) | `1×` GPU server `>= 24 GB` VRAM (`1× RTX 3090`) | **`168.4 tok/s`** (`1× 4090` JSON) · `20.8–22.9` e2e `3090` JSON (`58.5` CLI*) |
+| **`Nemotron 3.5 Super VL`** (`120B-A12B` `HG4-16R-OP`) | `58.2 GiB` (`4 × 14.6 GiB`) | `4× 24 GB RTX 3090` server or `1× 80 GB` GPU (`>= 72 GB` VRAM) | **`71.3 T=1 / 172.2 MTP`** (`4× 4090` JSON) · `13.4–14.5` e2e `3090` JSON (`38.4` CLI*) |
+| **`Kimi K3.1 Pro`** (`2.8T MoE` `K31H` two-tier `HG4+HG2`) | `741 GB` (`~780 GB` resident) | Same-rack GPU cluster `>= 780 GB` VRAM (`5× 8-GPU 3090` or `2× 8×80 GB`) | **`7.89 tok/s`** (`8× 4090` 3-tier + `288.4 tok/s DSpark` JSON; `~6` `3090` CLI*) |
 
 ---
 

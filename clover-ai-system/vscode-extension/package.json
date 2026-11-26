@@ -35,7 +35,8 @@
       "properties": {
         "clover.endpointUrl": {
           "type": "string",
-          "default": "https://api.cloverframework.com/v1/chat/completions",
+          "scope": "application",
+          "default": "http://127.0.0.1:8790/v1/chat/completions",
           "description": "Endpoint URL for the Clover AI System OpenAI-compatible Chat Completions server."
         },
         "clover.defaultModel": {
@@ -57,6 +58,7 @@
         },
         "clover.apiKey": {
           "type": "string",
+          "scope": "application",
           "default": "",
           "description": "Optional API key for private Clover AI System deployments."
         },

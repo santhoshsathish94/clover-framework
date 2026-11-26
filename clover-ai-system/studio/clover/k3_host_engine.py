@@ -86,9 +86,6 @@ _SIGN_OFF_PARA = re.compile(
     r"Feel free to ask|Let me know if you (?:have|need))[\s\S]*$", re.I)
 
 
-DEFAULT_K3_ACCOUNT_TOKEN = "acct:santhoshsathish94:881c19526c3e005cbdd18dc926592dc2"
-
-
 def k3_host_key(base_dir=None):
     env = (os.environ.get("CLOVER_K3_KEY") or os.environ.get("CLOVER_HOST_KEY") or "").strip()
     if env:
@@ -107,7 +104,7 @@ def k3_host_key(base_dir=None):
                 return saved
         except Exception:
             pass
-    return DEFAULT_K3_ACCOUNT_TOKEN
+    return ""
 
 
 def exchange_k3_login(account="", credential=""):

@@ -259,7 +259,10 @@ class LocalStageRunner:
 
 
 def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int, cluster_secret: str = "") -> None:
-    secret_bytes = (cluster_secret or os.environ.get("CLOVER_CLUSTER_SECRET") or "").encode("utf-8")
+    secret_bytes = (cluster_secret or os.environ.get("CLOVER_CLUSTER_SECRET") or os.environ.get("CLOVER_GATEWAY_API_KEY") or "").strip().encode("utf-8")
+    if host not in ("127.0.0.1", "localhost", "::1") and not secret_bytes and os.environ.get("CLOVER_ALLOW_UNAUTH_CLUSTER") != "1":
+        raise ValueError(f"Refusing unauthenticated Kimi worker on non-loopback host {host!r}; set CLOVER_CLUSTER_SECRET.")
+    conn_sem = threading.BoundedSemaphore(32)
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind((host, port))
@@ -271,24 +274,36 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int, cluster_secr
     )
 
     def handle_conn(conn: socket.socket) -> None:
-        conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         authed = not bool(secret_bytes)
         try:
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             if secret_bytes:
+                auth_deadline = time.monotonic() + 5.0
                 nonce = secrets.token_bytes(16)
+                conn.settimeout(5.0)
                 conn.sendall(nonce)
-                op_hdr = _recv_exact(conn, 4)
-                (auth_op,) = struct.unpack("<I", op_hdr)
+                auth_buf = bytearray()
+                while len(auth_buf) < 36:
+                    rem = auth_deadline - time.monotonic()
+                    if rem <= 0:
+                        raise TimeoutError("handshake deadline exceeded")
+                    conn.settimeout(rem)
+                    chunk = conn.recv(36 - len(auth_buf))
+                    if not chunk:
+                        raise ConnectionError("EOF during handshake")
+                    auth_buf.extend(chunk)
+                (auth_op,) = struct.unpack("<I", bytes(auth_buf[:4]))
                 if auth_op != OP_AUTH:
                     conn.sendall(struct.pack("<I", 1))
                     return
-                client_mac = _recv_exact(conn, 32)
+                client_mac = bytes(auth_buf[4:36])
                 expected_mac = hmac.new(secret_bytes, nonce, hashlib.sha256).digest()
                 if not hmac.compare_digest(client_mac, expected_mac):
                     conn.sendall(struct.pack("<I", 2))
                     return
                 conn.sendall(struct.pack("<I", 0))
                 authed = True
+            conn.settimeout(300.0)
 
             while authed:
                 hdr = conn.recv(4)
@@ -363,14 +378,31 @@ def serve_worker_tcp(stage: LocalStageRunner, host: str, port: int, cluster_secr
                     conn.sendall(b"".join(parts))
                 else:
                     break
-        except (ConnectionError, ValueError, struct.error):
+        except (ConnectionError, ValueError, struct.error, OSError):
             pass
         finally:
-            conn.close()
+            conn_sem.release()
+            try:
+                conn.close()
+            except OSError:
+                pass
 
     while True:
         c, _ = srv.accept()
-        threading.Thread(target=handle_conn, args=(c,), daemon=True).start()
+        if not conn_sem.acquire(blocking=False):
+            try:
+                c.close()
+            except OSError:
+                pass
+            continue
+        try:
+            threading.Thread(target=handle_conn, args=(c,), daemon=True).start()
+        except Exception:
+            conn_sem.release()
+            try:
+                c.close()
+            except OSError:
+                pass
 
 
 class RemoteStageClient:
@@ -797,11 +829,13 @@ def serve_coordinator_http(
                 self._send(404, {"error": "not found"})
 
         def _authorized(self) -> bool:
-            api_key = os.environ.get("CLOVER_GATEWAY_API_KEY") or ""
+            api_key = (os.environ.get("CLOVER_GATEWAY_API_KEY") or os.environ.get("CLOVER_CLUSTER_SECRET") or "").strip()
             if not api_key:
-                return True
-            auth = self.headers.get("Authorization") or ""
-            return auth == f"Bearer {api_key}" or self.headers.get("api-key") == api_key
+                return host in ("127.0.0.1", "localhost", "::1") or os.environ.get("CLOVER_ALLOW_UNAUTH_CLUSTER") == "1"
+            key_b = api_key.encode("utf-8")
+            auth = (self.headers.get("Authorization") or "").encode("utf-8")
+            hdr_k = (self.headers.get("api-key") or "").encode("utf-8")
+            return hmac.compare_digest(auth, b"Bearer " + key_b) or hmac.compare_digest(hdr_k, key_b)
 
         def do_POST(self) -> None:
             if not self._authorized():
@@ -937,7 +971,7 @@ def main() -> None:
     p_w.add_argument("--need-emb", action="store_true")
     p_w.add_argument("--pin-cold-vram", action="store_true")
     p_w.add_argument("--gpus", default="auto")
-    p_w.add_argument("--host", default="0.0.0.0")
+    p_w.add_argument("--host", default="127.0.0.1")
     p_w.add_argument("--port", type=int, default=9100)
 
     p_c = sub.add_parser("coordinator")
@@ -949,7 +983,7 @@ def main() -> None:
     p_c.add_argument("--wire-dtype", choices=["fp32", "bf16"], default="fp32")
     p_c.add_argument("--draft-k", type=int, default=4)
     p_c.add_argument("--gpus", default="auto")
-    p_c.add_argument("--host", default="0.0.0.0")
+    p_c.add_argument("--host", default="127.0.0.1")
     p_c.add_argument("--port", type=int, default=8000)
 
     p_t = sub.add_parser("self-test")

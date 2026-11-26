@@ -45,8 +45,8 @@ def _sha256_and_size(path: Path) -> tuple[str, int]:
     return hashlib.sha256(data).hexdigest(), len(data)
 
 
-def generate_all() -> dict:
-    # Ensure download/ mirrors and release/beta/ copies are byte-identical
+def generate_all() -> dict | None:
+    # Standalone Windows (.exe/.msix) and Android (.apk/.aab) GUI installers are currently withheld as WIP in v6.0.0.
     win_setup_rel = BETA_DIR / "windows" / "clover-ai-studio-beta-setup.exe"
     win_cer_rel = BETA_DIR / "windows" / "CloverFramework-CodeSign.cer"
     win_setup_dl = REPO_ROOT / "download" / "laptop" / "CloverAIStudio-Setup.exe"
@@ -56,6 +56,17 @@ def generate_all() -> dict:
     and_apk_rel = BETA_DIR / "android" / "clover-ai-studio-beta.apk"
     and_apk_dl = REPO_ROOT / "download" / "mobile" / "CloverAIStudio.apk"
 
+    required_inputs = (win_setup_rel, win_cer_rel, and_aab_rel, and_apk_rel)
+    missing = [str(p.relative_to(REPO_ROOT)) for p in required_inputs if not p.is_file()]
+    if missing:
+        print(
+            "SKIP: Standalone desktop/mobile installer binaries are Work in Progress (WIP) and withheld from git "
+            f"(missing local build outputs: {', '.join(missing)})."
+        )
+        return None
+
+    win_setup_dl.parent.mkdir(parents=True, exist_ok=True)
+    and_apk_dl.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(win_setup_rel, win_setup_dl)
     shutil.copy2(win_cer_rel, win_cer_dl)
     shutil.copy2(and_apk_rel, and_apk_dl)
@@ -293,7 +304,7 @@ launchable-activity: name='ai.clover.studio.MainActivity'
     )
     (BETA_DIR / "android" / "SHA256SUMS.txt").write_text(and_sums, encoding="utf-8")
 
-    # Write download/SHA256SUMS.txt and sync site/download/
+    # Write download/SHA256SUMS.txt locally when staging installers (never recreate public site/download/)
     dl_sums = (
         "Clover AI Studio installers (SHA-256). Each downloads what it needs on first run, from the publishers, checked against pinned hashes.\n\n"
         f"laptop/CloverAIStudio-Setup.exe  {VERSION}  Windows 10 2004+ x64, 16 GB RAM, AVX2, 25 GB free  {setup_size} bytes\n"
@@ -304,12 +315,6 @@ launchable-activity: name='ai.clover.studio.MainActivity'
         f"  {apk_sha}\n"
     )
     (REPO_ROOT / "download" / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")
-    site_dl = REPO_ROOT / "site" / "download"
-    if site_dl.is_dir():
-        (site_dl / "SHA256SUMS.txt").write_text(dl_sums, encoding="utf-8")
-        (site_dl / "laptop").mkdir(parents=True, exist_ok=True)
-        shutil.copy2(win_setup_rel, site_dl / "laptop" / "CloverAIStudio-Setup.exe")
-        shutil.copy2(win_cer_rel, site_dl / "laptop" / "CloverFramework-CodeSign.cer")
 
     return {
         "windows_setup": {"size": setup_size, "sha256": setup_sha},
@@ -362,5 +367,6 @@ def sync_store_checklists(meta: dict) -> None:
 
 if __name__ == "__main__":
     res = generate_all()
-    sync_store_checklists(res)
-    print(json.dumps(res, indent=2))
+    if res is not None:
+        sync_store_checklists(res)
+        print(json.dumps(res, indent=2))

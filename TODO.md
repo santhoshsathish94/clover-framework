@@ -8,11 +8,11 @@ Governed by the canonical Clover Cycle (**`Context → Direction → Execution �
 
 - [x] **1. Minimal 4-Part Steerable Clover System (`AGENTS.md` + `mcp.json` + `<task_id>.md` + Prerequisite-Gated SQLite Todo)**
   - Implemented across both the `HG4` Fusion Gateway ([`clover_4part_agent.py`](clover-ai-system/src/tools/hg4-fusion-gateway/clover_4part_agent.py)) and Clover AI Studio ([`clover_v6_system.py`](clover-ai-system/studio/clover/clover_v6_system.py)).
-  - Enforces `STOP_AND_ASK` human steering on destructive/underspecified requests and Tier-0 `2B` tool-exposure gating (`43/43` gateway tests & Studio v6 tests passing under `python -W error`).
+  - Enforces `STOP_AND_ASK` on destructive commands / stagnant verifier loops, verifier-tamper refusal, and Tier-0 `2B` tool-exposure gating (`43/43` gateway tests & Studio v6 tests passing under `python -W error`).
 
 - [x] **2. Computed `0B` Specialists First (`Computed > Predicted`)**
   - Exact big-integer multiplication, factorials, BBP hexadecimal $\pi$, and binary exponentiation (`A^B` / `A**B` past `6,000+` digits) via `x-cruncher` ([`local_tool_packs.py`](clover-ai-system/studio/clover/local_tool_packs.py), [`studio_xcruncher_verifier.py`](clover-ai-system/src/tools/hg4-fusion-gateway/studio_xcruncher_verifier.py)).
-  - `0B` Periodogram + Joint Harmonic OLS + Split-Conformal `P10/P50/P90` forecaster (`MASE = 0.3084`, `<50 ms` CPU) and `0B` Defeasible Epistemic Rule Resolver (`180/180` accuracy).
+  - `0B` Periodogram + Joint Harmonic OLS + Split-Conformal `P10/P50/P90` forecaster (`MASE = 0.3084`, `<110 ms` CPU) and `0B` Defeasible Epistemic Rule Resolver (`180/180` accuracy).
 
 - [x] **3. Self-Hosted v6.0 Server & Hardware-Gated Model Setup (`clover_v6_system.py` & `gateway.py`)**
   - Added **Clover System Setup** (`1` model, custom subset, or full Clover AI System) across local machines and user-supplied GPU servers with per-GPU VRAM placement (`ready_served`, `ready_pinned`, `ready_swap`, `needs_gateway`, `skipped_not_interactive`) and multi-token single-user (`batch = 1`) decode `tok/s` verification.
