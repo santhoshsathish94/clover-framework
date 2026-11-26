@@ -18,6 +18,7 @@ import json
 import os
 import re
 import time
+from pathlib import Path
 from typing import Any
 
 from clover_cycle_engine import AGENTS_MD_SHA256, CloverContextRecord
@@ -32,12 +33,35 @@ CLOVER_4PART_BASE_PROMPT = (
     "2. Keep reasoning concise (<= 45 tokens before code or tool calls, no verbose `<think>` monologues)."
 )
 
-CLOVER_4PART_TOOLS_ADDENDUM = (
-    "\n3. Use `clover_context_read` / `clover_context_record` for `<task_id>.md` Context handoffs and "
-    "`clover_todo_list` / `clover_todo_upsert` for step-by-step Todos (`depends_on`).\n"
-    "4. Delegate exact big-int/pi math to `xcruncher_exact_math`, Python checks to `python_ast_verify`, "
-    "Lean 4 checks to `lean4_surface_verify`, and quantile forecasts to `chronos2_forecast`."
-)
+def _build_tools_addendum(tool_names: set[str]) -> str:
+    if not tool_names:
+        return ""
+    lines: list[str] = []
+    ctx_tools = [t for t in ("clover_context_read", "clover_context_record", "clover_todo_list", "clover_todo_upsert") if t in tool_names]
+    if ctx_tools:
+        lines.append("3. Available Context/Todo tools: " + ", ".join(f"`{t}`" for t in ctx_tools) + ".")
+    spec_hints = [
+        ("xcruncher_exact_math", "exact big-int/pi math (`xcruncher_exact_math`)"),
+        ("python_ast_verify", "Python checks (`python_ast_verify`)"),
+        ("lean4_surface_verify", "Lean 4 checks (`lean4_surface_verify`)"),
+        ("chronos2_forecast", "quantile forecasts (`chronos2_forecast`)"),
+        ("goedel_lean4_prove", "formal proofs (`goedel_lean4_prove`)"),
+        ("vjepa2_predict_physics", "video physics (`vjepa2_predict_physics`)"),
+        ("boltz2_fold_structure", "3D structure folding (`boltz2_fold_structure`)"),
+    ]
+    avail_specs = [desc for name, desc in spec_hints if name in tool_names]
+    if avail_specs:
+        lines.append(f"{len(lines) + 3}. Available specialist tools ONLY: " + ", ".join(avail_specs) + ". Do not call tools outside the provided schema.")
+    return ("\n" + "\n".join(lines)) if lines else ""
+
+
+_SMALL_MODEL_IDS = frozenset({"omni", "lfm3-omni-2b", "lfm3-1.7b", "qwen3-0.6b", "router-0.6b"})
+_SMALL_MODEL_RE = re.compile(r"(?:^|[-_/:])(?:0\.6b|1\.7b|2b)(?:$|[-_/:])", re.IGNORECASE)
+
+
+def _is_small_tier0_model(model: str) -> bool:
+    ml = str(model or "").strip().lower()
+    return ml in _SMALL_MODEL_IDS or bool(_SMALL_MODEL_RE.search(ml))
 
 
 def _extract_code_block(text: str) -> str:
@@ -55,7 +79,7 @@ class Clover4PartAgent:
         self.metrics = metrics_ledger or CloverMetricsLedger()
 
     def _openai_tools_schema(self, allowed_names: list[str] | None = None) -> list[dict[str, Any]]:
-        allow = set(allowed_names) if allowed_names else None
+        allow = set(allowed_names) if allowed_names is not None else None
         out = []
         for t in self.mcp2._full_tools_list:
             if allow is not None and t["name"] not in allow:
@@ -83,11 +107,11 @@ class Clover4PartAgent:
         test_code = str(req.get("test_code") or "").strip()
         lean_statement = str(req.get("lean_statement") or "").strip()
         allowed_tools = req.get("tools") if isinstance(req.get("tools"), list) else None
-        # Tier-0 Tool-Exposure Gate: prevent small 1.7B/2B models from getting flooded by planning
+        # Tier-0 Tool-Exposure Gate: prevent small 0.6B/1.7B/2B models from getting flooded by planning
         # tools (`todo_upsert`/`context_*`) on single-function code completions unless explicitly requested.
         if (
             allowed_tools is None
-            and ("2b" in model.lower() or "1.7b" in model.lower())
+            and _is_small_tier0_model(model)
             and not isinstance(req.get("initial_todos"), list)
             and not re.search(r"\b(?:todo|plan|context|multi[\s-]*step)\b", prompt, re.IGNORECASE)
             and re.search(r"\bdef\s+[A-Za-z_]\w*\s*\(", prompt)
@@ -102,7 +126,11 @@ class Clover4PartAgent:
             task_id = self.mcp2.router.clover_cycle.derive_task_id({}, [{"role": "user", "content": prompt}])
 
         tools_schema = self._openai_tools_schema(allowed_tools)
-        sys_prompt = CLOVER_4PART_BASE_PROMPT + (CLOVER_4PART_TOOLS_ADDENDUM if tools_schema else "")
+        exposed_names = {t["function"]["name"] for t in tools_schema}
+        sys_prompt = CLOVER_4PART_BASE_PROMPT + _build_tools_addendum(exposed_names)
+        ws_root_raw = str(req.get("workspace_root") or os.environ.get("CLOVER_WORKSPACE_ROOT") or "").strip()
+        ws_root = Path(ws_root_raw) if (ws_root_raw and Path(ws_root_raw).is_dir() and os.environ.get("CLOVER_ALLOW_TEST_EDITS") != "1") else None
+        ws_baseline = self.mcp2.router.clover_cycle.snapshot_protected_files(ws_root) if ws_root is not None else {}
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": prompt},
@@ -212,15 +240,34 @@ class Clover4PartAgent:
                             "tool": tname,
                         }
                         ok_tool = False
+                        denied_tool = True
+                        tool_reason = "not_in_allowed_tools"
                     else:
+                        denied_tool = False
                         try:
                             tout = self.mcp2._invoke_tool(tname, parsed_args)
                             ok_tool = True
+                            tool_reason = "ok"
                         except Exception as exc:
                             tout = {"error": f"{type(exc).__name__}: {exc}", "tool": tname}
                             ok_tool = False
+                            tool_reason = type(exc).__name__
+                        if ws_root is not None:
+                            tampered_fs = self.mcp2.router.clover_cycle.restore_and_verify_protected_files(ws_root, ws_baseline)
+                            if tampered_fs:
+                                ok_tool = False
+                                denied_tool = True
+                                tool_reason = "verification_control_tamper_fs"
+                                discernment_state = "REFUSE"
+                                tout = {
+                                    "error": f"PermissionError: tool '{tname}' modified protected verification file(s) {tampered_fs} — changes rolled back automatically (AGENTS.md §4).",
+                                    "tampered_files_restored": tampered_fs,
+                                }
                     tool_ms = round((time.perf_counter() - t_tool0) * 1000.0, 2)
-                    self.metrics.record_tool(tname, ok_tool, tool_ms)
+                    self.metrics.record_tool(
+                        tname, ok_tool, tool_ms,
+                        denied=denied_tool, task_id=task_id, benchmark_tag=benchmark_tag, reason=tool_reason,
+                    )
                     tool_trace.append({"turn": turn_idx, "tool": tname, "args": parsed_args, "ok": ok_tool, "wall_ms": tool_ms, "result": tout})
                     messages.append({
                         "role": "tool",
@@ -228,6 +275,11 @@ class Clover4PartAgent:
                         "name": tname,
                         "content": json.dumps(tout, ensure_ascii=False),
                     })
+                    if discernment_state == "REFUSE":
+                        final_answer = str(tout.get("error") or "Refused: verification boundary tampered.")
+                        break
+                if discernment_state == "REFUSE":
+                    break
                 continue
 
             # Model emitted final answer (no tool calls) -> run deterministic Outcome Verifier if configured!

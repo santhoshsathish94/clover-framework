@@ -24,10 +24,10 @@ VS Code (`1.105+`) also supports connecting directly to any Clover v6.0 Studio o
       {
         "id": "clover-35b-a3b",
         "name": "Clover — Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, HG4-16R-OP)",
-        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "url": "http://127.0.0.1:8790/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
-        "vision": true,
+        "vision": false,
         "contextWindow": 131072,
         "maxOutputTokens": 16000,
         "streaming": true
@@ -35,10 +35,10 @@ VS Code (`1.105+`) also supports connecting directly to any Clover v6.0 Studio o
       {
         "id": "nemotron-3.5-super-vl",
         "name": "Clover — Nemotron 3.5 Super VL (120B-A12B HG4-16R, 1M Context)",
-        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "url": "http://127.0.0.1:8790/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
-        "vision": true,
+        "vision": false,
         "contextWindow": 1048576,
         "maxOutputTokens": 16000,
         "streaming": true
@@ -46,10 +46,10 @@ VS Code (`1.105+`) also supports connecting directly to any Clover v6.0 Studio o
       {
         "id": "lfm3-omni-2b",
         "name": "Clover — LFM3-Omni-2B (HG4-16R Fast Assistant)",
-        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "url": "http://127.0.0.1:8790/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
-        "vision": true,
+        "vision": false,
         "contextWindow": 32768,
         "maxOutputTokens": 8192,
         "streaming": true
@@ -57,10 +57,10 @@ VS Code (`1.105+`) also supports connecting directly to any Clover v6.0 Studio o
       {
         "id": "kimi-k3",
         "name": "Clover — Kimi K3.1 Pro (2.8T MoE K31H)",
-        "url": "https://api.cloverframework.com/v1/chat/completions",
+        "url": "http://127.0.0.1:8790/v1/chat/completions",
         "apiType": "chat-completions",
         "toolCalling": true,
-        "vision": true,
+        "vision": false,
         "contextWindow": 1048576,
         "maxOutputTokens": 16000,
         "streaming": true

@@ -196,7 +196,7 @@ def main() -> None:
     ap.add_argument("--model-dir", type=Path, default=None, help="Optional local path to an already-downloaded HG model folder")
     ap.add_argument("--cache-dir", type=Path, default=Path(os.environ.get("CLOVER_HG_CACHE", Path.home() / ".cache" / "clover-hg")))
     ap.add_argument("--gpus", default=os.environ.get("CLOVER_CUDA_GPUS", "auto"), help="'auto' (all NVIDIA GPUs), '0,1,2,3', or 'none' for pure CPU")
-    ap.add_argument("--host", default="0.0.0.0")
+    ap.add_argument("--host", default=os.environ.get("CLOVER_GATEWAY_HOST", "127.0.0.1"))
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--token-socket-port", type=int, default=0, help="Optional binary TokenSocket port (tsock://)")
     ap.add_argument("--api-key", default=os.environ.get("CLOVER_GATEWAY_API_KEY", ""))

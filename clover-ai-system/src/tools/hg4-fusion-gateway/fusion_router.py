@@ -613,10 +613,11 @@ class FusionRouter:
             studio_telem["s5_epistemic_memory"] = s5_meta
 
         # -- Clover `AGENTS.md` Operating Cycle (`Context -> Direction -> Execution -> Outcome -> Growth`) --------------
+        server_enforces_agents_cycle = os.environ.get("CLOVER_ENABLE_AGENTS_CYCLE", "1") != "0"
         use_agents_cycle = (
-            bool(body["x_clover_agents_cycle"])
+            bool(body["x_clover_agents_cycle"]) and server_enforces_agents_cycle
             if "x_clover_agents_cycle" in body
-            else os.environ.get("CLOVER_ENABLE_AGENTS_CYCLE", "1") != "0"
+            else server_enforces_agents_cycle
         )
         if use_agents_cycle:
             messages, cycle_meta, stop_response = self.clover_cycle.prepare_cycle(body, messages)
@@ -725,8 +726,8 @@ class FusionRouter:
         content = final.parsed.content
         tool_calls = final.parsed.openai_tool_calls() if tools_active else []
 
-        # -- AGENTS.md §4 & §9 Runtime Enforcement: Refuse unrequested tampering with test/oracle files! --------------
-        if use_agents_cycle and tool_calls:
+        # -- AGENTS.md §4 & §9 Runtime Enforcement: Always enforce test/oracle tamper boundary on server (never client-bypassable)!
+        if server_enforces_agents_cycle and tool_calls:
             tampered, target_file = self.clover_cycle.check_verification_boundary_tamper(messages, tool_calls)
             if tampered:
                 tool_calls = []

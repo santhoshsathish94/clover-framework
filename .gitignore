@@ -29,3 +29,15 @@ research/k3/experiments/**/fruit.bin
 benchmarks/results/
 /benchmarks/results/
 .app_secret
+
+# Standalone desktop/mobile installer binaries are Work in Progress (WIP) and never committed to Git.
+*.apk
+*.aab
+*.msix
+*.msixupload
+download/laptop/*.exe
+release/beta/windows/*.exe
+site/download/
+site/clover-ai/
+site/admin/
+

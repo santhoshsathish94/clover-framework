@@ -50,14 +50,14 @@ Accountability follows the same scale boundary. Within a task or piece of work, 
 - [Governance](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/governance/08-governance.md): Ownership, approval, attribution, access, and delegated execution.
 - [Outcome in practice](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/framework/07-outcome.md): What counts as evidence of the intended outcome.
 - [Quickstart](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/QUICKSTART.md): First cycle in about 15 minutes.
-- [Orchestration brief template](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/templates/orchestration-brief.md): One-page working artifact covering every stage.
+- [Orchestration brief template](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/templates/orchestration-brief.md): One-page working artifact covering every stage.
 
 ## Evidence
 
 - [Why Responsibility for AI Was Sidelined](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/governance/evidence/why-responsibility-was-sidelined.md): the master claim, direct sources, evidence limits, and links to the supporting papers.
 - [Reference implementations](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/reference-implementations.md): Patterns for system access, AI-enabled work, and runtime enforcement boundaries.
-- [Runtime enforcement reference](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/reference/runtime-enforcement): Executable examples showing how verification boundaries can be enforced outside the model.
-- [Case studies](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/case-studies/README.md): Delivered outcomes, each stating what it has not shown.
+- [Runtime enforcement reference](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/runtime-enforcement/README.md): Executable examples showing how verification boundaries can be enforced outside the model.
+- [Case studies](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/case-studies/README.md): Delivered outcomes, each stating what it has not shown.
 - [How AI fails](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/how-ai-fails.md): Failure modes and the stage that catches each.
 - [Practices and field lessons](https://raw.githubusercontent.com/santhoshsathish94/clover-framework/main/docs/guides/field-practices.md): Lessons from real work, including failures.
 

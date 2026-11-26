@@ -1,0 +1,204 @@
+{
+  "benchmark": "HumanEval (164 canonical Python tasks, Stage 3 A/B on k3 + RTX 3090 HG4-16R Petals)",
+  "measured_at_utc": "2026-11-26T02:02:00Z",
+  "coordinator_host": "k3-center (:8790 LoRA petal pool, :8791 Base petal pool)",
+  "gpu_hardware": "NVIDIA GeForce RTX 3090 (24 GB GDDR6X, sm_86) Petals",
+  "granularity": "arm_level_totals_from_k3_execution_log",
+  "completed_arms": [
+    {
+      "arm": "1_lfm3_2b_solo",
+      "model": "lfm3-omni-2b",
+      "use_4part": false,
+      "passed": 64,
+      "total": 164,
+      "pass_rate_pct": 39.02,
+      "end_to_end_tok_s_mean": 33.26,
+      "end_to_end_tok_s_p50": 35.74,
+      "cycles_histogram": {
+        "1": 164
+      }
+    },
+    {
+      "arm": "2_lfm3_2b_clover_4part",
+      "model": "lfm3-omni-2b",
+      "use_4part": true,
+      "passed": 31,
+      "total": 164,
+      "pass_rate_pct": 18.9,
+      "end_to_end_tok_s_mean": 19.17,
+      "end_to_end_tok_s_p50": 17.8,
+      "cycles_histogram": {
+        "1": 145,
+        "2": 12,
+        "3": 7
+      },
+      "growth_note": "Exposed planning-tool flooding on small 2B model; motivated Tier-0 2B Tool-Exposure Gate in ad3bc481."
+    },
+    {
+      "arm": "3_qwen36_35b_base_solo",
+      "model": "qwen3.6-35b-a3b-base-hg4",
+      "use_4part": false,
+      "passed": 113,
+      "total": 164,
+      "pass_rate_pct": 68.9,
+      "end_to_end_tok_s_mean": 17.27,
+      "end_to_end_tok_s_p50": 17.46,
+      "cycles_histogram": {
+        "1": 164
+      }
+    },
+    {
+      "arm": "4_qwen36_35b_lora_solo",
+      "model": "qwen3.6-35b-a3b-clover-lora-hg4",
+      "use_4part": false,
+      "passed": 111,
+      "total": 164,
+      "pass_rate_pct": 67.68,
+      "end_to_end_tok_s_mean": 15.21,
+      "end_to_end_tok_s_p50": 16.1,
+      "cycles_histogram": {
+        "1": 164
+      }
+    }
+  ],
+  "incomplete_arms_note": "Arm 5 (`5_qwen36_35b_base_clover_4part`) encountered a WAN socket TimeoutError during concurrent multi-turn execution before rental teardown; Arms 5-7 are omitted rather than extrapolated.",
+  "config": {
+    "arms": [
+      {
+        "name": "1_lfm3_2b_solo",
+        "urls": [
+          "http://127.0.0.1:8790"
+        ],
+        "model": "lfm3-omni-2b",
+        "use_4part": false,
+        "max_workers": 4
+      },
+      {
+        "name": "2_lfm3_2b_clover_4part",
+        "urls": [
+          "http://127.0.0.1:8790"
+        ],
+        "model": "lfm3-omni-2b",
+        "use_4part": true,
+        "max_workers": 4
+      },
+      {
+        "name": "3_qwen36_35b_base_solo",
+        "urls": [
+          "http://127.0.0.1:8791"
+        ],
+        "model": "clover-35b-a3b",
+        "use_4part": false,
+        "max_workers": 5
+      },
+      {
+        "name": "4_qwen36_35b_lora_solo",
+        "urls": [
+          "http://127.0.0.1:8790"
+        ],
+        "model": "clover-35b-a3b",
+        "use_4part": false,
+        "max_workers": 10
+      },
+      {
+        "name": "5_qwen36_35b_base_clover_4part",
+        "urls": [
+          "http://127.0.0.1:8791"
+        ],
+        "model": "clover-35b-a3b",
+        "use_4part": true,
+        "max_workers": 5
+      },
+      {
+        "name": "6_qwen36_35b_lora_clover_4part",
+        "urls": [
+          "http://127.0.0.1:8790"
+        ],
+        "model": "clover-35b-a3b",
+        "use_4part": true,
+        "max_workers": 10
+      },
+      {
+        "name": "7_clover_team_35b_lora_to_120b",
+        "urls": [
+          "http://127.0.0.1:8790"
+        ],
+        "model": "clover-35b-a3b",
+        "use_4part": true,
+        "max_workers": 10,
+        "escalate_url": "http://127.0.0.1:8790",
+        "escalate_model": "nemotron-3.5-super-vl"
+      }
+    ]
+  },
+  "raw_execution_log": [
+    "[bench] Running arm `1_lfm3_2b_solo` across 1 GPU instance(s) on 164 problems ...",
+    "[bench] DONE `1_lfm3_2b_solo`: 64/164 (39.02%) | tok/s mean=33.26 p50=35.74 | instances=1/1 | cycles={'1': 164}",
+    "[bench] Running arm `2_lfm3_2b_clover_4part` across 1 GPU instance(s) on 164 problems ...",
+    "[bench] DONE `2_lfm3_2b_clover_4part`: 31/164 (18.9%) | tok/s mean=19.17 p50=17.8 | instances=1/1 | cycles={'1': 145, '2': 12, '3': 7}",
+    "[bench] Running arm `3_qwen36_35b_base_solo` across 1 GPU instance(s) on 164 problems ...",
+    "[bench] DONE `3_qwen36_35b_base_solo`: 113/164 (68.9%) | tok/s mean=17.27 p50=17.46 | instances=1/1 | cycles={'1': 164}",
+    "[bench] Running arm `4_qwen36_35b_lora_solo` across 1 GPU instance(s) on 164 problems ...",
+    "[bench] DONE `4_qwen36_35b_lora_solo`: 111/164 (67.68%) | tok/s mean=15.21 p50=16.1 | instances=1/1 | cycles={'1': 164}",
+    "[bench] Running arm `5_qwen36_35b_base_clover_4part` across 1 GPU instance(s) on 164 problems ...",
+    "Traceback (most recent call last):",
+    "  File \"/opt/clover-k3/hg4-fusion-gateway/run_clover_ab_benchmarks.py\", line 363, in <module>",
+    "    main()",
+    "  File \"/opt/clover-k3/hg4-fusion-gateway/run_clover_ab_benchmarks.py\", line 337, in main",
+    "    res = eval_coding_arm(",
+    "          ^^^^^^^^^^^^^^^^",
+    "  File \"/opt/clover-k3/hg4-fusion-gateway/run_clover_ab_benchmarks.py\", line 271, in eval_coding_arm",
+    "    results = list(ex.map(_run_one, enumerate(tasks)))",
+    "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 619, in result_iterator",
+    "    yield _result_or_cancel(fs.pop())",
+    "          ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 317, in _result_or_cancel",
+    "    return fut.result(timeout)",
+    "           ^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 456, in result",
+    "    return self.__get_result()",
+    "           ^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 401, in __get_result",
+    "    raise self._exception",
+    "  File \"/usr/lib/python3.12/concurrent/futures/thread.py\", line 58, in run",
+    "    result = self.fn(*self.args, **self.kwargs)",
+    "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/clover-k3/hg4-fusion-gateway/run_clover_ab_benchmarks.py\", line 200, in _run_one",
+    "    s_out = _http_json(",
+    "            ^^^^^^^^^^^",
+    "  File \"/opt/clover-k3/hg4-fusion-gateway/run_clover_ab_benchmarks.py\", line 33, in _http_json",
+    "    with urllib.request.urlopen(req, timeout=timeout) as r:",
+    "         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 215, in urlopen",
+    "    return opener.open(url, data, timeout)",
+    "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 515, in open",
+    "    response = self._open(req, data)",
+    "               ^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 532, in _open",
+    "    result = self._call_chain(self.handle_open, protocol, protocol +",
+    "             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 492, in _call_chain",
+    "    result = func(*args)",
+    "             ^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 1373, in http_open",
+    "    return self.do_open(http.client.HTTPConnection, req)",
+    "           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/urllib/request.py\", line 1348, in do_open",
+    "    r = h.getresponse()",
+    "        ^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/http/client.py\", line 1457, in getresponse",
+    "    response.begin()",
+    "  File \"/usr/lib/python3.12/http/client.py\", line 336, in begin",
+    "    version, status, reason = self._read_status()",
+    "                              ^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/http/client.py\", line 297, in _read_status",
+    "    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")",
+    "               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/usr/lib/python3.12/socket.py\", line 707, in readinto",
+    "    return self._sock.recv_into(b)",
+    "           ^^^^^^^^^^^^^^^^^^^^^^^",
+    "TimeoutError: timed out"
+  ]
+}

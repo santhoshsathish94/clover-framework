@@ -106,11 +106,13 @@ run_remote() {
   local port="$3"
   local cmd="$4"
   if [[ "$DRY_RUN" -eq 1 ]]; then
+    local redacted="${cmd//${API_KEY}/<REDACTED_API_KEY>}"
+    redacted="${redacted//${CLUSTER_SECRET}/<REDACTED_CLUSTER_SECRET>}"
     echo "[DRY-RUN ${label} ${host}:${port}]"
-    echo "  ${cmd}"
+    echo "  ${redacted}"
     return 0
   fi
-  ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" -p "$port" "$host" "$cmd"
+  ssh -o StrictHostKeyChecking=accept-new -i "$SSH_KEY" -p "$port" "$host" "$cmd"
 }
 
 BOOTSTRAP_ALL_ENGINES='set -euo pipefail
@@ -121,7 +123,7 @@ else
   chmod u+w /workspace/clover-framework/AGENTS.md 2>/dev/null || true
   git -C /workspace/clover-framework pull --ff-only
 fi
-# Runtime enforcement (AGENTS.md §4): mount/lock AGENTS.md read-only (0444) so no agent can rewrite its governing rules
+# Mark AGENTS.md 0444 on host (and bind-mount :ro inside Docker below so containerized processes cannot modify it)
 chmod 0444 /workspace/clover-framework/AGENTS.md
 if [[ "'"${RUNTIME_MODE}"'" == "docker" ]] || { [[ "'"${RUNTIME_MODE}"'" == "auto" ]] && docker info >/dev/null 2>&1; }; then
   docker build -f /workspace/clover-framework/Dockerfile.hg-server -t clover-hg-server:latest /workspace/clover-framework
@@ -171,7 +173,7 @@ run_remote "PETAL2-BUILD" "$N2_HOST" "$N2_PORT" "$BOOTSTRAP_ALL_ENGINES" & P2=$!
 run_remote "PETAL3-BUILD" "$N3_HOST" "$N3_PORT" "$BOOTSTRAP_ALL_ENGINES" & P3=$!
 run_remote "PETAL4-BUILD" "$N4_HOST" "$N4_PORT" "$BOOTSTRAP_ALL_ENGINES" & P4=$!
 run_remote "PETAL5-BUILD" "$N5_HOST" "$N5_PORT" "$BOOTSTRAP_ALL_ENGINES" & P5=$!
-wait "$P1" "$P2" "$P3" "$P4" "$P5"
+for _pid in "$P1" "$P2" "$P3" "$P4" "$P5"; do wait "$_pid"; done
 
 # 2. Download exact slices + launch Kimi workers & LOCAL-ONLY Petal Gateways via `run_clover_role.sh` (Docker-first!)
 run_remote "PETAL1-START" "$N1_HOST" "$N1_PORT" "
@@ -212,7 +214,7 @@ python3 /workspace/clover-framework/clover-ai-system/src/tools/kimi_pipeline_clu
 CLOVER_CLUSTER_SECRET='${CLUSTER_SECRET}' CLOVER_GATEWAY_API_KEY='${API_KEY}' OMP_NUM_THREADS=24 /workspace/run_clover_role.sh kimi-coord kimi-coordinator --model-dir /workspace/hg-models/kimi-slice --local-range 71:93 --stages ${N1_WG}:9100@0:14,${N2_WG}:9101@14:33,${N3_WG}:9102@33:52,${N4_WG}:9103@52:71 --pin-cold-vram --wire-dtype fp32 --gpus 0,1,2,3,4,5,6,7 --host ${N5_WG} --port 8089
 " & D5=$!
 
-wait "$D1" "$D2" "$D3" "$D4" "$D5"
+for _pid in "$D1" "$D2" "$D3" "$D4" "$D5"; do wait "$_pid"; done
 
 # 3. If `--k3-center` is provided, start/update Center Hub `k3` and launch 30s lease heartbeats on Petals 1..4!
 if [[ -n "$K3_CENTER" ]]; then

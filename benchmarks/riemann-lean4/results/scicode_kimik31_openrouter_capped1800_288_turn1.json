@@ -1,0 +1,2624 @@
+{
+  "benchmark": "SciCode (AA-SciCode test split, with_background=True, v1.0.1)",
+  "code_dir": "/opt/scicode_bench/clover_test_288/submissions/kimi_k31_turn1_draft/with_background",
+  "problems_test_sha256": "38797fef78f434720be6d053b4f3a86839d6f8ea5fb9115450677cd3a6edf81d",
+  "test_data_h5_sha256": "48b0272a88b17dbd29777c217e1b4fb2b019b92e11cc2add847409db9541b890",
+  "subproblems_passed": 139,
+  "subproblems_total": 288,
+  "subproblem_pass_pct": 48.26,
+  "main_problems_solved": 14,
+  "main_problems_total": 65,
+  "main_problem_pass_pct": 21.54,
+  "solved_main_problem_ids": [
+    8,
+    9,
+    16,
+    20,
+    23,
+    25,
+    35,
+    36,
+    42,
+    48,
+    53,
+    56,
+    59,
+    74
+  ],
+  "missing_files": [],
+  "eval_wall_time_s": 328.37,
+  "per_step_results": [
+    {
+      "problem_id": "2",
+      "step_idx": 1,
+      "step_id": "2.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.82,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (51,61) (61,51) \n"
+    },
+    {
+      "problem_id": "5",
+      "step_idx": 1,
+      "step_id": "5.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.522,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_5.1_yvszv4vw/5.1.py\", line 53, in <module>\n    assert np.allclose(lanczos(A,b,m), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "8",
+      "step_idx": 1,
+      "step_id": "8.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.934,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "9",
+      "step_idx": 1,
+      "step_id": "9.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.646,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 1,
+      "step_id": "11.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.433,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.1_trgne6i6/11.1.py\", line 42, in <module>\n    assert np.allclose(ket(2, 0), target)\n                       ^^^^^^^^^\nTypeError: ket() takes 1 positional argument but 2 were given\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 2,
+      "step_id": "11.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.442,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 3,
+      "step_id": "11.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.818,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 4,
+      "step_id": "11.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.751,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.4_hzdd7fg1/11.4.py\", line 132, in <module>\n    assert np.allclose(apply_channel(K, rho, sys=[2], dim=[2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.4_hzdd7fg1/11.4.py\", line 110, in apply_channel\n    raise IndexError('Subsystem index out of range')\nIndexError: Subsystem index out of range\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 5,
+      "step_id": "11.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.967,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 6,
+      "step_id": "11.6",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.025,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 7,
+      "step_id": "11.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.626,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 8,
+      "step_id": "11.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.456,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.8__bydeqiy/11.8.py\", line 214, in <module>\n    assert np.allclose(syspermute(X, [2,1], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.8__bydeqiy/11.8.py\", line 201, in syspermute\n    raise ValueError('perm must be a permutation of the subsystem indices')\nValueError: perm must be a permutation of the subsystem indices\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 9,
+      "step_id": "11.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.626,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_11.9_2ft_vvz2/11.9.py\", line 245, in <module>\n    assert np.allclose(partial_trace(X, [2], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_11.9_2ft_vvz2/11.9.py\", line 230, in partial_trace\n    raise IndexError('Subsystem index out of range')\nIndexError: Subsystem index out of range\n"
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 10,
+      "step_id": "11.10",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.33,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 11,
+      "step_id": "11.11",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.707,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "11",
+      "step_idx": 12,
+      "step_id": "11.12",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.936,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 1,
+      "step_id": "12.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.937,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 2,
+      "step_id": "12.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.427,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 3,
+      "step_id": "12.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.285,
+      "error_tail": "/tmp/scicode_eval_12.3_0fxzgcdi/12.3.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.3_0fxzgcdi/12.3.py\", line 72, in <module>\n    assert np.allclose(compute_Schrod(1, np.linspace(1e-5,10,20), 1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 4,
+      "step_id": "12.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.639,
+      "error_tail": "/tmp/scicode_eval_12.4_c5nukagv/12.4.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.4_c5nukagv/12.4.py\", line 89, in <module>\n    assert np.allclose(shoot(1.1, np.linspace(1e-7,20,10), 0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 5,
+      "step_id": "12.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.705,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (0,) (6,2) \n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 6,
+      "step_id": "12.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.269,
+      "error_tail": ", target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (0,) (34,2) \n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 7,
+      "step_id": "12.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.485,
+      "error_tail": "/tmp/scicode_eval_12.7_80a4el52/12.7.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.7_80a4el52/12.7.py\", line 169, in <module>\n    assert np.allclose(calculate_charge_density(bound_states,r_grid,Z), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 8,
+      "step_id": "12.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.179,
+      "error_tail": "/tmp/scicode_eval_12.8_1xjkty6k/12.8.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.8_1xjkty6k/12.8.py\", line 211, in <module>\n    assert np.allclose(calculate_HartreeU(charge_density, 0.0, 0.5, r_grid[0]-r_grid[1], r_grid, Z), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 9,
+      "step_id": "12.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.312,
+      "error_tail": "/tmp/scicode_eval_12.9_vlcqib7g/12.9.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.9_vlcqib7g/12.9.py\", line 227, in <module>\n    assert np.allclose(f_Schrod_Hartree(-0.5, r_grid, 2, Z, hu), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 10,
+      "step_id": "12.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.531,
+      "error_tail": "/tmp/scicode_eval_12.10_5zvpxixm/12.10.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\n/tmp/scicode_eval_12.10_5zvpxixm/12.10.py:233: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.10_5zvpxixm/12.10.py\", line 249, in <module>\n    assert np.allclose(compute_Schrod_Hartree(-0.5, r_grid, 2, Z, hu), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 11,
+      "step_id": "12.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.494,
+      "error_tail": "/tmp/scicode_eval_12.11_5l94hlwm/12.11.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\n/tmp/scicode_eval_12.11_5l94hlwm/12.11.py:233: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.11_5l94hlwm/12.11.py\", line 268, in <module>\n    assert np.allclose(extrapolate_polyfit(-0.5, r_grid, 2, Z, hu), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 12,
+      "step_id": "12.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.577,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (10,2) (3,2) \n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 13,
+      "step_id": "12.13",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.979,
+      "error_tail": "/tmp/scicode_eval_12.13_7_rwpaup/12.13.py:65: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\n/tmp/scicode_eval_12.13_7_rwpaup/12.13.py:233: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.13_7_rwpaup/12.13.py\", line 363, in <module>\n    assert cmp_tuple_or_list(calculate_charge_density_Hartree(bound_states_Hartree, r_grid, Z, hu), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "12",
+      "step_idx": 14,
+      "step_id": "12.14",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 8.464,
+      "error_tail": "/tmp/scicode_eval_12.14_22x7d2x0/12.14.py:233: RuntimeWarning: invalid value encountered in sqrt\n  ur_norm = ur / np.sqrt(norm)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_12.14_22x7d2x0/12.14.py\", line 399, in <module>\n    assert cmp_tuple_or_list(scf_routine(r_grid, energy_grid, nmax, Z, hartreeU, tolerance, iteration), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 1,
+      "step_id": "13.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.618,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 2,
+      "step_id": "13.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.891,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 3,
+      "step_id": "13.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.146,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 4,
+      "step_id": "13.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.612,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 5,
+      "step_id": "13.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.711,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 7,
+      "step_id": "13.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.364,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 8,
+      "step_id": "13.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.528,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.8_gbelc68y/13.8.py\", line 317, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 9,
+      "step_id": "13.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.885,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.9_uv_eft69/13.9.py\", line 368, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 10,
+      "step_id": "13.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.557,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.10_ocuou45o/13.10.py\", line 396, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 11,
+      "step_id": "13.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.86,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.11_6_hyj5l7/13.11.py\", line 447, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 12,
+      "step_id": "13.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.97,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.12_knbbo7er/13.12.py\", line 468, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 13,
+      "step_id": "13.13",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.52,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.13_kcjgclbk/13.13.py\", line 519, in <module>\n    maxwell = Maxwell(50,2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 14,
+      "step_id": "13.14",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.727,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.14_bdez614v/13.14.py\", line 539, in <module>\n    maxwell = Maxwell(50, 2)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined\n"
+    },
+    {
+      "problem_id": "13",
+      "step_idx": 15,
+      "step_id": "13.15",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.52,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_13.15_1hftaf3n/13.15.py\", line 574, in <module>\n    assert np.allclose(main(n_grid, x_out, courant, t_max, t_check), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_13.15_1hftaf3n/13.15.py\", line 554, in main\n    maxwell = Maxwell(n_grid, x_out)\n              ^^^^^^^\nNameError: name 'Maxwell' is not defined. Did you mean: 'maxwell'?\n"
+    },
+    {
+      "problem_id": "14",
+      "step_idx": 1,
+      "step_id": "14.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.629,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "14",
+      "step_idx": 2,
+      "step_id": "14.2",
+      "passed": false,
+      "status": "timeout",
+      "duration_s": 300.145,
+      "error_tail": "TimeoutExpired (300s)"
+    },
+    {
+      "problem_id": "15",
+      "step_idx": 1,
+      "step_id": "15.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.527,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "15",
+      "step_idx": 2,
+      "step_id": "15.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.108,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_15.2_j1eqcs70/15.2.py\", line 70, in <module>\n    assert np.allclose(crank_nicolson(sigma, kappa, T, nstep, N, L), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "16",
+      "step_idx": 1,
+      "step_id": "16.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.886,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "16",
+      "step_idx": 2,
+      "step_id": "16.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.0,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "17",
+      "step_idx": 1,
+      "step_id": "17.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.197,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_17.1_93pzpr2t/17.1.py\", line 36, in <module>\n    assert cmp_tuple_or_list(init_eji_array(10,[4,6,8,10]), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "17",
+      "step_idx": 2,
+      "step_id": "17.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.813,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_17.2_kytnorkd/17.2.py\", line 67, in <module>\n    assert np.allclose(float(integrate_DOS(energy, energy_vertices)), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "18",
+      "step_idx": 1,
+      "step_id": "18.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.807,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_18.1_6wtezucz/18.1.py\", line 40, in <module>\n    assert np.allclose(Bspline(xi, i, p, Xi), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "18",
+      "step_idx": 2,
+      "step_id": "18.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.023,
+      "error_tail": "\n  File \"/tmp/scicode_eval_18.2_k3hlcbyx/18.2.py\", line 75, in <module>\n    assert np.allclose(NURBS_2D(xi_1, xi_2, i_1, i_2, p_1, p_2, n_1, n_2, Xi_1, Xi_2, w), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_18.2_k3hlcbyx/18.2.py\", line 47, in NURBS_2D\n    numerator = Bspline(xi_1, i_1, p_1, Xi_1) * Bspline(xi_2, i_2, p_2, Xi_2) * weights[i_1 * n_2 + i_2]\n                                                                                ~~~~~~~^^^^^^^^^^^^^^^^^\nIndexError: index 9 is out of bounds for axis 0 with size 1\n"
+    },
+    {
+      "problem_id": "20",
+      "step_idx": 1,
+      "step_id": "20.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.094,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "20",
+      "step_idx": 2,
+      "step_id": "20.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.568,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 1,
+      "step_id": "21.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.086,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 2,
+      "step_id": "21.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.89,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "21",
+      "step_idx": 3,
+      "step_id": "21.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.258,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_21.3_dljdierm/21.3.py\", line 63, in <module>\n    assert np.allclose(alpha(800, 0.1, 850, 8000), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 1,
+      "step_id": "22.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.914,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 2,
+      "step_id": "22.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.692,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_22.2_qgl4uz1f/22.2.py\", line 123, in <module>\n    assert np.allclose(Tnvm(2, 1, 1, Q), target)\n                       ^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_22.2_qgl4uz1f/22.2.py\", line 97, in Tnvm\n    coeff[nn, nu + n] = normalization * scipy.special.sph_harm(-nu, nn, phi, theta)\n                                        ^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: module 'scipy.special' has no attribute 'sph_harm'. Did you mean: 'sph_harm_y'?\n"
+    },
+    {
+      "problem_id": "22",
+      "step_idx": 3,
+      "step_id": "22.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.729,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_22.3_z_vvh37d/22.3.py\", line 192, in <module>\n    assert np.allclose(compute_BRnm(r0, B, n, m, wl, N_t), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 1,
+      "step_id": "23.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.764,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 2,
+      "step_id": "23.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.6,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "23",
+      "step_idx": 3,
+      "step_id": "23.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.592,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 1,
+      "step_id": "24.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.72,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_24.1_ghxjrghy/24.1.py\", line 31, in <module>\n    assert np.allclose(make_IC(n_x), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 2,
+      "step_id": "24.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.563,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "24",
+      "step_idx": 3,
+      "step_id": "24.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.73,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_24.3_ird58003/24.3.py\", line 65, in <module>\n    assert np.allclose(solve(n_x,n_t,T), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 1,
+      "step_id": "25.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.486,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 2,
+      "step_id": "25.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.292,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "25",
+      "step_idx": 3,
+      "step_id": "25.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 7.526,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 1,
+      "step_id": "26.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.506,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 2,
+      "step_id": "26.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.542,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "26",
+      "step_idx": 3,
+      "step_id": "26.3",
+      "passed": false,
+      "status": "timeout",
+      "duration_s": 300.134,
+      "error_tail": "TimeoutExpired (300s)"
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 1,
+      "step_id": "27.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.485,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 2,
+      "step_id": "27.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.428,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_27.2_j9ivby2c/27.2.py\", line 51, in <module>\n    assert np.allclose(capacitance(5, 1000, 1e10, 1e8,1.8e6,13, 0)*10**15, target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "27",
+      "step_idx": 3,
+      "step_id": "27.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.417,
+      "error_tail": "l last):\n  File \"/tmp/scicode_eval_27.3_wzx36bq3/27.3.py\", line 70, in <module>\n    f3dB = get_3dB_frequency(50, xi_arr, 700, 1e19, 1e17, 1.8e6, 13, 0)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_27.3_wzx36bq3/27.3.py\", line 61, in get_3dB_frequency\n    C = capacitance(xi, A, N_A, N_D, n_i, es, V0)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_27.3_wzx36bq3/27.3.py\", line 35, in capacitance\n    xi_m = float(xi) * 1e-06\n           ^^^^^^^^^\nTypeError: only 0-dimensional arrays can be converted to Python scalars\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 1,
+      "step_id": "28.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.59,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_28.1_e05mz9b2/28.1.py\", line 66, in <module>\n    assert np.allclose((P1, P2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 2,
+      "step_id": "28.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.428,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_28.2_q6h9z3de/28.2.py\", line 93, in <module>\n    assert np.allclose(gaussian_beam_through_lens(lambda_, w0, R0, Mf1, z,Mp2,L1,s), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "28",
+      "step_idx": 3,
+      "step_id": "28.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.874,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_28.3_f12u7ozq/28.3.py\", line 111, in <module>\n    assert cmp_tuple_or_list(Gussian_Lens_transmission(N, Ld, z, L,w0,R0, Mf1, Mp2, L1, s), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 1,
+      "step_id": "30.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.384,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 2,
+      "step_id": "30.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.279,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "30",
+      "step_idx": 3,
+      "step_id": "30.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.511,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_30.3_6gs4fi42/30.3.py\", line 293, in <module>\n    assert np.allclose(test_laplacian(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 1,
+      "step_id": "31.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.003,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 2,
+      "step_id": "31.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.945,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_31.2_7n_nsmm4/31.2.py\", line 48, in <module>\n    assert test_identity(np.cov(Z)) == s and np.allclose(Z, v)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "31",
+      "step_idx": 3,
+      "step_id": "31.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.04,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_31.3_evbjrlh0/31.3.py\", line 72, in <module>\n    assert np.allclose(ica(np.array([[ -4.        ,  -1.25837414,  -4.2834508 ,   4.22567322,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 1,
+      "step_id": "32.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.325,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 2,
+      "step_id": "32.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.552,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_32.2_9192nb1b/32.2.py\", line 110, in <module>\n    assert np.allclose(generate_Hamiltonian(P, phi, R, l, w, a, n, h, N, rho), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "32",
+      "step_idx": 3,
+      "step_id": "32.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 5.507,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_32.3_9z78c2o8/32.3.py\", line 155, in <module>\n    assert np.allclose(runge_kutta(C0, H, L, M, t0, steps), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 1,
+      "step_id": "33.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.389,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 2,
+      "step_id": "33.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.034,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_33.2_lrtqmr_2/33.2.py\", line 98, in <module>\n    assert np.allclose(compute_chern_number(delta, a, t1, t2, phi, m), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "33",
+      "step_idx": 3,
+      "step_id": "33.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 16.369,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_33.3_9y5lbr71/33.3.py\", line 130, in <module>\n    assert cmp_tuple_or_list(compute_chern_number_grid(delta, a, t1, t2, N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 1,
+      "step_id": "34.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.349,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 2,
+      "step_id": "34.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.326,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "34",
+      "step_idx": 3,
+      "step_id": "34.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.076,
+      "error_tail": "   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (461,) (462,) \n"
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 1,
+      "step_id": "35.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.342,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 2,
+      "step_id": "35.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.557,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "35",
+      "step_idx": 3,
+      "step_id": "35.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.713,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 1,
+      "step_id": "36.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.356,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 2,
+      "step_id": "36.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.604,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "36",
+      "step_idx": 3,
+      "step_id": "36.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.219,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 1,
+      "step_id": "37.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.312,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.1_673q_2hr/37.1.py\", line 60, in <module>\n    assert np.allclose(calculate_paraxial(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 2,
+      "step_id": "37.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.203,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.2_c3yfw1tf/37.2.py\", line 99, in <module>\n    assert np.allclose(calculate_non_paraxial(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "37",
+      "step_idx": 3,
+      "step_id": "37.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.53,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_37.3_d1bf2ow3/37.3.py\", line 116, in <module>\n    assert np.allclose(compute_LC(h1, r1, r2, r3, d1, d2, nD1, nD1, nD3, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 1,
+      "step_id": "39.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.556,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 2,
+      "step_id": "39.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.491,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_39.2_oy61u686/39.2.py\", line 47, in <module>\n    assert np.allclose(get_theta(1+1j, 2-1j), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "39",
+      "step_idx": 3,
+      "step_id": "39.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.5,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 1,
+      "step_id": "40.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.567,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 2,
+      "step_id": "40.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.736,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_40.2_q9zh1hv9/40.2.py\", line 58, in <module>\n    assert np.allclose(Strang_splitting(u, dt, dx, alpha), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "40",
+      "step_idx": 3,
+      "step_id": "40.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.416,
+      "error_tail": "), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (15,) (42,) \n"
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 1,
+      "step_id": "41.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.532,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_41.1_is4j9pwm/41.1.py\", line 48, in <module>\n    assert np.allclose(Conversion(g, pref, t, dep_order), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 2,
+      "step_id": "41.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.23,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "41",
+      "step_idx": 3,
+      "step_id": "41.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.503,
+      "error_tail": "/tmp/scicode_eval_41.3_i5be65o4/41.3.py:62: RuntimeWarning: invalid value encountered in divide\n  M_scaled = M / D_minus_1[None, :]\n/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py:2423: RuntimeWarning: invalid value encountered in det\n  r = _umath_linalg.det(a, signature=signature)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_41.3_i5be65o4/41.3.py\", line 78, in <module>\n    assert np.allclose(StrucStability(g, pref, t, dep_order), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 1,
+      "step_id": "42.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.239,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 2,
+      "step_id": "42.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.624,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "42",
+      "step_idx": 3,
+      "step_id": "42.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.368,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 1,
+      "step_id": "43.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.398,
+      "error_tail": " was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_43.1_k4fawdtc/43.1.py\", line 105, in <module>\n    assert np.allclose(f(z, y, Pssat, Ppsat, N, sigma_ap, sigma_ep, sigma_as, sigma_es, gamma_p, alpha_p, gamma_s, alpha_s), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_43.1_k4fawdtc/43.1.py\", line 52, in f\n    dydz[0] = -pump_gain * Pp_plus - alpha_p * Pp_plus\n    ~~~~^^^\nValueError: setting an array element with a sequence.\n"
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 2,
+      "step_id": "43.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.523,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "43",
+      "step_idx": 3,
+      "step_id": "43.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.372,
+      "error_tail": "48, in fun_p\n    return np.asarray(fun(x, y), dtype)\n                      ^^^^^^^^^\n  File \"/tmp/scicode_eval_43.3_xaflihzo/43.3.py\", line 153, in rate_equations\n    return f(z_values, y_values, Pssat, Ppsat, N, sigma_ap, sigma_ep, sigma_as, sigma_es, gamma_p, alpha_p, gamma_s, alpha_s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_43.3_xaflihzo/43.3.py\", line 50, in f\n    dydz[0] = -pump_gain * Pp_plus - alpha_p * Pp_plus\n    ~~~~^^^\nValueError: setting an array element with a sequence.\n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 1,
+      "step_id": "45.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.703,
+      "error_tail": "be broadcast together with shapes (2,10,5) (2,5,10) \n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_45.1_ougqzcj6/45.1.py\", line 37, in <module>\n    assert cmp_tuple_or_list(init_grid(2, 10, 5, 2, 100, 1, 50, 2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/SciCode/src/scicode/compare/cmp.py\", line 72, in cmp_tuple_or_list\n    if not v1 == v2:\n           ^^^^^^^^\nValueError: operands could not be broadcast together with shapes (2,10,5) (2,5,10) \n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 2,
+      "step_id": "45.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.65,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (2,10,5) (2,5,10) \n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 3,
+      "step_id": "45.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.647,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (2,10,5) (2,5,10) \n"
+    },
+    {
+      "problem_id": "45",
+      "step_idx": 4,
+      "step_id": "45.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.618,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_45.4_w3tvrmdf/45.4.py\", line 138, in <module>\n    assert np.allclose(result[190], target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 1,
+      "step_id": "46.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.604,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 2,
+      "step_id": "46.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.692,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 3,
+      "step_id": "46.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.357,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_46.3_m70uspxq/46.3.py\", line 127, in <module>\n    assert np.allclose(metropolis(np.random.normal(size=(1, 2, 3)), wf, tau=0.01, nsteps=2000), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "46",
+      "step_idx": 4,
+      "step_id": "46.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.694,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_46.4_q3p8z_3s/46.4.py\", line 153, in <module>\n    assert cmp_tuple_or_list(calc_energy(np.random.randn(1000, 2, 3), nsteps=1000, tau=0.2, alpha=1, Z=2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 1,
+      "step_id": "48.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.469,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 2,
+      "step_id": "48.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.396,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 3,
+      "step_id": "48.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.551,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "48",
+      "step_idx": 4,
+      "step_id": "48.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.53,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 1,
+      "step_id": "50.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 6.219,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 2,
+      "step_id": "50.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.253,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 3,
+      "step_id": "50.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.375,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_50.3_tdg4rcfn/50.3.py\", line 91, in <module>\n    assert potential_RSB == target\n           ^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "50",
+      "step_idx": 4,
+      "step_id": "50.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 216.839,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_50.4_16p_rqec/50.4.py\", line 129, in <module>\n    assert a == aa and np.allclose((b, c), (bb, cc))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 1,
+      "step_id": "52.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.495,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 2,
+      "step_id": "52.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.699,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_52.2_3phl3n2y/52.2.py\", line 61, in <module>\n    assert np.allclose(SolveSchroedinger(y0,En,l,R), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 3,
+      "step_id": "52.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.717,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_52.3_35kbngad/52.3.py\", line 67, in <module>\n    assert np.allclose(Shoot(2, np.logspace(-3,3.2,1000), 1, [0, -1e-5]), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "52",
+      "step_idx": 4,
+      "step_id": "52.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.343,
+      "error_tail": "sert np.allclose(Bnd, target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (27,2) (33,2) \n"
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 1,
+      "step_id": "53.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.705,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 2,
+      "step_id": "53.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.623,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 3,
+      "step_id": "53.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.488,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "53",
+      "step_idx": 4,
+      "step_id": "53.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 51.524,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 1,
+      "step_id": "54.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.573,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.1_116lswwy/54.1.py\", line 49, in <module>\n    assert np.allclose(basis(i, p, M, h, etype), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 2,
+      "step_id": "54.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.369,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.2_h9tq_xxc/54.2.py\", line 70, in <module>\n    assert cmp_tuple_or_list(assemble(M), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 3,
+      "step_id": "54.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.421,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.3_uen87j93/54.3.py\", line 113, in <module>\n    assert cmp_tuple_or_list(stabilization(A,b), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "54",
+      "step_idx": 4,
+      "step_id": "54.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.452,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_54.4_vcrwfo35/54.4.py\", line 123, in <module>\n    assert np.allclose(solve(N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 1,
+      "step_id": "55.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.622,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 2,
+      "step_id": "55.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.647,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_55.2_siwv3zlj/55.2.py\", line 57, in <module>\n    assert np.allclose(structure_factor(u), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 3,
+      "step_id": "55.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.024,
+      "error_tail": "  File \"/tmp/scicode_eval_55.3_deh68dg5/55.3.py\", line 52\n    '''Analyze the structure factor to identify peak near q0\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 94)\n"
+    },
+    {
+      "problem_id": "55",
+      "step_idx": 4,
+      "step_id": "55.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 9.585,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_55.4_d900po1q/55.4.py\", line 151, in <module>\n    assert cmp_tuple_or_list(SH_pattern_formation(u0, dt, T, N, epsilon, q0, min_height), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 1,
+      "step_id": "56.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.326,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 2,
+      "step_id": "56.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.147,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 3,
+      "step_id": "56.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.053,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "56",
+      "step_idx": 4,
+      "step_id": "56.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.31,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 1,
+      "step_id": "57.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.271,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 2,
+      "step_id": "57.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.265,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 3,
+      "step_id": "57.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.12,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 4,
+      "step_id": "57.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.268,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "57",
+      "step_idx": 5,
+      "step_id": "57.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 21.351,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_57.5_2l3g13o5/57.5.py\", line 121, in <module>\n    assert np.allclose(BoundStates(np.linspace(0,10,200), 2, 1e-4), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 1,
+      "step_id": "58.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.378,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 2,
+      "step_id": "58.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.42,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 3,
+      "step_id": "58.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.392,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 4,
+      "step_id": "58.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.139,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_58.4_8d2m77wm/58.4.py\", line 87, in <module>\n    assert np.allclose(tov_RHS(data, r, eos_Gamma, eos_kappa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "58",
+      "step_idx": 5,
+      "step_id": "58.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.355,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_58.5_oocn0gr9/58.5.py\", line 119, in <module>\n    assert np.allclose(tov(rhoc, eos_Gamma, eos_kappa, npoints, rmax), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 1,
+      "step_id": "59.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.431,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 2,
+      "step_id": "59.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.171,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 3,
+      "step_id": "59.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.447,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 4,
+      "step_id": "59.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.225,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "59",
+      "step_idx": 5,
+      "step_id": "59.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.371,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 1,
+      "step_id": "60.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.432,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 2,
+      "step_id": "60.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.525,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.2_4ktfqeje/60.2.py\", line 67, in <module>\n    assert np.allclose(E_i(r2, pos2, sigma2, epsilon2, L2, r_c2), target)  # Expect 16140.993141289438\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 3,
+      "step_id": "60.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.341,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.3_pxu_1dls/60.3.py\", line 99, in <module>\n    assert np.allclose(Widom_insertion(pos3, sigma3, epsilon3, L3, r_c3, T3), target)  # Expect to be 2.998541562462041e-17\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 4,
+      "step_id": "60.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.337,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.4_v__dy4qd/60.4.py\", line 100, in <module>\n    assert cmp_tuple_or_list(init_system(N1, rho1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "60",
+      "step_idx": 5,
+      "step_id": "60.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 142.452,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_60.5_s1o1pwxz/60.5.py\", line 206, in <module>\n    assert (np.abs(np.mean((mu_ext_list-ref)/ref)) < 0.1) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 1,
+      "step_id": "61.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.402,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_61.1_thsf7hqb/61.1.py\", line 32, in <module>\n    assert np.allclose(Bmat(pa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 2,
+      "step_id": "61.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.266,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 3,
+      "step_id": "61.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.398,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 4,
+      "step_id": "61.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.359,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "61",
+      "step_idx": 5,
+      "step_id": "61.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.163,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 2,
+      "step_id": "62.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.337,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_62.2_f3_4ii7t/62.2.py\", line 37, in <module>\n    block = block_initial(model_d)\n            ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_62.2_f3_4ii7t/62.2.py\", line 28, in block_initial\n    initial_block = Block(length=1, basis_size=model_d, operator_dict={'H': H1, 'conn_Sz': Sz1, 'conn_Sp': Sp1})\n                    ^^^^^\nNameError: name 'Block' is not defined\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 3,
+      "step_id": "62.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.226,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 4,
+      "step_id": "62.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.376,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 5,
+      "step_id": "62.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.346,
+      "error_tail": "/scipy/reference/sparse.migration_to_sparray.html\n\n        This function will be changed no earlier than v1.20.\n        \n  H_e = H_e + kron(Sr_z, Sz, format='csr')\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_62.5_5upwjaig/62.5.py\", line 173, in <module>\n    assert np.allclose(newblock.length, a) and np.allclose(newblock.basis_size, b) and are_dicts_close(newblock.operator_dict, c) and np.allclose(energy, d)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "62",
+      "step_idx": 6,
+      "step_id": "62.6",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 297.443,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 1,
+      "step_id": "63.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.302,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 2,
+      "step_id": "63.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.507,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 3,
+      "step_id": "63.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.36,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 4,
+      "step_id": "63.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.358,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.4_71n1c7w7/63.4.py\", line 123, in <module>\n    assert np.allclose(forward_iteration(V, D, N_p, N_t, r, sig, dp, dt), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 5,
+      "step_id": "63.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.588,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.5_pvwnrixb/63.5.py\", line 141, in <module>\n    assert np.allclose(price_option(price_step, time_step, strike, r, sig, max_price, min_price), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "63",
+      "step_idx": 6,
+      "step_id": "63.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.546,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_63.6_cgjjt7jq/63.6.py\", line 181, in <module>\n    assert np.allclose(price_option_of_time(price_step, time_step, strike, r, sig, max_price, min_price, t, S0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 1,
+      "step_id": "64.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.575,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 2,
+      "step_id": "64.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.492,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_64.2__kti6d2e/64.2.py\", line 42, in <module>\n    assert np.allclose(distance1[0], target)  # Expected distance should be roughly 0.866\n                       ~~~~~~~~~^^^\nTypeError: 'float' object is not subscriptable\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 3,
+      "step_id": "64.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.607,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 4,
+      "step_id": "64.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.477,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_64.4_0yvzoquu/64.4.py\", line 109, in <module>\n    assert np.allclose(E_i(r3, positions3, L3, sigma3, epsilon3), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.4_0yvzoquu/64.4.py\", line 76, in E_i\n    E += E_ij(distance, sigma, epsilon)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_64.4_0yvzoquu/64.4.py\", line 50, in E_ij\n    sigma_r_6 = (sigma / r) ** 6\n                 ~~~~~~^~~\nZeroDivisionError: float division by zero\n"
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 5,
+      "step_id": "64.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.683,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "64",
+      "step_idx": 6,
+      "step_id": "64.6",
+      "passed": false,
+      "status": "timeout",
+      "duration_s": 300.119,
+      "error_tail": "TimeoutExpired (300s)"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 1,
+      "step_id": "65.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.634,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 2,
+      "step_id": "65.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.741,
+      "error_tail": "nary part\n  M = np.kron(M, np.asarray(arg, dtype=float))\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_65.2_3dv5p183/65.2.py\", line 64, in <module>\n    assert np.allclose(apply_channel(K, rho, sys=[2], dim=[2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_65.2_3dv5p183/65.2.py\", line 47, in apply_channel\n    matrix += full_k @ rho @ full_k.conj().T\n              ~~~~~~~^~~~~\nValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 4 is different from 8)\n"
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 3,
+      "step_id": "65.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.917,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 4,
+      "step_id": "65.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.805,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 5,
+      "step_id": "65.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.775,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "65",
+      "step_idx": 6,
+      "step_id": "65.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.919,
+      "error_tail": "65.6_vewz9cgy/65.6.py:98: LinAlgWarning: Matrix is singular. The result might be inaccurate or the array might not have a square root.\n  sqrt_rho = sqrtm(rho)\n/tmp/scicode_eval_65.6_vewz9cgy/65.6.py:99: LinAlgWarning: Matrix is singular. The result might be inaccurate or the array might not have a square root.\n  sqrt_sigma = sqrtm(sigma)\nTraceback (most recent call last):\n  File \"/tmp/scicode_eval_65.6_vewz9cgy/65.6.py\", line 130, in <module>\n    assert np.allclose(ghz_protocol_fidelity(ghz,dephasing), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 1,
+      "step_id": "66.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.785,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_66.1_mkxulb5q/66.1.py\", line 41, in <module>\n    assert np.allclose(generate_monolayer_graphene(s, a, z, n), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 2,
+      "step_id": "66.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.421,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 3,
+      "step_id": "66.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.988,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 4,
+      "step_id": "66.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.157,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 5,
+      "step_id": "66.5",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.813,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "66",
+      "step_idx": 6,
+      "step_id": "66.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.034,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_66.6_7vwrqhpc/66.6.py\", line 158, in <module>\n    assert np.allclose(calc_potential(generate_monolayer_graphene(0, 2.46, 1.6, 5), generate_monolayer_graphene(0, 2.46, -1.6, 5)), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 1,
+      "step_id": "67.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.306,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 2,
+      "step_id": "67.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.561,
+      "error_tail": "t)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'complex'\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 3,
+      "step_id": "67.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.702,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.3_qz39s0a2/67.3.py\", line 99, in <module>\n    assert np.allclose(D_cal(D0,q,d,bg_eps,N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 4,
+      "step_id": "67.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.31,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.4_7xd0r5sr/67.4.py\", line 122, in <module>\n    assert np.allclose(D_b_qz_analy(qz,D0,bg_eps,q,d), target, atol=1e-10, rtol=1e-10)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 5,
+      "step_id": "67.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.289,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.5_5ov1upbo/67.5.py\", line 143, in <module>\n    assert np.allclose(omega_p_cal(q,qz,m_eff,n_eff,d,bg_eps), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "67",
+      "step_idx": 6,
+      "step_id": "67.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.477,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_67.6_eodxivlv/67.6.py\", line 182, in <module>\n    assert np.allclose(D_b_qz_mat(q,qz,omega,gamma,n_eff,e_F,k_F,v_F,bg_eps,d,N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 1,
+      "step_id": "68.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.656,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 2,
+      "step_id": "68.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.803,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 3,
+      "step_id": "68.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.926,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_68.3_u1nemvb2/68.3.py\", line 296, in <module>\n    assert np.allclose(test_laplacian(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 4,
+      "step_id": "68.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.941,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 5,
+      "step_id": "68.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.239,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_68.5_evk3ciw_/68.5.py\", line 245, in <module>\n    assert np.allclose(metropolis(np.random.normal(size=(1, 2, 3)), wf, tau=0.01, nsteps=2000), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 6,
+      "step_id": "68.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.846,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_68.6_gix3cw6d/68.6.py\", line 271, in <module>\n    assert np.allclose(get_acceptance_ratio(configs_old, configs_new, drift_old, drift_new, 0.02, MultiplyWF(Slater(alpha=2.0), Jastrow(beta=0.5))), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 7,
+      "step_id": "68.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.027,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "68",
+      "step_idx": 8,
+      "step_id": "68.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.38,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_68.8_li81y3tx/68.8.py\", line 314, in <module>\n    assert np.allclose(run_dmc(\n           ^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 1,
+      "step_id": "69.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.888,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 2,
+      "step_id": "69.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.907,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.2_533q4o1z/69.2.py\", line 79, in <module>\n    assert np.allclose(D_2DEG(q,omega,gamma,n_eff,e_F,k_F,v_F), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 3,
+      "step_id": "69.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 4.178,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.3_ojb0molo/69.3.py\", line 117, in <module>\n    assert np.allclose(D_cal(D0,q,d,bg_eps,N), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 4,
+      "step_id": "69.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.963,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 5,
+      "step_id": "69.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.997,
+      "error_tail": "        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nTypeError: unsupported operand type(s) for -: 'NoneType' and 'float'\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 6,
+      "step_id": "69.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.601,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.6_0rd188_c/69.6.py\", line 267, in <module>\n    assert np.allclose(I_Raman(q,d,omega,gamma,n_eff,e_F,k_F,v_F,bg_eps,delta_E,kd), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 7,
+      "step_id": "69.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.023,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "69",
+      "step_idx": 8,
+      "step_id": "69.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 28.373,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_69.8_utu14ih0/69.8.py\", line 400, in <module>\n    assert (np.abs(NUM-ANA)< tol*abs(ANA)) == target\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 1,
+      "step_id": "71.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.5,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.1_34k8m6w6/71.1.py\", line 38, in <module>\n    assert np.allclose(ket(2, 0), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 2,
+      "step_id": "71.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.828,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 3,
+      "step_id": "71.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.235,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.3_k65tu_pv/71.3.py\", line 91, in <module>\n    assert np.allclose(apply_channel(K, rho, sys=[2], dim=[2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.3_k65tu_pv/71.3.py\", line 70, in apply_channel\n    factors[systems[0]] = k\n    ~~~~~~~^^^^^^^^^^^^\nIndexError: list assignment index out of range\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 4,
+      "step_id": "71.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.386,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.4_in0dqcts/71.4.py\", line 106, in <module>\n    assert np.allclose(syspermute(X, [2,1], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.4_in0dqcts/71.4.py\", line 93, in syspermute\n    raise ValueError('perm must be a permutation of the subsystem indices.')\nValueError: perm must be a permutation of the subsystem indices.\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 5,
+      "step_id": "71.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.722,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_71.5_8h3snp22/71.5.py\", line 124, in <module>\n    assert np.allclose(partial_trace(X, [2], [2,2]), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.5_8h3snp22/71.5.py\", line 113, in partial_trace\n    Y = syspermute(X, kept + traced, dims)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_71.5_8h3snp22/71.5.py\", line 93, in syspermute\n    raise ValueError('perm must be a permutation of the subsystem indices.')\nValueError: perm must be a permutation of the subsystem indices.\n"
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 6,
+      "step_id": "71.6",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.374,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 7,
+      "step_id": "71.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.004,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 8,
+      "step_id": "71.8",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.489,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "71",
+      "step_idx": 9,
+      "step_id": "71.9",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.372,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 1,
+      "step_id": "72.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.843,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 2,
+      "step_id": "72.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.109,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 3,
+      "step_id": "72.3",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.062,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 4,
+      "step_id": "72.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.672,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 5,
+      "step_id": "72.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.504,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.5_uqiyd38q/72.5.py\", line 90, in <module>\n    assert np.allclose(get_flip_probability_magnetization(lattice, 1, 2, 1), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 6,
+      "step_id": "72.6",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 3.157,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 7,
+      "step_id": "72.7",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.851,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 8,
+      "step_id": "72.8",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 4.103,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "72",
+      "step_idx": 9,
+      "step_id": "72.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.664,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_72.9_wqtkqs8b/72.9.py\", line 149, in <module>\n    assert np.allclose(calc_transition(Ts, mag2), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 1,
+      "step_id": "73.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.318,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.1_mtl0k6e2/73.1.py\", line 34, in <module>\n    assert np.allclose(Bmat(pa), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 2,
+      "step_id": "73.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.447,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.2_omdh9hsk/73.2.py\", line 69, in <module>\n    assert np.allclose(q_cal_p(p,b_c,det_d,p_s,wl,yaw,pitch,roll), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 3,
+      "step_id": "73.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.776,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.3_0072jq7f/73.3.py\", line 130, in <module>\n    assert np.allclose(u_triple_p(pa,H1,H2,p1,p2,b_c,det_d,p_s,wl,yaw,pitch,roll,z1,z2,z_s,chi,phi), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 4,
+      "step_id": "73.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.588,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.4_2k3fllnk/73.4.py\", line 144, in <module>\n    assert np.allclose(Umat(t_c,t_g), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 5,
+      "step_id": "73.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.995,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.5_we4zgukv/73.5.py\", line 184, in <module>\n    assert np.allclose(get_hkl_p(p,z,b_c,det_d,p_s,wl,yaw,pitch,roll,pa,H1,H2,p1,p2,z1,z2,z_s,chi,phi), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 6,
+      "step_id": "73.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.142,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.6_xu7e2ibe/73.6.py\", line 209, in <module>\n    assert are_dicts_close(ringdstar(pa,polar_max,wl), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 7,
+      "step_id": "73.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.29,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.7_ve7plh2z/73.7.py\", line 247, in <module>\n    assert cmp_tuple_or_list(hkl_pairs(pa,p1,p2,b_c,det_d,p_s,wl,yaw,pitch,roll,polar_max), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 8,
+      "step_id": "73.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.943,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.8_h9wnqh71/73.8.py\", line 334, in <module>\n    assert cmp_tuple_or_list(Umat_p(pa,p1,p2,p3,b_c,det_d,p_s,wl,yaw,pitch,roll,z1,z2,z3,z_s,chi,phi,polar_max), target)\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_73.8_h9wnqh71/73.8.py\", line 307, in Umat_p\n    raise ValueError('No reflection pair is consistent with the observed scattering vectors.')\nValueError: No reflection pair is consistent with the observed scattering vectors.\n"
+    },
+    {
+      "problem_id": "73",
+      "step_idx": 9,
+      "step_id": "73.9",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.132,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_73.9_feti5tlg/73.9.py\", line 382, in <module>\n    assert np.allclose(auto_index(pa,px,py,b_c,det_d,p_s,wl,yaw,pitch,roll,z,z_s,chi,phi,polar_max), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "74",
+      "step_idx": 1,
+      "step_id": "74.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.471,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 1,
+      "step_id": "75.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.538,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 2,
+      "step_id": "75.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.778,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_75.2_2plyxknn/75.2.py\", line 66, in <module>\n    assert np.allclose(mk(latvecs, basis, di, dj, ai, aj), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_75.2_2plyxknn/75.2.py\", line 42, in mk\n    pos_i = basis[ai] + di @ latvecs\n                        ~~~^~~~~~~~~\nValueError: matmul: Input operand 1 has a mismatch in its core dimension 0, with gufunc signature (n?,k),(k,m?)->(n?,m?) (size 3 is different from 14)\n"
+    },
+    {
+      "problem_id": "75",
+      "step_idx": 3,
+      "step_id": "75.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.424,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_75.3_tdy9fi4j/75.3.py\", line 93, in <module>\n    assert np.allclose(ham_eig(k, latvecs, basis), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 1,
+      "step_id": "76.1",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.933,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_76.1_ee4e2_8r/76.1.py\", line 30, in <module>\n    assert np.allclose(load_motif_from_df(data), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.1_ee4e2_8r/76.1.py\", line 15, in load_motif_from_df\n    mat = np.asarray(data[['A', 'C', 'G', 'T']].values, dtype=float)\n                     ~~~~^^^^^^^^^^^^^^^^^^^^^^\nTypeError: unhashable type: 'list'\n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 2,
+      "step_id": "76.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.584,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_76.2_6i9qtkxg/76.2.py\", line 38, in <module>\n    assert np.allclose(compute_kld(load_motif_from_df(data)), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "76",
+      "step_idx": 4,
+      "step_id": "76.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.543,
+      "error_tail": "), target)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.4_0sq1_5qo/76.4.py\", line 59, in scan_sequence\n    motif = load_motif_from_df(matrix)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_76.4_0sq1_5qo/76.4.py\", line 13, in load_motif_from_df\n    mat = np.column_stack([np.asarray(data[base], dtype=float) for base in ('A', 'C', 'G', 'T')])\n                                      ~~~~^^^^^^\nIndexError: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 1,
+      "step_id": "77.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.632,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 2,
+      "step_id": "77.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.736,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 3,
+      "step_id": "77.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.852,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.3_3em72qgx/77.3.py\", line 59, in <module>\n    assert np.allclose(dist_v(r1, r2, box_length), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 4,
+      "step_id": "77.4",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.446,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 5,
+      "step_id": "77.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.433,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.5_kyu5_7_p/77.5.py\", line 113, in <module>\n    assert np.allclose(f_ij(r,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 6,
+      "step_id": "77.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.446,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.6_32d5wlxr/77.6.py\", line 132, in <module>\n    assert np.allclose(E_tail(N,L,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 7,
+      "step_id": "77.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.899,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.7_gtsjvtof/77.7.py\", line 158, in <module>\n    assert np.allclose(P_tail(N,L,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 8,
+      "step_id": "77.8",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.344,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.8_wgrv4xok/77.8.py\", line 181, in <module>\n    assert np.allclose(E_pot(positions1, L1, sigma1, epsilon1,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 9,
+      "step_id": "77.9",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.343,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 10,
+      "step_id": "77.10",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.804,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_77.10_nogqlklv/77.10.py\", line 275, in <module>\n    assert cmp_tuple_or_list(pressure(N, L, T, positions, sigma, epsilon, rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 11,
+      "step_id": "77.11",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.463,
+      "error_tail": "   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2312, in allclose\n    res = all(isclose(a, b, rtol=rtol, atol=atol, equal_nan=equal_nan))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/scicode_bench/venv/lib/python3.12/site-packages/numpy/_core/numeric.py\", line 2443, in isclose\n    result = (less_equal(abs(x - y), atol + rtol * abs(y))\n                             ~~^~~\nValueError: operands could not be broadcast together with shapes (3,3) (2,3) \n"
+    },
+    {
+      "problem_id": "77",
+      "step_idx": 12,
+      "step_id": "77.12",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.448,
+      "error_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.12_sp9uv9h4/77.12.py\", line 487, in test_main\n    xyz, v_xyz, L = velocityVerlet(N, xyz, v_xyz, L, sigma, epsilon, rc, m, dt, tau_T, T_target, tau_P, P_target)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/scicode_eval_77.12_sp9uv9h4/77.12.py\", line 341, in velocityVerlet\n    raise Exception('The Berendsen barostat has reduced L below twice the cutoff radius.')\nException: The Berendsen barostat has reduced L below twice the cutoff radius.\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 1,
+      "step_id": "79.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 1.66,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 2,
+      "step_id": "79.2",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.491,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_79.2_vbuidunp/79.2.py\", line 128, in <module>\n    assert cmp_tuple_or_list(nhc_step(v0, G, V, X, dt, m, T, omega), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 3,
+      "step_id": "79.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.415,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_79.3_a5g91hit/79.3.py\", line 167, in <module>\n    assert cmp_tuple_or_list(nhc_Y4(v0, G, V, X, dt, m, T, omega), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "79",
+      "step_idx": 4,
+      "step_id": "79.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 3.263,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_79.4_9afsjuyu/79.4.py\", line 176, in <module>\n    assert cmp_tuple_or_list(nose_hoover_chain(x0, v0, T0, M, m, omega, dt, nsteps), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 1,
+      "step_id": "80.1",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.416,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 2,
+      "step_id": "80.2",
+      "passed": true,
+      "status": "pass",
+      "duration_s": 2.991,
+      "error_tail": ""
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 3,
+      "step_id": "80.3",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 1.989,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.3_h71663gb/80.3.py\", line 104, in <module>\n    assert np.allclose(E_pot(positions3, L3, sigma3, epsilon3, rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 4,
+      "step_id": "80.4",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.816,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.4_nrhcvcoq/80.4.py\", line 111, in <module>\n    assert np.allclose(f_ij(r,sigma,epsilon,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 5,
+      "step_id": "80.5",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.442,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.5_d4wvs2xk/80.5.py\", line 153, in <module>\n    assert np.allclose(forces(N, positions, L, sigma, epsilon, rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 6,
+      "step_id": "80.6",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 2.356,
+      "error_tail": "Traceback (most recent call last):\n  File \"/tmp/scicode_eval_80.6_78hz_qgy/80.6.py\", line 187, in <module>\n    assert cmp_tuple_or_list(velocity_verlet(N,sigma,epsilon,positions,velocities,dt,m,L,rc), target)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "problem_id": "80",
+      "step_idx": 7,
+      "step_id": "80.7",
+      "passed": false,
+      "status": "fail",
+      "duration_s": 0.031,
+      "error_tail": "  File \"/tmp/scicode_eval_80.7_he89ikko/80.7.py\", line 221\n    if collision_probability > 0.\n                                 ^\nSyntaxError: expected ':'\n"
+    }
+  ]
+}

@@ -1,13 +1,11 @@
 # Google Play Console — Closed Testing Submission Checklist (`ai.clover.studio`)
 
-## 1. Release Artifacts & Signing
+> **v6.0.0 Status — Work in Progress (`WIP`):** Standalone Android `.apk`/`.aab` GUI binaries are withheld from the public repository and website while packaging stability is finalized (see [../../../../download/README.md](../../../../download/README.md)). The checklist below serves as the staging template when building local closed-testing bundles.
 
-- **Upload Artifact (Google Play Console)**: `release/beta/android/clover-ai-studio-beta.aab`
-  - Size: `81,671,951` bytes (`77.89 MB`)
-  - SHA-256: `b4c0adb27c39059e051db6a69a266849696a6ecf3caf6fd67c6eea9bd27f7541`
-- **Direct ADB / Tester APK**: `release/beta/android/clover-ai-studio-beta.apk`
-  - Size: `82,748,417` bytes (`78.92 MB`)
-  - SHA-256: `b89e793e19fcb282ac79ad8b3c25850afb9902624c8730c67047c431c6dc315a`
+## 1. Release Artifacts & Signing (Local Staging Template)
+
+- **Upload Artifact (Google Play Console — local build output, not committed)**: `clover-ai-studio-beta.aab`
+- **Direct ADB / Tester APK (local build output, not committed)**: `clover-ai-studio-beta.apk`
 - **Package Identity**:
   - `applicationId`: `ai.clover.studio`
   - `versionCode`: `22`

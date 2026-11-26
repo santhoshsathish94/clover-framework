@@ -35,6 +35,9 @@ RISKY = (
     (re.compile(r"\b(?:Stop-Process|taskkill|kill|Uninstall-Package|Uninstall-Module|Remove-AppxPackage)\b|"
                 r"\bwinget\s+uninstall\b|\bchoco\s+uninstall\b", re.I),
      "it stops programs or uninstalls software"),
+    (re.compile(r"\b(?:DROP\s+(?:DATABASE|TABLE|SCHEMA)|TRUNCATE\s+TABLE|terraform\s+destroy|kubectl\s+delete|"
+                r"mkfs(?:\.[A-Za-z0-9_]+)?)\b|\bdd\s+if=\S+", re.I),
+     "it destroys databases, cloud infrastructure, or raw block devices"),
 )
 
 

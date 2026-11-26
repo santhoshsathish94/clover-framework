@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import hmac
 import json
 import math
 import os
@@ -297,11 +298,12 @@ def load_hg4_causal_lm(hg_dir: Path) -> tuple[Any, Any]:
 
     HG4Linear, HG4Embedding = build_hg4_modules()
     manifest = json.loads((hg_dir / "hg_manifest.json").read_text(encoding="utf-8"))
-    tok = AutoTokenizer.from_pretrained(str(hg_dir), trust_remote_code=True)
-    cfg = AutoConfig.from_pretrained(str(hg_dir), trust_remote_code=True)
+    _trc = os.environ.get("CLOVER_TRUST_REMOTE_CODE") == "1"
+    tok = AutoTokenizer.from_pretrained(str(hg_dir), trust_remote_code=_trc)
+    cfg = AutoConfig.from_pretrained(str(hg_dir), trust_remote_code=_trc)
 
     with torch.device("meta"):
-        mdl = AutoModelForCausalLM.from_config(cfg, torch_dtype=torch.bfloat16, trust_remote_code=True)
+        mdl = AutoModelForCausalLM.from_config(cfg, torch_dtype=torch.bfloat16, trust_remote_code=_trc)
     mdl.eval()
 
     passthrough: dict[str, torch.Tensor] = {}
@@ -497,7 +499,8 @@ class SpecialistRuntime:
                         else self.model_dir
                     )
                     dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-                    mdl = AutoModel.from_pretrained(str(src_dir), torch_dtype=torch.bfloat16, trust_remote_code=True).to(dev).eval()
+                    _trc = os.environ.get("CLOVER_TRUST_REMOTE_CODE") == "1"
+                    mdl = AutoModel.from_pretrained(str(src_dir), torch_dtype=torch.bfloat16, trust_remote_code=_trc).to(dev).eval()
                     self._loaded_impl = ("vjepa2_gpu", mdl, dev)
                 except Exception as exc:
                     print(f"[specialist] vjepa-2.1 load error: {exc}", flush=True)
@@ -555,10 +558,11 @@ class SpecialistRuntime:
                             "      msa: empty",
                         ]
                         if smiles_match:
+                            safe_smiles = smiles_match.group(1).replace("'", "''").replace("\n", "").replace("\r", "")
                             yaml_lines.extend([
                                 "  - ligand:",
                                 "      id: B",
-                                f"      smiles: '{smiles_match.group(1)}'",
+                                f"      smiles: '{safe_smiles}'",
                             ])
                         in_yaml = tmp_p / "input.yaml"
                         in_yaml.write_text("\n".join(yaml_lines) + "\n", encoding="utf-8")
@@ -615,8 +619,9 @@ class SpecialistRuntime:
 
                     base_dir = os.environ.get("CLOVER_ROUTER_BASE_DIR", "/workspace/models/qwen3-0.6b-base")
                     dev = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-                    tok = AutoTokenizer.from_pretrained(base_dir, trust_remote_code=True)
-                    base_mdl = AutoModelForCausalLM.from_pretrained(base_dir, torch_dtype=torch.bfloat16, trust_remote_code=True).to(dev)
+                    _trc = os.environ.get("CLOVER_TRUST_REMOTE_CODE") == "1"
+                    tok = AutoTokenizer.from_pretrained(base_dir, trust_remote_code=_trc)
+                    base_mdl = AutoModelForCausalLM.from_pretrained(base_dir, torch_dtype=torch.bfloat16, trust_remote_code=_trc).to(dev)
                     mdl = PeftModel.from_pretrained(base_mdl, str(self.model_dir)).eval()
                     self._loaded_impl = ("router_peft", tok, mdl, dev)
                 except Exception as exc:
@@ -641,10 +646,11 @@ class SpecialistRuntime:
                     import torch
                     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-                    tok = AutoTokenizer.from_pretrained(str(self.model_dir), trust_remote_code=True)
+                    _trc = os.environ.get("CLOVER_TRUST_REMOTE_CODE") == "1"
+                    tok = AutoTokenizer.from_pretrained(str(self.model_dir), trust_remote_code=_trc)
                     qcfg = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16)
                     mdl = AutoModelForCausalLM.from_pretrained(
-                        str(self.model_dir), quantization_config=qcfg, device_map="auto", trust_remote_code=True
+                        str(self.model_dir), quantization_config=qcfg, device_map="auto", trust_remote_code=_trc
                     )
                     self._loaded_impl = ("hf_4bit", tok, mdl)
                 except Exception as exc:
@@ -792,14 +798,25 @@ def main() -> None:
 
         def do_POST(self) -> None:
             if api_key:
-                auth = self.headers.get("Authorization") or ""
-                if auth != f"Bearer {api_key}" and self.headers.get("api-key") != api_key:
+                key_b = api_key.encode("utf-8")
+                auth_b = (self.headers.get("Authorization") or "").encode("utf-8")
+                hdr_b = (self.headers.get("api-key") or "").encode("utf-8")
+                if not (hmac.compare_digest(auth_b, b"Bearer " + key_b) or hmac.compare_digest(hdr_b, key_b)):
                     self._send(401, {"error": "unauthorized"})
                     return
+            elif args.host not in ("127.0.0.1", "localhost", "::1") and os.environ.get("CLOVER_ALLOW_UNAUTH_CLUSTER") != "1":
+                self._send(401, {"error": "CLOVER_GATEWAY_API_KEY required on non-loopback specialist server"})
+                return
             if not self.path.startswith("/v1/chat/completions"):
                 self._send(404, {"error": "not found"})
                 return
-            n = int(self.headers.get("Content-Length") or "0")
+            try:
+                n = int(self.headers.get("Content-Length") or "0")
+            except ValueError:
+                n = 0
+            if n <= 0 or n > 16_777_216:
+                self._send(413 if n > 0 else 400, {"error": "missing or oversized body"})
+                return
             body = json.loads(self.rfile.read(n).decode("utf-8"))
             max_tok = int(body.get("max_completion_tokens") or body.get("max_tokens") or 512)
             try:

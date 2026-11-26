@@ -2635,15 +2635,15 @@ button.row:hover { background: rgba(23, 107, 44, .045); }
   });
   var sysCat = [], sysScope = 'one', sysPlanId = '';
   var FALLBACK_SYS_CAT = [
-    { id: '0b-computed-pack', name: '0B Computed Specialists (x-cruncher + Conformal + Defeasible)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU machine (0 GPUs required)', interactive_speed: '0.02–52 ms exact on CPU' },
-    { id: 'omni', name: 'LFM3-Omni-2B (HG4-16R)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '240–250+ decode tok/s on 1x RTX 3090 · 50.3 tok/s CPU' },
-    { id: 'chronos-2', name: 'Chronos-Bolt 0.2B (HG4)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '187–191 decode tok/s on 1x RTX 3090 · < 52 ms 0B Conformal' },
-    { id: 'vjepa-2.1', name: 'V-JEPA 2.1 (HG4)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '0.12 s/clip on 1x RTX 3090 · 0.9 s CPU' },
-    { id: 'boltz-2', name: 'Boltz-2 Biomolecular Folding (HG4)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 16 GB VRAM (1x RTX 3090)', interactive_speed: '~12 s per 3D complex on 1x RTX 3090' },
-    { id: 'goedel-prover-v2-32b', name: 'Goedel-Prover-V2-32B (HG4-16R)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (1x RTX 3090)', interactive_speed: '18.4–28.6 decode tok/s on RTX 3090' },
-    { id: 'clover-35b-a3b', name: 'Clover-35B-A3B Coordinator (HG4-16R-OP)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (1x RTX 3090)', interactive_speed: '58.5 decode tok/s on 1x RTX 3090 (35.8 tok/s HTTP)' },
-    { id: 'nemotron-3.5-super-vl', name: 'Nemotron 3.5 Super VL (120B-A12B HG4-16R)', tier: 'big_gpu', min_server_spec: '4x 24 GB RTX 3090 server OR 1x 80 GB GPU (>= 72 GB VRAM)', interactive_speed: '38.4–55+ decode tok/s on 4x RTX 3090' },
-    { id: 'kimi-k3', name: 'Kimi K3.1 Pro (2.8T MoE K31H)', tier: 'big_gpu', min_server_spec: 'Same-rack GPU cluster >= 780 GB VRAM (5x 8-GPU 24 GB or 2x 8x80 GB)', interactive_speed: '6–18 decode tok/s in-rack VRAM' }
+    { id: '0b-computed-pack', name: '0B Computed Specialists (x-cruncher + Conformal + Defeasible)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU machine (0 GPUs required)', interactive_speed: '0.02–105 ms exact on CPU' },
+    { id: 'omni', name: 'LFM3-Omni-2B (HG4-16R)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '240.2 decode tok/s (1x 4090) · 35.7 e2e 3090 · 50.3 CPU' },
+    { id: 'chronos-2', name: 'Chronos-Bolt 0.2B (HG4-16R)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '187.1–191.5 steps/s p50–max (151.9 mean on 1x 3090) · < 110 ms 0B CPU' },
+    { id: 'vjepa-2.1', name: 'V-JEPA 2.1 (HG4-16R)', tier: 'small', min_server_spec: 'Any phone, laptop, or CPU/GPU machine (0 GPUs required)', interactive_speed: '64-frame ViT-g 1408-d rollout verified on 1x RTX 3090' },
+    { id: 'boltz-2', name: 'Boltz-2 Biomolecular Folding (HG4-16R)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 16 GB VRAM (1x RTX 3090)', interactive_speed: '39.6–40.6 s per 3D complex on 1x RTX 3090 (pLDDT 0.908 & 0.926)' },
+    { id: 'goedel-prover-v2-32b', name: 'Goedel-Prover-V2-32B (HG4-16R)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (1x RTX 3090)', interactive_speed: 'Fits 1x 24 GB GPU in VRAM (0.93 tok/s on k3 CPU)' },
+    { id: 'clover-35b-a3b', name: 'Clover-35B-A3B Coordinator (HG4-16R-OP)', tier: 'big_gpu', min_server_spec: '1x GPU server >= 24 GB VRAM (1x RTX 3090)', interactive_speed: '168.4 tok/s (1x 4090 JSON) · 20.8–22.9 e2e 3090 JSON (58.5 CLI)' },
+    { id: 'nemotron-3.5-super-vl', name: 'Nemotron 3.5 Super VL (120B-A12B HG4-16R-OP)', tier: 'big_gpu', min_server_spec: '4x 24 GB RTX 3090 server OR 1x 80 GB GPU (>= 72 GB VRAM)', interactive_speed: '71.3 T=1 / 172.2 MTP (4x 4090 JSON) · 13.4–14.5 e2e 3090 JSON (38.4 CLI)' },
+    { id: 'kimi-k3', name: 'Kimi K3.1 Pro (2.8T MoE K31H)', tier: 'big_gpu', min_server_spec: 'Same-rack GPU cluster >= 780 GB VRAM (5x 8-GPU 24 GB or 2x 8x80 GB)', interactive_speed: '7.89 tok/s (8x 4090 3-tier + DSpark JSON) · ~6 tok/s 3090 stage CLI' }
   ];
   function getSelectedSysModels() {
     if (sysScope === 'all') return (sysCat.length ? sysCat : FALLBACK_SYS_CAT).map(function (m) { return m.id; });

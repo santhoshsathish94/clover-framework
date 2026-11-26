@@ -6,6 +6,7 @@ STUDIO = Path(__file__).resolve().parent.parent
 REPO = STUDIO.parent.parent
 APP_HTML = STUDIO / "clover" / "web" / "app.html"
 SITE_HTML = REPO / "site" / "clover-ai" / "index.html"
+SITE_ADMIN_DIR = REPO / "site" / "admin"
 ANDROID_HTML = STUDIO.parent / "mobile" / "android-app" / "assets" / "index.html"
 
 ok = True
@@ -23,7 +24,6 @@ def check(label: str, cond: bool) -> bool:
 
 
 app = APP_HTML.read_text(encoding="utf-8")
-site = SITE_HTML.read_text(encoding="utf-8")
 android = ANDROID_HTML.read_text(encoding="utf-8")
 
 # 1. Theme colors and Apple design palette preserved
@@ -248,10 +248,9 @@ check(
     "Android assets/index.html is byte-identical to studio/clover/web/app.html",
     android == app,
 )
-expected_site = app.replace("__CLOVER_PLATFORM__", "web").replace(' nonce="__CSP_NONCE__"', "")
 check(
-    "Web site/clover-ai/index.html is in sync with studio/clover/web/app.html",
-    site == expected_site,
+    "Public hosted site/clover-ai and site/admin are withheld from public site/ deployment",
+    not SITE_HTML.exists() and not SITE_ADMIN_DIR.exists(),
 )
 
 print(f"{n} checks" + (" passed" if ok else ", SOME FAILED"))

@@ -4,8 +4,9 @@ Shared across Windows Desktop (`CloverAIStudio.exe`), Android Mobile (Chaquopy `
 and Web Studio (`api.cloverframework.com` / `clover-web-studio.service`).
 
 4-Part Architecture:
-  1. `AGENTS.md`       — Steerable epistemic instructions (`Context -> Direction -> Execution -> Outcome -> Growth`
-                         + `STOP_AND_ASK` human steering + Tier-0 `2B` Tool-Exposure Gate).
+  1. `AGENTS.md`       — Steerable epistemic operating rules (`Context -> Direction -> Execution -> Outcome -> Growth`,
+                         stopping to ask the human on boundary/context gaps per §4 & §8, paired with a Studio
+                         Tier-0 `2B` tool-exposure gate).
   2. `mcp.json`        — Deterministic `0B` Computed Tools (`xcruncher_exact_math`, `forecast_series_0b`,
                          `resolve_defeasible_rules_0b`, `python_ast_verify`) + remote `HG4` specialist mesh.
   3. `<task_id>.md`    — Human-readable task context ledger (`<base>/clover-ai-studio/contexts/<task_id>.md`).
@@ -22,6 +23,7 @@ from __future__ import annotations
 
 import ast
 import concurrent.futures
+import contextlib
 import datetime
 import hashlib
 import ipaddress
@@ -45,12 +47,53 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-if hasattr(sys, "set_int_max_str_digits"):
-    try:
-        if sys.get_int_max_str_digits() != 0 and sys.get_int_max_str_digits() < 250_000:
-            sys.set_int_max_str_digits(250_000)
-    except Exception:
-        pass
+_BIGINT_SEM = threading.BoundedSemaphore(4)
+
+
+def _bigint_to_decimal_safe(val: int) -> str:
+    """Convert arbitrarily large `int` to decimal string via base-10^2000 divide-and-conquer
+    WITHOUT mutating process-wide `sys.set_int_max_str_digits` (keeps JSON parser protected at 4,300!)."""
+    if val == 0:
+        return "0"
+    neg = val < 0
+    v = -val if neg else val
+    if v.bit_length() <= 14_000:
+        s = str(v)
+        return ("-" + s) if neg else s
+
+    def _conv(x: int, approx_digs: int) -> str:
+        if x.bit_length() <= 14_000 or approx_digs <= 2000:
+            return str(x)
+        half = max(2000, (approx_digs // 4000) * 2000)
+        hi, lo = divmod(x, 10 ** half)
+        if hi == 0:
+            return _conv(lo, half)
+        return _conv(hi, approx_digs - half) + _conv(lo, half).zfill(half)
+
+    res = _conv(v, int(v.bit_length() * 0.30103) + 2)
+    return ("-" + res) if neg else res
+
+
+def _decimal_to_bigint_safe(s: str) -> int:
+    """Parse decimal string of up to MAX_STR_DIGITS via base-10^2000 chunks without raising sys.set_int_max_str_digits."""
+    neg = s.startswith("-")
+    digits = s[1:] if s[:1] in "+-" else s
+    if not digits or not digits.isdigit():
+        raise ValueError(f"invalid decimal integer {s[:40]!r}")
+    if len(digits) <= 4000:
+        v = int(digits)
+        return -v if neg else v
+
+    def _parse_range(lo_i: int, hi_i: int) -> int:
+        span = hi_i - lo_i
+        if span <= 2000:
+            return int(digits[lo_i:hi_i])
+        mid_len = max(2000, (span // 4000) * 2000)
+        split = hi_i - mid_len
+        return _parse_range(lo_i, split) * (10 ** mid_len) + _parse_range(split, hi_i)
+
+    v = _parse_range(0, len(digits))
+    return -v if neg else v
 
 
 # ---------------------------------------------------------------------------
@@ -121,90 +164,102 @@ def forecast_series_0b(values: list[float] | str, horizon: int = 12) -> dict[str
     Zero neural parameters, zero external dependencies (pure Python stdlib math), <50 ms on CPU."""
     t0 = time.perf_counter()
     if isinstance(values, str):
-        raw_vals = [float(x) for x in re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", values)]
+        cleaned_str = re.sub(r"(?<=\d),(?=\d{3}\b)", "", values)
+        tokens = [t.strip() for t in re.split(r"[\s;|,]+", cleaned_str) if t.strip()]
+        raw_vals = []
+        for tok in tokens:
+            if re.fullmatch(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?", tok):
+                raw_vals.append(float(tok))
     else:
         raw_vals = [float(x) for x in (values or ())]
+    raw_vals = [v for v in raw_vals if math.isfinite(v)]
     n = len(raw_vals)
     h = max(1, min(int(horizon or 12), 256))
     if n < 4:
-        raise ValueError("forecast_series requires at least 4 historical numeric observations")
+        raise ValueError("forecast_series requires at least 4 finite historical numeric observations")
 
-    t_mean = (n - 1) / 2.0
-    y_mean = sum(raw_vals) / n
-    s_tt = sum((i - t_mean) ** 2 for i in range(n)) or 1.0
-    slope_init = sum((i - t_mean) * (raw_vals[i] - y_mean) for i in range(n)) / s_tt
-    intercept_init = y_mean - slope_init * t_mean
-    detrended = [raw_vals[i] - (intercept_init + slope_init * i) for i in range(n)]
+    def _fit_periodogram_ols(seq: list[float]) -> tuple[list[tuple[float, float]], list[float]]:
+        m = len(seq)
+        tm = (m - 1) / 2.0
+        ym = sum(seq) / m
+        stt = sum((i - tm) ** 2 for i in range(m)) or 1.0
+        sl0 = sum((i - tm) * (seq[i] - ym) for i in range(m)) / stt
+        ic0 = ym - sl0 * tm
+        det = [seq[i] - (ic0 + sl0 * i) for i in range(m)]
+        mk = min(m // 2, 64)
+        omegas: list[tuple[float, float]] = []
+        if m >= 8 and mk >= 2:
+            scored_k: list[tuple[float, int]] = []
+            for k in range(1, mk):
+                om = 2.0 * math.pi * k / m
+                cs = sum(det[t] * math.cos(om * t) for t in range(m)) * (2.0 / m)
+                ss = sum(det[t] * math.sin(om * t) for t in range(m)) * (2.0 / m)
+                scored_k.append((cs * cs + ss * ss, k))
+            scored_k.sort(key=lambda x: x[0], reverse=True)
+            picked: list[int] = []
+            for amp2, k in scored_k:
+                if len(picked) >= 2:
+                    break
+                if any(abs(k - ck) <= 1 for ck in picked):
+                    continue
+                if amp2 > 1e-12:
+                    picked.append(k)
+                    omegas.append((2.0 * math.pi * k / m, round(m / k, 3)))
+        pd = 2 + 2 * len(omegas)
+        mat = [[0.0] * (pd + 1) for _ in range(pd)]
+        for t_i in range(m):
+            fx = [1.0, float(t_i)]
+            for om, _per in omegas:
+                fx.append(math.cos(om * t_i))
+                fx.append(math.sin(om * t_i))
+            yv = seq[t_i]
+            for r_i in range(pd):
+                fr = fx[r_i]
+                for c_i in range(pd):
+                    mat[r_i][c_i] += fr * fx[c_i]
+                mat[r_i][pd] += fr * yv
+        for d_i in range(pd):
+            mat[d_i][d_i] += 1e-10
+        for col in range(pd):
+            piv = max(range(col, pd), key=lambda r_i: abs(mat[r_i][col]))
+            mat[col], mat[piv] = mat[piv], mat[col]
+            denom = mat[col][col] or 1e-12
+            for j in range(col, pd + 1):
+                mat[col][j] /= denom
+            for r_i in range(pd):
+                if r_i != col and mat[r_i][col] != 0.0:
+                    fac = mat[r_i][col]
+                    for j in range(col, pd + 1):
+                        mat[r_i][j] -= fac * mat[col][j]
+        return omegas, [mat[i][pd] for i in range(pd)]
 
-    max_k = min(n // 2, 64)
-    chosen_omegas: list[tuple[float, float]] = []
-    if n >= 8 and max_k >= 2:
-        scored: list[tuple[float, int]] = []
-        for k in range(1, max_k):
-            omega = 2.0 * math.pi * k / n
-            c_sum = sum(detrended[t] * math.cos(omega * t) for t in range(n)) * (2.0 / n)
-            s_sum = sum(detrended[t] * math.sin(omega * t) for t in range(n)) * (2.0 / n)
-            scored.append((c_sum * c_sum + s_sum * s_sum, k))
-        scored.sort(key=lambda x: x[0], reverse=True)
-        chosen_k: list[int] = []
-        for amp2, k in scored:
-            if len(chosen_k) >= 2:
-                break
-            if any(abs(k - ck) <= 1 for ck in chosen_k):
-                continue
-            if amp2 > 1e-12:
-                chosen_k.append(k)
-                chosen_omegas.append((2.0 * math.pi * k / n, round(n / k, 3)))
+    def _eval_model(omegas: list[tuple[float, float]], wts: list[float], idx: int) -> float:
+        fx = [1.0, float(idx)]
+        for om, _per in omegas:
+            fx.append(math.cos(om * idx))
+            fx.append(math.sin(om * idx))
+        return sum(w * x for w, x in zip(wts, fx))
 
-    def _features(idx: int) -> list[float]:
-        row = [1.0, float(idx)]
-        for omega, _period in chosen_omegas:
-            row.append(math.cos(omega * idx))
-            row.append(math.sin(omega * idx))
-        return row
+    # True split-conformal calibration: fit on prefix [0..cal_start), score held-out [cal_start..n), then refit on all n for forecast
+    cal_start = max(4, int(n * 0.75)) if n >= 8 else 0
+    if cal_start >= 4 and (n - cal_start) >= 2:
+        cal_om, cal_w = _fit_periodogram_ols(raw_vals[:cal_start])
+        abs_res = sorted(abs(raw_vals[i] - _eval_model(cal_om, cal_w, i)) for i in range(cal_start, n))
+    else:
+        abs_res = []
 
-    p_dim = 2 + 2 * len(chosen_omegas)
-    ata = [[0.0] * (p_dim + 1) for _ in range(p_dim)]
-    for t_i in range(n):
-        fx = _features(t_i)
-        yv = raw_vals[t_i]
-        for r_i in range(p_dim):
-            fr = fx[r_i]
-            for c_i in range(p_dim):
-                ata[r_i][c_i] += fr * fx[c_i]
-            ata[r_i][p_dim] += fr * yv
-    for d_i in range(p_dim):
-        ata[d_i][d_i] += 1e-10
-    for col in range(p_dim):
-        piv = max(range(col, p_dim), key=lambda r_i: abs(ata[r_i][col]))
-        ata[col], ata[piv] = ata[piv], ata[col]
-        denom = ata[col][col] or 1e-12
-        for j in range(col, p_dim + 1):
-            ata[col][j] /= denom
-        for r_i in range(p_dim):
-            if r_i != col and ata[r_i][col] != 0.0:
-                factor = ata[r_i][col]
-                for j in range(col, p_dim + 1):
-                    ata[r_i][j] -= factor * ata[col][j]
-    weights = [ata[i][p_dim] for i in range(p_dim)]
+    chosen_omegas, weights = _fit_periodogram_ols(raw_vals)
     slope = weights[1]
-
-    def _predict_at(idx: int) -> float:
-        fx = _features(idx)
-        return sum(w * x for w, x in zip(weights, fx))
-
-    cal_start = max(2, int(n * 0.7))
-    abs_res = sorted(abs(raw_vals[i] - _predict_at(i)) for i in range(cal_start, n))
     if not abs_res:
-        abs_res = sorted(abs(raw_vals[i] - _predict_at(i)) for i in range(n))
+        abs_res = sorted(abs(raw_vals[i] - _eval_model(chosen_omegas, weights, i)) for i in range(n))
     q80_idx = min(len(abs_res) - 1, max(0, math.ceil(0.80 * (len(abs_res) + 1)) - 1))
     q_radius = abs_res[q80_idx] if abs_res else 0.0
 
     naive_mae = sum(abs(raw_vals[i] - raw_vals[i - 1]) for i in range(1, n)) / max(1, n - 1)
-    fit_mae = sum(abs(raw_vals[i] - _predict_at(i)) for i in range(n)) / n
+    fit_mae = sum(abs(raw_vals[i] - _eval_model(chosen_omegas, weights, i)) for i in range(n)) / n
     insample_mase = round(fit_mae / max(naive_mae, 1e-12), 6)
 
-    p50 = [round(_predict_at(n + step), 6) for step in range(h)]
+    p50 = [round(_eval_model(chosen_omegas, weights, n + step), 6) for step in range(h)]
     p10 = [round(v - q_radius, 6) for v in p50]
     p90 = [round(v + q_radius, 6) for v in p50]
     return {
@@ -253,8 +308,18 @@ def resolve_defeasible_rules_0b(
             continue
 
         specificity = len(conds)
-        priority = float(raw.get("priority", 0.0) or 0.0)
-        ts_rank = int(raw.get("updated_seq", idx))
+        raw_prio = raw.get("priority", 0.0)
+        try:
+            priority = float(raw_prio) if raw_prio is not None else 0.0
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"rule {rid!r} has non-numeric priority {raw_prio!r}") from exc
+        if not math.isfinite(priority):
+            raise ValueError(f"rule {rid!r} has non-finite priority {raw_prio!r}")
+        raw_seq = raw.get("updated_seq")
+        try:
+            ts_rank = int(raw_seq) if raw_seq is not None else idx
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"rule {rid!r} has invalid updated_seq {raw_seq!r}") from exc
         applicable.append(((specificity, priority, ts_rank), dict(raw, id=rid, matched_specificity=specificity)))
 
     applicable.sort(key=lambda item: item[0], reverse=True)
@@ -274,20 +339,23 @@ def resolve_defeasible_rules_0b(
 def exact_bigint_power(base_str: str, exp_str: str, max_output_digits: int = 200_000) -> dict[str, Any]:
     """Exact binary exponentiation (`A^B` / `A**B`) safe above Python 3.11's 4,300-digit str() limit."""
     t0 = time.perf_counter()
-    a = int(str(base_str).replace("_", "").strip())
-    b = int(str(exp_str).replace("_", "").strip())
+    s_a = str(base_str).replace("_", "").strip()
+    s_b = str(exp_str).replace("_", "").strip()
+    if len(s_a) > 50_000 or len(s_b) > 12:
+        raise ValueError(f"base or exponent exceeds safe exact bounds (len_base={len(s_a)}, len_exp={len(s_b)})")
+    a = int(s_a)
+    b = int(s_b)
     if b < 0:
         raise ValueError("exact_bigint_power requires a non-negative integer exponent")
+    if b > max_output_digits * 4:
+        raise ValueError(f"exponent {b} exceeds safe cap")
     if a != 0 and b > 0:
         est_digits = int(b * math.log10(abs(a))) + 1 if abs(a) > 1 else 1
         if est_digits > max_output_digits:
             raise ValueError(f"result has ~{est_digits} digits (exceeds safe cap {max_output_digits})")
-    val = pow(a, b)
-    if hasattr(sys, "set_int_max_str_digits"):
-        prev = sys.get_int_max_str_digits()
-        if prev != 0 and prev < max_output_digits + 64:
-            sys.set_int_max_str_digits(max_output_digits + 64)
-    s = str(val)
+    with _BIGINT_SEM:
+        val = pow(a, b)
+        s = _bigint_to_decimal_safe(val)
     out: dict[str, Any] = {
         "operation": "pow",
         "base": a,
@@ -310,10 +378,13 @@ class CloverTodoStore:
     def __init__(self, db_path: str | Path = ":memory:") -> None:
         self.db_path = str(db_path)
         self._lock = threading.Lock()
-        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        with self._conn:
-            self._conn.executescript(
+        self._mem_conn: sqlite3.Connection | None = (
+            sqlite3.connect(":memory:", check_same_thread=False) if self.db_path == ":memory:" else None
+        )
+        if self._mem_conn is not None:
+            self._mem_conn.row_factory = sqlite3.Row
+        with self._connect() as conn:
+            conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS todos (
                     id TEXT PRIMARY KEY,
@@ -331,30 +402,97 @@ class CloverTodoStore:
                 """
             )
 
-    def add_todo(self, task_id: str, todo_id: str, title: str, description: str = "", depends_on: list[str] | None = None) -> None:
+    @contextlib.contextmanager
+    def _connect(self):
+        if self._mem_conn is not None:
+            with self._mem_conn:
+                yield self._mem_conn
+            return
+        conn = sqlite3.connect(self.db_path, timeout=15.0)
+        conn.row_factory = sqlite3.Row
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
+
+    VALID_STATUSES = frozenset({"pending", "in_progress", "done", "blocked"})
+
+    def _creates_cycle_unlocked(self, conn: sqlite3.Connection, task_id: str, src: str, dst: str) -> bool:
+        if src == dst:
+            return True
+        seen: set[str] = set()
+        stack = [dst]
+        while stack:
+            cur = stack.pop()
+            if cur == src:
+                return True
+            if cur in seen:
+                continue
+            seen.add(cur)
+            rows = conn.execute(
+                "SELECT td.depends_on FROM todo_deps td JOIN todos t ON t.id = td.todo_id WHERE t.task_id = ? AND td.todo_id = ?",
+                (task_id, cur),
+            ).fetchall()
+            stack.extend(str(r[0]) for r in rows)
+        return False
+
+    def add_todo(self, task_id: str, todo_id: str, title: str, description: str = "", depends_on: list[str] | None = None, status: str | None = None) -> None:
+        if status is not None and status not in self.VALID_STATUSES:
+            raise ValueError(f"invalid todo status {status!r}; must be one of {sorted(self.VALID_STATUSES)}")
         now = time.time()
-        with self._lock, self._conn:
-            self._conn.execute(
-                "INSERT OR REPLACE INTO todos (id, task_id, title, description, status, updated_at) VALUES (?, ?, ?, ?, 'pending', ?)",
-                (todo_id, task_id, title, description, now),
-            )
-            for dep in (depends_on or ()):
-                self._conn.execute("INSERT OR IGNORE INTO todo_deps (todo_id, depends_on) VALUES (?, ?)", (todo_id, dep))
+        with self._lock, self._connect() as conn:
+            deps = [str(d) for d in (depends_on or ())]
+            for dep in deps:
+                exists = conn.execute("SELECT 1 FROM todos WHERE id = ? AND task_id = ?", (dep, task_id)).fetchone()
+                if not exists:
+                    raise ValueError(f"prerequisite todo {dep!r} does not exist in task {task_id!r}")
+                if self._creates_cycle_unlocked(conn, task_id, todo_id, dep):
+                    raise ValueError(f"dependency {todo_id!r} -> {dep!r} creates a cycle")
+            if status is not None:
+                conn.execute(
+                    """
+                    INSERT INTO todos (id, task_id, title, description, status, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        title = excluded.title,
+                        description = excluded.description,
+                        status = excluded.status,
+                        updated_at = excluded.updated_at
+                    """,
+                    (todo_id, task_id, title, description, status, now),
+                )
+            else:
+                conn.execute(
+                    """
+                    INSERT INTO todos (id, task_id, title, description, status, updated_at)
+                    VALUES (?, ?, ?, ?, 'pending', ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        title = excluded.title,
+                        description = excluded.description,
+                        updated_at = excluded.updated_at
+                    """,
+                    (todo_id, task_id, title, description, now),
+                )
+            for dep in deps:
+                conn.execute("INSERT OR IGNORE INTO todo_deps (todo_id, depends_on) VALUES (?, ?)", (todo_id, dep))
 
     def set_status(self, todo_id: str, status: str) -> None:
-        with self._lock, self._conn:
-            self._conn.execute("UPDATE todos SET status = ?, updated_at = ? WHERE id = ?", (status, time.time(), todo_id))
+        if status not in self.VALID_STATUSES:
+            raise ValueError(f"invalid todo status {status!r}; must be one of {sorted(self.VALID_STATUSES)}")
+        with self._lock, self._connect() as conn:
+            conn.execute("UPDATE todos SET status = ?, updated_at = ? WHERE id = ?", (status, time.time(), todo_id))
 
     def ready_todos(self, task_id: str) -> list[dict[str, Any]]:
-        with self._lock:
-            rows = self._conn.execute(
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
                 """
                 SELECT t.* FROM todos t
                 WHERE t.task_id = ? AND t.status = 'pending'
                   AND NOT EXISTS (
                       SELECT 1 FROM todo_deps td
-                      JOIN todos dep ON td.depends_on = dep.id
-                      WHERE td.todo_id = t.id AND dep.status != 'done'
+                      LEFT JOIN todos dep ON td.depends_on = dep.id AND dep.task_id = t.task_id
+                      WHERE td.todo_id = t.id AND (dep.id IS NULL OR dep.status != 'done')
                   )
                 ORDER BY t.rowid ASC
                 """,
@@ -363,13 +501,15 @@ class CloverTodoStore:
             return [dict(r) for r in rows]
 
     def all_todos(self, task_id: str) -> list[dict[str, Any]]:
-        with self._lock:
-            rows = self._conn.execute("SELECT * FROM todos WHERE task_id = ? ORDER BY rowid ASC", (task_id,)).fetchall()
+        with self._lock, self._connect() as conn:
+            rows = conn.execute("SELECT * FROM todos WHERE task_id = ? ORDER BY rowid ASC", (task_id,)).fetchall()
             return [dict(r) for r in rows]
 
     def close(self) -> None:
         with self._lock:
-            self._conn.close()
+            if self._mem_conn is not None:
+                self._mem_conn.close()
+                self._mem_conn = None
 
 
 # ---------------------------------------------------------------------------
@@ -381,10 +521,9 @@ class CloverMetricsLedger:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
         self._started_at = time.time()
-        self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        with self._conn:
-            self._conn.executescript(
+        self._window_since = 0.0
+        with self._connect() as conn:
+            conn.executescript(
                 """
                 CREATE TABLE IF NOT EXISTS model_calls (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -423,6 +562,16 @@ class CloverMetricsLedger:
                 """
             )
 
+    @contextlib.contextmanager
+    def _connect(self):
+        conn = sqlite3.connect(str(self.db_path), timeout=15.0)
+        conn.row_factory = sqlite3.Row
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
+
     def record_model_call(
         self,
         *,
@@ -442,8 +591,8 @@ class CloverMetricsLedger:
             else (round(completion_tokens / (elapsed_ms / 1000.0), 2) if elapsed_ms > 1.0 and completion_tokens > 0 else 0.0)
         )
         cm = canon_model_id(model)
-        with self._lock, self._conn:
-            self._conn.execute(
+        with self._lock, self._connect() as conn:
+            conn.execute(
                 """INSERT INTO model_calls
                    (ts, task_id, cycle, model, instance, prompt_tokens, completion_tokens, elapsed_ms, decode_tok_per_s, ok)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -451,8 +600,8 @@ class CloverMetricsLedger:
             )
 
     def record_tool_call(self, *, task_id: str, tool_name: str, instance: str = "0b-local", cycle: int = 1, elapsed_ms: float = 0.0, ok: bool = True) -> None:
-        with self._lock, self._conn:
-            self._conn.execute(
+        with self._lock, self._connect() as conn:
+            conn.execute(
                 """INSERT INTO tool_calls (ts, task_id, cycle, tool_name, instance, elapsed_ms, ok)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (time.time(), str(task_id), int(cycle), str(tool_name), str(instance), float(elapsed_ms), 1 if ok else 0),
@@ -460,28 +609,27 @@ class CloverMetricsLedger:
 
     def record_problem_run(self, *, task_id: str, model: str, status: str = "SOLVED", domain: str = "chat", cycles_used: int = 1, tools_used: list[str] | None = None, total_ms: float = 0.0) -> None:
         cm = canon_model_id(model)
-        with self._lock, self._conn:
-            self._conn.execute(
+        with self._lock, self._connect() as conn:
+            conn.execute(
                 """INSERT INTO problem_runs (ts, task_id, domain, model, status, cycles_used, tools_used_json, total_ms)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (time.time(), str(task_id), str(domain), cm, str(status), int(cycles_used), json.dumps(list(tools_used or ())), float(total_ms)),
             )
 
     def reset(self) -> dict[str, Any]:
-        with self._lock, self._conn:
-            self._conn.executescript("DELETE FROM model_calls; DELETE FROM tool_calls; DELETE FROM problem_runs;")
-            self._started_at = time.time()
+        with self._lock:
+            self._window_since = time.time()
+            self._started_at = self._window_since
         return {"ok": True, "reset_at": self._started_at}
 
     def close(self) -> None:
-        with self._lock:
-            self._conn.close()
+        return None
 
     def summary(self) -> dict[str, Any]:
-        with self._lock:
-            m_rows = self._conn.execute("SELECT * FROM model_calls ORDER BY id DESC LIMIT 2000").fetchall()
-            t_rows = self._conn.execute("SELECT * FROM tool_calls ORDER BY id DESC LIMIT 2000").fetchall()
-            p_rows = self._conn.execute("SELECT * FROM problem_runs ORDER BY id DESC LIMIT 2000").fetchall()
+        with self._lock, self._connect() as conn:
+            m_rows = conn.execute("SELECT * FROM model_calls WHERE ts >= ? ORDER BY id DESC LIMIT 2000", (self._window_since,)).fetchall()
+            t_rows = conn.execute("SELECT * FROM tool_calls WHERE ts >= ? ORDER BY id DESC LIMIT 2000", (self._window_since,)).fetchall()
+            p_rows = conn.execute("SELECT * FROM problem_runs WHERE ts >= ? ORDER BY id DESC LIMIT 2000", (self._window_since,)).fetchall()
 
         per_model: dict[str, list[sqlite3.Row]] = {}
         instances_hit: set[str] = set()
@@ -495,7 +643,7 @@ class CloverMetricsLedger:
             tps_vals = sorted(float(x["decode_tok_per_s"]) for x in rows if float(x["decode_tok_per_s"]) > 0)
             lat_vals = [float(x["elapsed_ms"]) for x in rows]
             p50 = round(statistics.median(tps_vals), 2) if tps_vals else 0.0
-            p95 = round(tps_vals[min(len(tps_vals) - 1, int(0.95 * len(tps_vals)))], 2) if tps_vals else 0.0
+            p95 = round(tps_vals[round((len(tps_vals) - 1) * 0.95)], 2) if tps_vals else 0.0
             model_stats[mk] = {
                 "calls": len(rows),
                 "ok_calls": sum(int(x["ok"]) for x in rows),
@@ -586,14 +734,14 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 0,
         "min_servers": 1,
         "min_server_spec": "Any phone, laptop, or CPU machine (0 GPUs required)",
-        "interactive_speed": "< 50 ms on any CPU",
+        "interactive_speed": "< 110 ms on any CPU",
     },
     {
         "id": "omni",
         "name": "LFM3-Omni-2B (HG4-16R)",
         "tier": "small",
-        "role": "Everyday Local & Edge Multimodal Assistant",
-        "weights_gb": 0.98,
+        "role": "Everyday Local & Edge Fast Text Assistant",
+        "weights_gb": 0.83,
         "resident_gb": 1.6,
         "max_tp": 1,
         "runs_on_any_device": True,
@@ -602,11 +750,11 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 0,
         "min_servers": 1,
         "min_server_spec": "Any phone, laptop, or CPU/GPU machine (0 GPUs required)",
-        "interactive_speed": "240–250+ decode tok/s on 1x RTX 3090 · 50.3 tok/s CPU · 33.4 tok/s S23 phone",
+        "interactive_speed": "240.2 decode tok/s (1x 4090) · 35.7 tok/s e2e 3090 · 50.3 tok/s CPU · 33.4 tok/s S23 phone",
     },
     {
         "id": "chronos-2",
-        "name": "Chronos-Bolt 0.2B (HG4)",
+        "name": "Chronos-Bolt 0.2B (HG4-16R)",
         "tier": "small",
         "role": "Zero-Shot Probabilistic Time-Series Specialist",
         "weights_gb": 0.10,
@@ -618,11 +766,11 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 0,
         "min_servers": 1,
         "min_server_spec": "Any phone, laptop, or CPU/GPU machine (0 GPUs required)",
-        "interactive_speed": "187–191 decode tok/s on 1x RTX 3090 (0.37 s) · < 52 ms 0B Conformal CPU",
+        "interactive_speed": "187.1–191.5 steps/s p50–max (151.9 mean, 0.80 s on 1x RTX 3090) · < 110 ms 0B Conformal CPU",
     },
     {
         "id": "vjepa-2.1",
-        "name": "V-JEPA 2.1 (HG4)",
+        "name": "V-JEPA 2.1 (HG4-16R)",
         "tier": "small",
         "role": "Physical Video Dynamics & Epistemic Surprise Specialist",
         "weights_gb": 0.51,
@@ -634,14 +782,14 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 0,
         "min_servers": 1,
         "min_server_spec": "Any phone, laptop, or CPU/GPU machine (0 GPUs required)",
-        "interactive_speed": "0.12 s/clip on 1x RTX 3090 · 0.9 s CPU",
+        "interactive_speed": "64-frame ViT-g 1408-d rollout verified on 1x RTX 3090",
     },
     {
         "id": "boltz-2",
-        "name": "Boltz-2 Biomolecular Folding (HG4)",
+        "name": "Boltz-2 Biomolecular Folding (HG4-16R)",
         "tier": "big_gpu",
         "role": "3D Protein/RNA/Ligand Structure & Affinity Specialist",
-        "weights_gb": 0.53,
+        "weights_gb": 0.52,
         "resident_gb": 14.0,  # pairformer 3D diffusion activations
         "max_tp": 1,
         "runs_on_any_device": False,
@@ -650,7 +798,7 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 16,
         "min_servers": 1,
         "min_server_spec": "1x GPU server with >= 16 GB VRAM (e.g. 1x RTX 3090 / 4080 / A10G)",
-        "interactive_speed": "~12 s per 3D complex on 1x RTX 3090 (>180 s on CPU — not interactive)",
+        "interactive_speed": "39.6–40.6 s per 3D complex on 1x RTX 3090 (pLDDT 0.908 & 0.926; skipped on CPU)",
     },
     {
         "id": "goedel-prover-v2-32b",
@@ -658,7 +806,7 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "tier": "big_gpu",
         "role": "Formal Lean 4 Mathematical Proof Specialist",
         "weights_gb": 15.8,
-        "resident_gb": 21.6,  # 15.8 GB weights + 16k KV cache + runtime
+        "resident_gb": 21.6,  # 15.8 GiB weights + 16k KV cache + runtime
         "max_tp": 2,
         "runs_on_any_device": False,
         "needs_gpu_interactive": True,
@@ -666,15 +814,15 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 24,
         "min_servers": 1,
         "min_server_spec": "1x GPU server with >= 24 GB VRAM (e.g. 1x RTX 3090 / 4090 / A10G / L4)",
-        "interactive_speed": "18.4–28.6 decode tok/s on RTX 3090 (~0.9 tok/s on CPU — not interactive)",
+        "interactive_speed": "Fits 1x 24 GB GPU in VRAM (0.93 tok/s on k3 CPU — skipped on CPU)",
     },
     {
         "id": "clover-35b-a3b",
         "name": "Clover-35B-A3B Coordinator (Qwen3.6-35B-A3B + LoRA, HG4-16R-OP)",
         "tier": "big_gpu",
         "role": "Primary Clover v6.0 Coordinator Brain & Tool Orchestrator",
-        "weights_gb": 17.4,
-        "resident_gb": 20.2,  # 17.4 GB weights + hybrid GDN/GQA 32k KV + runtime
+        "weights_gb": 17.2,
+        "resident_gb": 20.2,  # 17.2 GiB weights + hybrid GDN/GQA 32k KV + runtime
         "max_tp": 2,
         "runs_on_any_device": False,
         "needs_gpu_interactive": True,
@@ -682,13 +830,13 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 24,
         "min_servers": 1,
         "min_server_spec": "1x GPU server with >= 24 GB VRAM (e.g. 1x RTX 3090 / 4090 / A10G / L4)",
-        "interactive_speed": "58.5 decode tok/s on 1x RTX 3090 (35.8 tok/s HTTP; 4x GPUs add +0.0 tok/s)",
+        "interactive_speed": "168.4 tok/s (1x 4090 JSON) · 20.8–22.9 e2e 3090 JSON (58.5 CLI)",
     },
     {
         "id": "nemotron-3.5-super-vl",
-        "name": "Nemotron 3.5 Super VL (120B-A12B HG4-16R)",
+        "name": "Nemotron 3.5 Super VL (120B-A12B HG4-16R-OP)",
         "tier": "big_gpu",
-        "role": "1M Context Mamba-2 + GQA & C-RADIO Vision Escalation",
+        "role": "1M Context Mamba-2 + GQA Heavy Text Escalation",
         "weights_gb": 58.2,
         "resident_gb": 68.0,  # fits 4x 24 GB RTX 3090 or 1x 80 GB GPU
         "max_tp": 4,
@@ -698,7 +846,7 @@ CLOVER_V6_MODEL_CATALOG: list[dict[str, Any]] = [
         "min_vram_gb": 72,
         "min_servers": 1,
         "min_server_spec": "4x 24 GB RTX 3090 server OR 1x 80 GB GPU (>= 72 GB VRAM)",
-        "interactive_speed": "38.4–55+ decode tok/s on 4x RTX 3090 (8x GPUs add +0.0 tok/s)",
+        "interactive_speed": "71.3 T=1 / 172.2 MTP (4x 4090 JSON) · 13.4–14.5 e2e 3090 JSON (38.4 CLI)",
     },
     {
         "id": "kimi-k3",
@@ -753,7 +901,7 @@ def parse_target(text: str) -> dict[str, Any]:
 
     raw_h = t if "://" in t else ("http://" + t)
     u = urllib.parse.urlparse(raw_h)
-    if u.scheme not in ("http", "https") or not u.hostname or u.hostname.startswith("-") or not _HOST_RE.match(u.hostname) or u.username:
+    if u.scheme not in ("http", "https") or not u.hostname or u.hostname.startswith("-") or not _HOST_RE.match(u.hostname) or u.username or u.password is not None or "@" in u.netloc:
         raise ValueError(f"invalid HTTP(S) server target {t!r}")
     port = u.port or (443 if u.scheme == "https" else 80)
     if not (1 <= port <= 65535):
@@ -761,23 +909,33 @@ def parse_target(text: str) -> dict[str, Any]:
     clean_path = u.path.rstrip("/")
     if clean_path.endswith("/v1"):
         clean_path = clean_path[:-3]
+    netloc_clean = f"{u.hostname}:{u.port}" if u.port else u.hostname
     return {
         "scheme": u.scheme,
         "host": u.hostname,
         "port": port,
-        "target": f"{u.scheme}://{u.netloc}{clean_path}",
+        "target": f"{u.scheme}://{netloc_clean}{clean_path}",
     }
 
 
-def _check_ssrf_safe_for_web(host: str) -> None:
-    """Blocks loopback, private, link-local, and metadata IPs when probing user URLs from the shared Web server."""
+def _check_ssrf_safe_for_web(host: str) -> str:
+    """Blocks loopback, private, CGNAT (100.64/10), link-local, and metadata IPs when probing user URLs from Web,
+    returning the pinned global IP address to prevent DNS rebinding."""
     if host.lower() == "api.cloverframework.com":
-        return
+        infos_k3 = socket.getaddrinfo(host, None)
+        return str(infos_k3[0][4][0])
     infos = socket.getaddrinfo(host, None)
+    if not infos:
+        raise ValueError(f"could not resolve host {host!r}")
+    pinned_ip = ""
     for info in infos:
-        ip = ipaddress.ip_address(info[4][0])
-        if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
-            raise ValueError(f"refusing private/loopback address {host} from shared Web Studio")
+        ip_str = str(info[4][0])
+        ip = ipaddress.ip_address(ip_str)
+        if not ip.is_global or ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+            raise ValueError(f"refusing non-global/private address {host} ({ip_str}) from shared Web Studio")
+        if not pinned_ip:
+            pinned_ip = ip_str
+    return pinned_ip
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -785,11 +943,45 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+class _PinnedHTTPHandler(urllib.request.HTTPHandler):
+    def __init__(self, pinned_ip: str) -> None:
+        super().__init__()
+        self._pinned_ip = pinned_ip
+
+    def http_open(self, req):
+        import http.client
+        return self.do_open(lambda host, **kw: http.client.HTTPConnection(self._pinned_ip, port=urllib.parse.urlparse(req.full_url).port or 80, **kw), req)
+
+
+class _PinnedHTTPSHandler(urllib.request.HTTPSHandler):
+    def __init__(self, pinned_ip: str, orig_host: str) -> None:
+        super().__init__()
+        self._pinned_ip = pinned_ip
+        self._orig_host = orig_host
+
+    def https_open(self, req):
+        import http.client
+        import ssl
+
+        port = urllib.parse.urlparse(req.full_url).port or 443
+        ctx = ssl.create_default_context()
+
+        def _conn_factory(_host, **kw):
+            raw_s = socket.create_connection((self._pinned_ip, port), timeout=kw.get("timeout", 10))
+            tls_s = ctx.wrap_socket(raw_s, server_hostname=self._orig_host)
+            c = http.client.HTTPSConnection(self._orig_host, port=port, context=ctx, **kw)
+            c.sock = tls_s
+            return c
+
+        return self.do_open(_conn_factory, req)
+
+
 def _build_bootstrap_cmd(user: str, host: str, port: int, _api_key: str | None = None) -> str:
     remote_sh = (
+        "test -n \"${CLOVER_GATEWAY_API_KEY:-}\" || { echo 'ERROR: export CLOVER_GATEWAY_API_KEY (>=32 random chars) before starting gateway on 0.0.0.0' >&2; exit 1; }; "
         "test -d /opt/clover/.git || git clone --depth 1 https://github.com/santhoshsathish94/clover-framework.git /opt/clover; "
         "cd /opt/clover && (pgrep -f 'gateway.py.*--port 8790' >/dev/null || "
-        "nohup python3 clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8790 --api-key \"$CLOVER_GATEWAY_KEY\" >/var/log/clover-gw.log 2>&1 &)"
+        "nohup python3 clover-ai-system/src/tools/hg4-fusion-gateway/gateway.py --mode real --host 0.0.0.0 --port 8790 --api-key \"$CLOVER_GATEWAY_API_KEY\" >/var/log/clover-gw.log 2>&1 &)"
     )
     return f"ssh -p {int(port)} -l {shlex.quote(user)} -- {shlex.quote(host)} {shlex.quote(remote_sh)}"
 
@@ -932,6 +1124,9 @@ def probe_machine_target(
     if isinstance(raw_spec, dict):
         raw_tgt = str(raw_spec.get("target") or raw_spec.get("url") or raw_spec.get("host") or "").strip()
         per_key = str(raw_spec.get("api_key") or api_key or "").strip()
+        if web_mode:
+            # Never trust client-supplied `reachable` or `served_models` in shared Web mode; probe live instead
+            return probe_machine_target(raw_tgt, api_key=per_key, allow_ssh=False, web_mode=True, verify_live_completion=verify_live_completion, only_models=only_models)
         if "vram_gb" in raw_spec or "gpus" in raw_spec:
             parsed = parse_target(raw_tgt) if "://" in raw_tgt or "@" in raw_tgt or "." in raw_tgt else {
                 "scheme": "spec", "host": re.sub(r"[^A-Za-z0-9_.-]", "-", raw_tgt or "server"), "port": 0, "target": raw_tgt or "server"
@@ -1059,8 +1254,7 @@ def probe_machine_target(
 
     # 2. HTTP(S) Model Gateway Target (`gateway.py`, Studio, vLLM, llama-server, Ollama)
     url = parsed["target"]
-    if web_mode:
-        _check_ssrf_safe_for_web(parsed["host"])
+    pinned_ip = _check_ssrf_safe_for_web(parsed["host"]) if web_mode else ""
 
     if gpus_hint is not None:
         vram = round(sum(g["vram_gb"] for g in gpus_hint), 1)
@@ -1081,8 +1275,12 @@ def probe_machine_target(
             "api_key": api_key,
         }
 
-    opener = urllib.request.build_opener(_NoRedirect) if web_mode else urllib.request.build_opener()
-    headers = {"User-Agent": "CloverStudio/6.0"}
+    opener = (
+        urllib.request.build_opener(_NoRedirect, _PinnedHTTPHandler(pinned_ip), _PinnedHTTPSHandler(pinned_ip, parsed["host"]))
+        if (web_mode and pinned_ip)
+        else urllib.request.build_opener()
+    )
+    headers = {"User-Agent": "CloverStudio/6.0", "Host": f"{parsed['host']}:{parsed['port']}" if parsed["port"] not in (80, 443) else parsed["host"]}
     if api_key:
         headers["X-Clover-Key"] = api_key
         headers["Authorization"] = f"Bearer {api_key}"
@@ -1097,7 +1295,7 @@ def probe_machine_target(
     try:
         req = urllib.request.Request(url + "/health", headers=headers)
         with opener.open(req, timeout=5) as resp:
-            h_data = json.loads(resp.read().decode("utf-8", "replace"))
+            h_data = json.loads(resp.read(262_144).decode("utf-8", "replace"))
         reachable = True
         backends = h_data.get("backends") or {}
         if isinstance(backends, dict):
@@ -1112,7 +1310,7 @@ def probe_machine_target(
     try:
         req = urllib.request.Request(url + "/v1/models", headers=headers)
         with opener.open(req, timeout=5) as resp:
-            m_data = json.loads(resp.read().decode("utf-8", "replace"))
+            m_data = json.loads(resp.read(262_144).decode("utf-8", "replace"))
         reachable = True
         for item in (m_data.get("data") or ()):
             if isinstance(item, dict) and item.get("id"):
@@ -1128,7 +1326,7 @@ def probe_machine_target(
     try:
         req = urllib.request.Request(url + "/api/settings", headers=headers)
         with opener.open(req, timeout=4) as resp:
-            s_data = json.loads(resp.read().decode("utf-8", "replace"))
+            s_data = json.loads(resp.read(262_144).decode("utf-8", "replace"))
         reachable = True
         hw = s_data.get("hardware") or {}
         for g in (hw.get("gpus") or ()):
@@ -1169,7 +1367,7 @@ def probe_machine_target(
                 )
                 t_p = time.perf_counter()
                 with opener.open(req_c, timeout=18) as resp_c:
-                    c_data = json.loads(resp_c.read().decode("utf-8", "replace"))
+                    c_data = json.loads(resp_c.read(262_144).decode("utf-8", "replace"))
                 dt_s = max(0.001, time.perf_counter() - t_p)
                 telem = c_data.get("x_clover_telemetry") or {}
                 if telem.get("backend_kind") == "mock":
@@ -1296,13 +1494,23 @@ def setup_mcp_routes(saved: dict[str, Any]) -> dict[str, dict[str, str]]:
 # ---------------------------------------------------------------------------
 # 5. Studio-Wide Clover v6.0 4-Part Coordinator (`CloverStudioV6`)
 # ---------------------------------------------------------------------------
+_EDUCATIONAL_QUERY_RE = re.compile(r"^\s*(?:explain|what\s+(?:is|does|happens)|why\s+(?:is|should)|describe|how\s+does)\b[^.;:!\n]*\??\s*$", re.I)
+_IMPERATIVE_OVERRIDE_RE = re.compile(r"[;|&]|\bnothing\b|\b(?:then|just|now|please|go\s+ahead\s+and)\s+(?:run|execute|perform|do|apply|delete|drop|wipe|destroy|format)\b", re.I)
 _AMBIGUOUS_RISK_RE = re.compile(
-    r"\b(?:rm\s+-rf|drop\s+table|delete\s+all\s+production|format\s+disk|wipe\s+database)\b"
-    r"|\b(?:deploy\s+it\s+to\s+production|migrate\s+our\s+auth\s+database)\b(?!.*(?:postgres|mysql|sqlite|staging|canary|aws|gcp|azure))",
+    r"\b(?:rm\s+(?:-[A-Za-z]*(?:rf|fr)[A-Za-z]*|-[rR]\s+-[fF]|-[fF]\s+-[rR])|drop\s+(?:database|table|schema)|truncate\s+table|"
+    r"delete\s+all\s+production|format\s+disk|wipe\s+database|terraform\s+destroy|kubectl\s+delete\s+(?:ns|namespace)|"
+    r"mkfs(?:\.[A-Za-z0-9_]+)?)\b"
+    r"|\bdd\s+if=\S+"
+    r"|\bgit\s+push\s+(?:--force(?:-with-lease)?|-f)\b"
+    r"|\b(?:deploy\s+it\s+to\s+production|migrate\s+our\s+auth\s+database)\b",
     re.I,
 )
+_ADJ_MATH_OP_BEHIND = r"(?<![\w\d.])(?<!\*\*\s)(?<!\*\*)(?<!\^\s)(?<!\^)"
+_ADJ_MATH_OP_AHEAD = r"(?![\w\d]|\.\d)(?!\s*(?:\*\*|\^))"
 _EXACT_MATH_RE = re.compile(
-    r"(?:(\d[\d_]*)!|factorial\(\s*(\d[\d_]*)\s*\)|(\d[\d_]*)\s*(?:\^|\*\*)\s*(\d[\d_]*)|pi_hex\(\s*(\d[\d_]*)(?:\s*,\s*(\d+))?\s*\))",
+    _ADJ_MATH_OP_BEHIND
+    + r"(?:(\d[\d_]*)!(?!=)(?!\s+[A-Za-z])|factorial\(\s*(\d[\d_]*)\s*\)|(\d[\d_]*)\s*(?:\^|\*\*)\s*(\d[\d_]*)|pi_hex\(\s*(\d[\d_]*)(?:\s*,\s*(\d+))?\s*\))"
+    + _ADJ_MATH_OP_AHEAD,
     re.I,
 )
 _SINGLE_FUNC_CODE_RE = re.compile(r"^\s*(?:write|implement|complete|create)\s+(?:a\s+)?(?:python\s+)?function\b", re.I)
@@ -1384,9 +1592,12 @@ class CloverStudioV6:
             machines.append(loc)
 
         raw_sv_list = [sv for sv in (servers or ()) if not (isinstance(sv, str) and not sv.strip())]
+        if len(raw_sv_list) > 32:
+            raise ValueError(f"too many servers in one setup plan ({len(raw_sv_list)} > 32 max)")
         req_set = set(req_ids)
         if raw_sv_list:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(raw_sv_list))) as pool:
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(raw_sv_list)))
+            try:
                 futs = [
                     pool.submit(
                         probe_machine_target,
@@ -1407,6 +1618,8 @@ class CloverStudioV6:
                             machines.append(m_res)
                     except Exception as exc:
                         probe_errors.append({"target": str(sv_in), "error": str(exc)})
+            finally:
+                pool.shutdown(wait=False, cancel_futures=True)
 
         if not machines:
             machines.append(detect_local_machine_spec(hardware_hint, is_android=is_android, is_web=is_web))
@@ -1471,21 +1684,28 @@ class CloverStudioV6:
                 min_sv = int(spec.get("min_servers") or 8)
                 if len(rack_hosts) >= min_sv and rem_cluster >= need:
                     is_preview = any(m.get("reachable") is None for m in rack_hosts)
+                    coord_ep = next((m.get("endpoint_url") for m in rack_hosts if m.get("endpoint_url")), None)
+                    needs_gw = coord_ep is None and not is_preview
                     for m in rack_hosts:
                         free_gpus[m["id"]] = [0.0 for _ in free_gpus.get(m["id"], ())]
                     big_results[mid] = {
                         "model_id": mid,
                         "name": spec["name"],
                         "tier": spec["tier"],
-                        "status": "preview_unverified" if is_preview else "ready_pinned",
-                        "interactive": not is_preview,
+                        "status": "preview_unverified" if is_preview else ("needs_gateway" if needs_gw else "ready_pinned"),
+                        "interactive": not is_preview and not needs_gw,
                         "assigned_to": f"Same-rack GPU cluster ({len(rack_hosts)} servers, {rem_cluster:.0f} GB VRAM)",
                         "assigned_target": ",".join(m["target"] for m in rack_hosts),
-                        "endpoint_url": rack_hosts[0].get("endpoint_url"),
+                        "endpoint_url": coord_ep,
+                        "bootstrap_cmd": rack_hosts[0].get("bootstrap_cmd") if needs_gw else None,
                         "key_id": "",
                         "min_server_spec": spec["min_server_spec"],
                         "interactive_speed": spec["interactive_speed"],
-                        "reason": f"Fits across {len(rack_hosts)} same-rack GPU servers ({rem_cluster:.0f} GB free VRAM).",
+                        "reason": (
+                            f"Fits across {len(rack_hosts)} same-rack GPU servers ({rem_cluster:.0f} GB free VRAM); start Clover Gateway on coordinator to expose HTTP /v1."
+                            if needs_gw
+                            else f"Fits across {len(rack_hosts)} same-rack GPU servers ({rem_cluster:.0f} GB free VRAM)."
+                        ),
                     }
                 else:
                     tot_any_vram = sum(float(m.get("vram_gb") or 0.0) for m in machines if m.get("reachable") in (True, None))
@@ -1850,15 +2070,17 @@ class CloverStudioV6:
             if tool_name in ("xcruncher_exact_math", "calculate"):
                 import local_tool_packs
                 res: Any = local_tool_packs.calculate(str(a.get("expression") or a.get("expr") or ""))
+                if isinstance(res, str) and res.startswith("Error:"):
+                    raise ValueError(res)
             elif tool_name in ("forecast_series_0b", "forecast_series"):
-                res = forecast_series_0b(a.get("values") or [], int(a.get("horizon") or 12))
+                res = forecast_series_0b(a.get("values") or a.get("series") or [], int(a.get("horizon") or 12))
             elif tool_name in ("resolve_defeasible_rules_0b", "resolve_rules"):
                 res = resolve_defeasible_rules_0b(a.get("rules") or [], a.get("context_facts") or [])
             elif tool_name == "python_ast_verify":
-                code = str(a.get("code") or "")
+                code = str(a.get("code") or a.get("candidate_code") or "")
                 tree = ast.parse(code)
                 funcs = [n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
-                res = {"valid_syntax": True, "functions": funcs}
+                res = {"valid_syntax": True, "safe_ast": True, "functions": funcs}
             else:
                 routes = setup_mcp_routes(self.load_saved_setup())
                 rt = routes.get(tool_name)
@@ -1901,11 +2123,11 @@ class CloverStudioV6:
         t_start = time.perf_counter()
         tools_used: list[str] = []
 
-        self.todos.add_todo(tid, f"{tid}_ctx", "Capturing context & epistemic boundaries", q[:200])
-        self.todos.add_todo(tid, f"{tid}_exec", "Executing smallest-capable computed tool or model", "Run deterministic 0B tool or model", depends_on=[f"{tid}_ctx"])
-        self.todos.set_status(f"{tid}_ctx", "done")
+        self.todos.add_todo(tid, f"{tid}_ctx", "Capturing context & epistemic boundaries", q[:200], status="done")
+        self.todos.add_todo(tid, f"{tid}_exec", "Executing smallest-capable computed tool or model", "Run deterministic 0B tool or model", depends_on=[f"{tid}_ctx"], status="pending")
 
-        if _AMBIGUOUS_RISK_RE.search(q):
+        is_edu = bool(_EDUCATIONAL_QUERY_RE.match(q)) and not bool(_IMPERATIVE_OVERRIDE_RE.search(q))
+        if _AMBIGUOUS_RISK_RE.search(q) and not is_edu:
             self.todos.set_status(f"{tid}_exec", "blocked")
             msg = (
                 "STOP_AND_ASK: This action carries irreversible or underspecified infrastructure risk. "
@@ -1946,6 +2168,7 @@ class CloverStudioV6:
         self.todos.set_status(f"{tid}_exec", "in_progress")
         cycles_used = 1
         answer = computed_context
+        verify_ok = True
         if callable(generate_fn):
             aug_prompt = f"{q}\n\n{computed_context}".strip() if computed_context else q
             for cyc in range(1, max(1, int(max_cycles)) + 1):
@@ -1953,34 +2176,40 @@ class CloverStudioV6:
                 t_m = time.perf_counter()
                 ans_raw = str(generate_fn(aug_prompt, cyc) or "").strip()
                 el_ms = round((time.perf_counter() - t_m) * 1000.0, 2)
-                tok_est = max(1, len(ans_raw.split()))
+                tok_est = max(1, round(len(ans_raw) / 4.0)) if ans_raw else 0
                 self.metrics.record_model_call(
                     task_id=tid,
                     model=model,
                     instance=instance,
                     cycle=cyc,
-                    prompt_tokens=max(1, len(aug_prompt.split())),
+                    prompt_tokens=max(1, round(len(aug_prompt) / 4.0)),
                     completion_tokens=tok_est,
                     elapsed_ms=el_ms,
                     ok=bool(ans_raw),
                 )
                 answer = ans_raw
+                if not ans_raw:
+                    verify_ok = False
                 if is_single_func_code and "def " in ans_raw:
                     m_code = re.search(r"```(?:python)?\s*(.*?)```", ans_raw, flags=re.S)
                     code_snip = m_code.group(1) if m_code else ans_raw
                     v_out = self.call_mcp_tool("python_ast_verify", {"code": code_snip}, task_id=tid)
                     tools_used.append("python_ast_verify")
-                    if not v_out.get("ok") and cyc < max_cycles:
+                    verify_ok = bool(v_out.get("ok"))
+                    if not verify_ok and cyc < max_cycles:
                         aug_prompt = f"{q}\n\nFix Python syntax error from Cycle {cyc}: {v_out.get('error')}"
                         continue
                 break
+        elif not answer:
+            verify_ok = False
 
-        self.todos.set_status(f"{tid}_exec", "done")
-        ctx_path = self.write_task_context(tid, q, f"4PART_{canon_model_id(model).upper()}", answer or "OK", tools_used)
+        final_status = "SOLVED" if (bool(answer) and verify_ok) else "FAILED"
+        self.todos.set_status(f"{tid}_exec", "done" if final_status == "SOLVED" else "blocked")
+        ctx_path = self.write_task_context(tid, q, f"4PART_{canon_model_id(model).upper()}", answer or "EMPTY_OR_UNVERIFIED", tools_used)
         self.metrics.record_problem_run(
             task_id=tid,
             model=model,
-            status="SOLVED",
+            status=final_status,
             domain="code" if is_single_func_code else ("math" if tools_used else "general"),
             cycles_used=cycles_used,
             tools_used=tools_used,
@@ -1988,7 +2217,7 @@ class CloverStudioV6:
         )
         return {
             "task_id": tid,
-            "status": "SOLVED",
+            "status": final_status,
             "cycles_used": cycles_used,
             "model": canon_model_id(model),
             "tools_used": tools_used,

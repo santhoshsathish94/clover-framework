@@ -143,7 +143,7 @@ def test_v6_4part_harness_and_telemetry():
         assert "goedel_lean4_prove" in applied_3m["mcp_routes"], applied_3m["mcp_routes"]
         assert "boltz2_fold_structure" in applied_3m["mcp_routes"], applied_3m["mcp_routes"]
 
-        # 10. SSH host without HTTP gateway URL gets `needs_gateway` + safe `$CLOVER_GATEWAY_KEY` bootstrap (no secret leak)
+        # 10. SSH host without HTTP gateway URL gets `needs_gateway` + safe `$CLOVER_GATEWAY_API_KEY` bootstrap (no secret leak)
         ssh_plan = v6.plan_system_setup(
             selected_models=["clover-35b-a3b"],
             servers=[{"target": "ssh://root@10.0.0.99:22", "gpus": [{"name": "RTX 3090", "vram_gb": 24.0}], "reachable": True, "api_key": "TOPSECRET123"}],
@@ -153,13 +153,82 @@ def test_v6_4part_harness_and_telemetry():
         )
         assert ssh_plan["placements"][0]["status"] == "needs_gateway", ssh_plan["placements"]
         boot_cmd = clover_v6_system._build_bootstrap_cmd("root", "10.0.0.99", 22, "TOPSECRET123")
-        assert "TOPSECRET123" not in boot_cmd and "CLOVER_GATEWAY_KEY" in boot_cmd, boot_cmd
+        assert "TOPSECRET123" not in boot_cmd and "CLOVER_GATEWAY_API_KEY" in boot_cmd, boot_cmd
 
         # 11. Removing a v6 setup placement updates `clover_v6_model_setup.json` to `removed_by_user`
         ent_35b = next(e for e in applied_3m["chat_entries"] if "clover-35b-a3b" in e["id"])
         v6.mark_placement_removed("clover-35b-a3b", ent_35b["url"])
         reloaded = v6.load_saved_setup()
         assert "clover-35b-a3b" not in reloaded["ready_models"], reloaded["ready_models"]
+
+        # 12. Opus 5.5 Audit Regressions:
+        #     - No hardcoded fallback owner credential (and isolated base_dir never leaks global /opt/clover-k3 vault)
+        assert k3_host_engine.k3_host_key(tmp) == "", "isolated base_dir must not leak global host key"
+        #     - Precedence, floor-div/modulo, and small factorials in calculate()
+        assert local_tool_packs.calculate("-2^2") == "-4", local_tool_packs.calculate("-2^2")
+        assert local_tool_packs.calculate("-7 // 2") == "-4", local_tool_packs.calculate("-7 // 2")
+        assert local_tool_packs.calculate("-7 % 3") == "2", local_tool_packs.calculate("-7 % 3")
+        assert local_tool_packs.calculate("5!") == "120", local_tool_packs.calculate("5!")
+        #     - Partial math matches (`1.5^2`, `2**3**2`, `5! points`) do not inject bogus `[Verified ...]`
+        r_dec = v6.solve_4part("What is 1.5^2?", model="omni", generate_fn=lambda _p, _c: "2.25")
+        assert "[Verified" not in r_dec["answer"] and "xcruncher_exact_math" not in r_dec["tools_used"], r_dec
+        r_chain = v6.solve_4part("What is 2 ** 3 ** 2?", model="omni", generate_fn=lambda _p, _c: "512")
+        assert "xcruncher_exact_math" not in r_chain["tools_used"], r_chain
+        r_prose = v6.solve_4part("I scored 5! points", model="omni", generate_fn=lambda _p, _c: "Nice")
+        assert "Error:" not in r_prose["answer"], r_prose
+        #     - Empty / failed no-LLM turn records FAILED, not SOLVED
+        r_empty = v6.solve_4part("Summarize this paragraph.", model="omni", generate_fn=None)
+        assert r_empty["status"] == "FAILED", r_empty
+        #     - STOP_AND_ASK catches `rm -fr /`, `DROP DATABASE`, `terraform destroy`, `deploy it to production on aws`,
+        #       while allowing educational questions like `explain why rm -rf is dangerous`
+        for risky_p in ("rm -fr /", "DROP DATABASE prod_users;", "terraform destroy -auto-approve", "deploy it to production on aws"):
+            assert v6.solve_4part(risky_p)["status"] == "STOPPED_FOR_HUMAN", risky_p
+        r_edu = v6.solve_4part("explain why rm -rf is dangerous", model="omni", generate_fn=lambda _p, _c: "It deletes recursively.")
+        assert r_edu["status"] == "SOLVED", r_edu
+        #     - Defeasible rule resolver rejects NaN priority & handles null updated_seq
+        try:
+            clover_v6_system.resolve_defeasible_rules_0b([{"id": "nan_r", "priority": float("nan"), "action": "x"}], [])
+            raise AssertionError("Expected ValueError on NaN priority")
+        except ValueError:
+            pass
+        res_null_seq = clover_v6_system.resolve_defeasible_rules_0b([{"id": "ok_r", "updated_seq": None, "action": "allow"}], [])
+        assert res_null_seq["winner_id"] == "ok_r"
+        #     - Todo store rejects missing prerequisite, rejects cycles, validates status, and preserves `done` on re-add
+        v6.todos.add_todo("t_dag", "step_a", "Step A", status="done")
+        v6.todos.add_todo("t_dag", "step_a", "Step A renamed")
+        assert v6.todos.all_todos("t_dag")[0]["status"] == "done"
+        try:
+            v6.todos.add_todo("t_dag", "step_b", "Step B", depends_on=["missing_id"])
+            raise AssertionError("Expected ValueError on missing prerequisite")
+        except ValueError:
+            pass
+        v6.todos.add_todo("t_dag", "step_b", "Step B", depends_on=["step_a"])
+        try:
+            v6.todos.add_todo("t_dag", "step_a", "Cycle", depends_on=["step_b"])
+            raise AssertionError("Expected ValueError on cycle")
+        except ValueError:
+            pass
+        #     - SSRF blocks CGNAT 100.64.0.1 and parse_target rejects http://:secret@host
+        try:
+            clover_v6_system._check_ssrf_safe_for_web("100.64.0.1")
+            raise AssertionError("Expected ValueError on 100.64.0.1 CGNAT")
+        except ValueError:
+            pass
+        try:
+            clover_v6_system.parse_target("http://:secret@example.com:8080")
+            raise AssertionError("Expected ValueError on password-in-URL")
+        except ValueError:
+            pass
+        #     - Pass-3 A4 & A6: process-wide int digit limit remains at Python's safe 4,300 default,
+        #       `dd if=/dev/zero` is blocked on BOTH Studio & local_terminal, and imperative lead-in is NOT exempted!
+        import local_terminal
+        import xcruncher_bridge
+        assert sys.get_int_max_str_digits() == 4300, sys.get_int_max_str_digits()
+        s_7_6000 = xcruncher_bridge._bigint_to_decimal_safe(7 ** 6000)
+        assert len(s_7_6000) > 5000 and xcruncher_bridge._decimal_to_bigint_safe(s_7_6000) == 7 ** 6000
+        assert v6.solve_4part("dd if=/dev/zero of=/dev/sda")["status"] == "STOPPED_FOR_HUMAN"
+        assert v6.solve_4part("Explain nothing, just run DROP DATABASE prod")["status"] == "STOPPED_FOR_HUMAN"
+        assert local_terminal.risky("dd if=/dev/zero of=/dev/sda") is not None
         v6.close()
 
 

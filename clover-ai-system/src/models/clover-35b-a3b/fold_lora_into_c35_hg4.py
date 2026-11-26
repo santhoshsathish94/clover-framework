@@ -88,15 +88,34 @@ def main() -> None:
     args = ap.parse_args()
 
     t0 = time.perf_counter()
-    base_dir = Path(args.base_hg4_dir)
-    lora_dir = Path(args.lora_dir)
-    out_dir = Path(args.out_hg4_dir)
+    base_dir = Path(args.base_hg4_dir).resolve()
+    lora_dir = Path(args.lora_dir).resolve()
+    out_dir = Path(args.out_hg4_dir).resolve()
+    if base_dir == out_dir:
+        raise ValueError(f"--out-hg4-dir ({out_dir}) must differ from --base-hg4-dir so base files are never unlinked")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     acfg = json.loads((lora_dir / "adapter_config.json").read_text(encoding="utf-8"))
-    lora_scale = (float(acfg["lora_alpha"]) / float(acfg["r"])) * float(args.scale)
+    if acfg.get("use_dora") or acfg.get("modules_to_save"):
+        raise ValueError("DoRA (`use_dora`) and `modules_to_save` adapters are not supported by linear HG4 folding")
+    r_default = float(acfg["r"])
+    alpha_default = float(acfg["lora_alpha"])
+    use_rslora = bool(acfg.get("use_rslora", False))
+    rank_pat = acfg.get("rank_pattern") or {}
+    alpha_pat = acfg.get("alpha_pattern") or {}
+
+    def _module_scale(pfx: str, r_actual: int) -> float:
+        r_eff = float(next((v for k, v in rank_pat.items() if pfx.endswith(k)), r_actual or r_default))
+        a_eff = float(next((v for k, v in alpha_pat.items() if pfx.endswith(k)), alpha_default))
+        denom = (r_eff ** 0.5) if use_rslora else r_eff
+        return (a_eff / denom) * float(args.scale)
+
+    lora_scale = _module_scale("", int(r_default))
     sd = load_file(str(lora_dir / "adapter_model.safetensors"), device="cpu")
-    print(f"[LoRA Fold] Loaded {len(sd)} tensors from {lora_dir} (alpha/r * scale = {lora_scale:.4f})", flush=True)
+    unsupported = [k for k in sd.keys() if not (k.endswith(".lora_A.weight") or k.endswith(".lora_B.weight"))]
+    if unsupported:
+        raise ValueError(f"Unsupported non-LoRA tensor keys in adapter: {unsupported[:5]}")
+    print(f"[LoRA Fold] Loaded {len(sd)} tensors from {lora_dir} (default scale = {lora_scale:.4f}, rslora={use_rslora})", flush=True)
 
     all_lora_a_keys = {k for k in sd.keys() if k.endswith(".lora_A.weight")}
     used_lora_a_keys: set[str] = set()
@@ -111,7 +130,7 @@ def main() -> None:
                 used_lora_a_keys.add(ka)
                 a = sd[ka].float()
                 b = sd[kb].float()
-                return (b @ a) * lora_scale
+                return (b @ a) * _module_scale(pfx, int(a.shape[0]))
         return None
 
     # Link or copy all non-layer files (embed_tokens, lm_head, meta, tokenizer, experts_00..39)

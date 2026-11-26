@@ -15,17 +15,13 @@
 
 ---
 
-## 2. Built Artifacts & Checksums
+> **v6.0.0 Status — Work in Progress (`WIP`):** Standalone Windows `.exe`/`.msix` GUI installers are withheld from the public repository and website while packaging stability is finalized (see [../../../../download/README.md](../../../../download/README.md)). The checklist below serves as the staging template when building local closed-testing packages.
 
-- **Partner Center Upload Bundle (Recommended — Option A)**: `release/beta/windows/clover-ai-studio-beta.msixupload`
-  - Size: `4,738,436` bytes (`4.52 MB`)
-  - SHA-256: `a1eba69e325dbfe64cdd9fdcf6f91d7f9fed790cdd41a41e405c04a1b929b621`
-- **Standalone MSIX Package (`x64`)**: `release/beta/windows/SanthoshNarayanan.CloverAIStudio_6.0.0.0_x64.msix` (also copied as `clover-ai-studio-beta.msix`)
-  - Size: `4,786,629` bytes (`4.56 MB`)
-  - SHA-256: `061797c889d2a3ffc26b0b8dac148b4e9780cf617d7cf73831b228fe904cbb21`
-- **Standalone Direct-Download Setup EXE (`x64`)**: `release/beta/windows/clover-ai-studio-beta-setup.exe`
-  - Size: `10,454,488` bytes (`9.97 MB`)
-  - SHA-256: `2be3467c0330277403a1be2f5b84d58d034fdab5830480eade8167ef7ef9bcef`
+## 2. Built Artifacts & Checksums (Local Staging Template)
+
+- **Partner Center Upload Bundle (local build output, not committed)**: `clover-ai-studio-beta.msixupload`
+- **Standalone MSIX Package (`x64`, local build output, not committed)**: `SanthoshNarayanan.CloverAIStudio_6.0.0.0_x64.msix`
+- **Standalone Setup EXE (`x64`, local build output, not committed)**: `clover-ai-studio-beta-setup.exe`
 
 ---
 

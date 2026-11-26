@@ -305,9 +305,9 @@ def _extract_prompt_doctest_runner(prompt_text: str, preload_modules: list[str] 
 
 
 def _minimal_subprocess_env() -> dict[str, str]:
-    """Strip all gateway secrets/tokens from child environment; retain only minimal OS loader keys."""
+    """Strip all gateway secrets/tokens from child environment; retain only minimal OS/toolchain loader keys."""
     clean: dict[str, str] = {"PATH": os.environ.get("PATH", ""), "PYTHONIOENCODING": "utf-8"}
-    for k in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME", "LANG", "LC_ALL"):
+    for k in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME", "LANG", "LC_ALL", "ELAN_HOME", "LD_LIBRARY_PATH"):
         if k in os.environ:
             clean[k] = os.environ[k]
     return clean
@@ -365,7 +365,7 @@ def verify_python_draft_fast(prompt_text: str, draft_text: str, timeout_s: float
     return None
 
 
-def verify_lean_surface_fast(prompt_text: str, draft_text: str) -> str | None:
+def verify_lean_surface_fast(prompt_text: str, draft_text: str, *, allow_verdict_meta: bool = False) -> str | None:
     """Fast zero-toolchain Lean 4 surface check (strips comments/strings and skips plain English prose)."""
     cleaned_raw = re.sub(r"<think>.*?</think>", "", draft_text or "", flags=re.DOTALL).strip()
     if not cleaned_raw:
@@ -375,7 +375,7 @@ def verify_lean_surface_fast(prompt_text: str, draft_text: str) -> str | None:
     if block.count("/-") != block.count("-/"):
         return "Unclosed `/- ... -/` block comment in Lean 4 output; close all comments cleanly."
     stripped = _strip_lean_comments_and_strings(block)
-    is_verdict_prompt = "verdict:" in prompt_text.lower()
+    is_verdict_prompt = allow_verdict_meta and bool(re.search(r"(?i)^\s*verdict\s*:", prompt_text, flags=re.MULTILINE))
     if not is_verdict_prompt and _FORBIDDEN_LEAN_ALWAYS_META_RE.search(stripped):
         return "Forbidden Lean 4 metaprogramming or `native_decide` directive in proof; use pure tactics only."
     looks_like_lean = has_fence or bool(

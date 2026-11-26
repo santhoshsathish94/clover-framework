@@ -195,16 +195,17 @@ def calculate(expression: str) -> str:
         except (ValueError, RuntimeError) as exc:
             return f"Error: {exc}"
 
-    # 2. Large exact factorial: factorial(n) or n! for 201 <= n <= 200,000
+    # 2. Exact factorial: factorial(n) or n! for 0 <= n <= 200,000
     m_fact = re.fullmatch(r"(?:factorial\(\s*(\d[\d_]*)\s*\)|(\d[\d_]*)!)", norm_head, flags=re.I)
     if m_fact:
         n_val = int((m_fact.group(1) or m_fact.group(2)).replace("_", ""))
-        if n_val > 200:
-            import xcruncher_bridge
-            return xcruncher_bridge.run_xcruncher_compute(operation="factorial", n=n_val)
+        if n_val <= 200:
+            return str(math.factorial(n_val))
+        import xcruncher_bridge
+        return xcruncher_bridge.run_xcruncher_compute(operation="factorial", n=n_val)
 
-    # 2b. Exact big-integer binary exponentiation: a ^ b or a ** b (e.g. 3^89, 7^61, 2^127)
-    m_pow = re.fullmatch(r"(-?\d[\d_]*)\s*(?:\^|\*\*)\s*(\d[\d_]*)", norm_head)
+    # 2b. Exact positive-base big-integer binary exponentiation: a ^ b or a ** b (unary `-2^2` goes through AST so `-2^2 == -4`)
+    m_pow = re.fullmatch(r"(\d[\d_]*)\s*(?:\^|\*\*)\s*(\d[\d_]*)", norm_head)
     if m_pow:
         import clover_v6_system
         try:
@@ -237,6 +238,7 @@ def calculate(expression: str) -> str:
     norm = re.sub(r"(?<=\d),(?=\d{3}\b)", "", norm)
     norm = re.sub(r"^\s*(?:what\s+is|calculate|compute|evaluate)\s+", "", norm, flags=re.I)
     norm = re.sub(r"[?=]+\s*$", "", norm).strip()
+    norm = re.sub(r"\b(\d{1,3})!(?!=)", r"factorial(\1)", norm)
 
     for m in re.finditer(r"\d+", norm):
         if len(m.group(0)) > MAX_LITERAL_DIGITS:
@@ -289,11 +291,12 @@ def calculate(expression: str) -> str:
                 if isinstance(node.op, ast.FloorDiv):
                     if right == 0:
                         raise ZeroDivisionError("division by zero")
-                    return Decimal(int(left // right))
+                    return (left / right).to_integral_value(rounding=decimal.ROUND_FLOOR)
                 if isinstance(node.op, ast.Mod):
                     if right == 0:
                         raise ZeroDivisionError("modulo by zero")
-                    return left % right
+                    q_floor = (left / right).to_integral_value(rounding=decimal.ROUND_FLOOR)
+                    return left - q_floor * right
                 if isinstance(node.op, ast.Pow):
                     if abs(right) > MAX_EXPONENT:
                         raise ValueError(f"exponent {right} exceeds maximum ({MAX_EXPONENT})")

@@ -15,6 +15,7 @@ run so fine-tuning and architecture decisions are 100% data-driven:
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sqlite3
@@ -22,7 +23,7 @@ import statistics
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 
 def _pct(sorted_vals: list[float], q: float) -> float:
@@ -55,15 +56,22 @@ class CloverMetricsLedger:
         self.started_at = time.time()
         self.model_stats: dict[str, dict[str, Any]] = {}
         self.tool_stats: dict[str, dict[str, Any]] = {}
+        self.tag_model_stats: dict[str, dict[str, dict[str, Any]]] = {}
+        self.tag_tool_stats: dict[str, dict[str, dict[str, Any]]] = {}
         self.instance_hits: dict[str, int] = {}
         self.solve_records: list[dict[str, Any]] = []
 
-    def _connect(self) -> sqlite3.Connection:
+    @contextlib.contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
         assert self.db_path is not None
         conn = sqlite3.connect(str(self.db_path), timeout=15.0)
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-        return conn
+        try:
+            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
+            with conn:
+                yield conn
+        finally:
+            conn.close()
 
     def _init_db(self) -> None:
         with self._connect() as conn:
@@ -83,9 +91,18 @@ class CloverMetricsLedger:
                 CREATE TABLE IF NOT EXISTS tool_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ts REAL NOT NULL,
+                    task_id TEXT NOT NULL DEFAULT '',
+                    benchmark_tag TEXT NOT NULL DEFAULT '',
                     tool_name TEXT NOT NULL,
                     ok INTEGER NOT NULL,
+                    outcome TEXT NOT NULL DEFAULT 'ok',
+                    reason TEXT NOT NULL DEFAULT '',
                     wall_ms REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS ledger_windows (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts REAL NOT NULL,
+                    event TEXT NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS solve_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,15 +127,29 @@ class CloverMetricsLedger:
                 """
             )
 
+            for col_sql in (
+                "ALTER TABLE tool_events ADD COLUMN task_id TEXT NOT NULL DEFAULT '';",
+                "ALTER TABLE tool_events ADD COLUMN benchmark_tag TEXT NOT NULL DEFAULT '';",
+                "ALTER TABLE tool_events ADD COLUMN outcome TEXT NOT NULL DEFAULT 'ok';",
+                "ALTER TABLE tool_events ADD COLUMN reason TEXT NOT NULL DEFAULT '';",
+            ):
+                try:
+                    conn.execute(col_sql)
+                except sqlite3.OperationalError:
+                    pass
+
     def reset(self) -> dict[str, Any]:
+        """Reset active in-memory telemetry window while keeping SQLite audit tables strictly append-only."""
+        now = time.time()
         with self._lock:
             self._reset_memory_unlocked()
-            if self.db_path is not None and self.db_path.is_file():
-                with self._connect() as conn:
-                    conn.execute("DELETE FROM completion_events;")
-                    conn.execute("DELETE FROM tool_events;")
-                    conn.execute("DELETE FROM solve_events;")
-        return {"status": "reset", "ts": time.time()}
+            if self.db_path is not None:
+                try:
+                    with self._connect() as conn:
+                        conn.execute("INSERT INTO ledger_windows (ts, event) VALUES (?, 'window_reset')", (now,))
+                except sqlite3.Error:
+                    pass
+        return {"status": "reset", "ts": now}
 
     def record_completion(
         self,
@@ -154,6 +185,18 @@ class CloverMetricsLedger:
                     st["tok_s_samples"].append(tok_s)
             st["instances_used"].add(instance_id)
             self.instance_hits[instance_id] = self.instance_hits.get(instance_id, 0) + 1
+            if benchmark_tag:
+                tst = self.tag_model_stats.setdefault(benchmark_tag, {}).setdefault(
+                    model,
+                    {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "wall_ms_total": 0.0, "tok_s_samples": [], "instances_used": set()},
+                )
+                tst["calls"] += 1
+                tst["prompt_tokens"] += int(prompt_tokens)
+                tst["completion_tokens"] += int(completion_tokens)
+                tst["wall_ms_total"] += float(wall_ms)
+                if tok_s > 0 and len(tst["tok_s_samples"]) < 4096:
+                    tst["tok_s_samples"].append(tok_s)
+                tst["instances_used"].add(instance_id)
 
         if self.db_path is not None:
             try:
@@ -167,26 +210,52 @@ class CloverMetricsLedger:
                 pass
         return tok_s
 
-    def record_tool(self, tool_name: str, ok: bool, wall_ms: float) -> None:
+    def record_tool(
+        self,
+        tool_name: str,
+        ok: bool,
+        wall_ms: float,
+        *,
+        denied: bool = False,
+        task_id: str = "",
+        benchmark_tag: str = "",
+        reason: str = "",
+    ) -> None:
         now = time.time()
+        outcome = "ok" if ok else ("denied" if denied else "failed")
         with self._lock:
             ts = self.tool_stats.setdefault(
                 tool_name,
-                {"calls": 0, "ok_calls": 0, "failed_calls": 0, "wall_ms_total": 0.0},
+                {"calls": 0, "ok_calls": 0, "failed_calls": 0, "denied_calls": 0, "wall_ms_total": 0.0},
             )
             ts["calls"] += 1
             if ok:
                 ts["ok_calls"] += 1
+            elif denied:
+                ts["denied_calls"] = ts.get("denied_calls", 0) + 1
             else:
                 ts["failed_calls"] += 1
             ts["wall_ms_total"] += float(wall_ms)
+            if benchmark_tag:
+                tts = self.tag_tool_stats.setdefault(benchmark_tag, {}).setdefault(
+                    tool_name,
+                    {"calls": 0, "ok_calls": 0, "failed_calls": 0, "denied_calls": 0, "wall_ms_total": 0.0},
+                )
+                tts["calls"] += 1
+                if ok:
+                    tts["ok_calls"] += 1
+                elif denied:
+                    tts["denied_calls"] = tts.get("denied_calls", 0) + 1
+                else:
+                    tts["failed_calls"] += 1
+                tts["wall_ms_total"] += float(wall_ms)
 
         if self.db_path is not None:
             try:
                 with self._connect() as conn:
                     conn.execute(
-                        "INSERT INTO tool_events (ts, tool_name, ok, wall_ms) VALUES (?, ?, ?, ?)",
-                        (now, tool_name, 1 if ok else 0, float(wall_ms)),
+                        "INSERT INTO tool_events (ts, task_id, benchmark_tag, tool_name, ok, outcome, reason, wall_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (now, task_id, benchmark_tag, tool_name, 1 if ok else 0, outcome, reason, float(wall_ms)),
                     )
             except sqlite3.Error:
                 pass
@@ -244,14 +313,16 @@ class CloverMetricsLedger:
         benchmark_tag: str | None = None,
     ) -> dict[str, Any]:
         with self._lock:
-            reg_m = sorted(set(registered_models or []) | set(self.model_stats.keys()))
-            reg_t = sorted(set(registered_tools or []) | set(self.tool_stats.keys()))
+            active_m_map = self.tag_model_stats.get(benchmark_tag, {}) if benchmark_tag else self.model_stats
+            active_t_map = self.tag_tool_stats.get(benchmark_tag, {}) if benchmark_tag else self.tool_stats
+            reg_m = sorted(set(registered_models or []) | set(active_m_map.keys()))
+            reg_t = sorted(set(registered_tools or []) | set(active_t_map.keys()))
             reg_inst = dict(registered_instances or {})
 
             models_used_out: dict[str, Any] = {}
             models_unused_out: list[str] = []
             for m in reg_m:
-                st = self.model_stats.get(m)
+                st = active_m_map.get(m)
                 avail_urls = reg_inst.get(m, [])
                 if not st or st["calls"] == 0:
                     models_unused_out.append(m)
@@ -276,14 +347,16 @@ class CloverMetricsLedger:
             tools_used_out: dict[str, Any] = {}
             tools_unused_out: list[str] = []
             for t in reg_t:
-                ts = self.tool_stats.get(t)
+                ts = active_t_map.get(t)
                 if not ts or ts["calls"] == 0:
                     tools_unused_out.append(t)
                     continue
+                denied_n = int(ts.get("denied_calls", 0))
                 tools_used_out[t] = {
                     "calls": ts["calls"],
                     "ok_calls": ts["ok_calls"],
                     "failed_calls": ts["failed_calls"],
+                    "denied_calls": denied_n,
                     "error_rate_pct": round(100.0 * ts["failed_calls"] / max(1, ts["calls"]), 2),
                     "mean_wall_ms": round(ts["wall_ms_total"] / max(1, ts["calls"]), 2),
                 }
@@ -330,7 +403,11 @@ class CloverMetricsLedger:
             for tname, tstat in tools_used_out.items():
                 if tstat["failed_calls"] > 0:
                     fine_tune_signals.append(
-                        f"Tool `{tname}` had {tstat['failed_calls']}/{tstat['calls']} failed invocations ({tstat['error_rate_pct']}%) — inspect argument formatting."
+                        f"Tool `{tname}` had {tstat['failed_calls']}/{tstat['calls']} execution failures ({tstat['error_rate_pct']}%) — inspect argument formatting."
+                    )
+                if tstat.get("denied_calls", 0) > 0:
+                    fine_tune_signals.append(
+                        f"Tool `{tname}` had {tstat['denied_calls']}/{tstat['calls']} policy-denied calls (tool not in request's allowed schema)."
                     )
             for fcat, fcnt in sorted(fail_cats.items(), key=lambda kv: -kv[1]):
                 fine_tune_signals.append(f"Failure mode `{fcat}` occurred on {fcnt} problem(s).")

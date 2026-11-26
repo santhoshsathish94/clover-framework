@@ -93,6 +93,7 @@ def compute_clubbing_key(body: dict[str, Any]) -> str | None:
         "max_tokens": body.get("max_completion_tokens") or body.get("max_tokens") or 1024,
         "stop": body.get("stop") or None,
         "seed": int(body.get("seed") or 0),
+        "x_clover": {k: v for k, v in body.items() if str(k).startswith("x_clover_")},
     }
     raw = json.dumps(canonical, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -947,8 +948,9 @@ class Mcp2MeshServer:
         if method == "tools/call":
             tname = str(params.get("name") or norm_hdrs.get("mcp-name") or "").strip()
             targs = params.get("arguments") if isinstance(params.get("arguments"), dict) else {}
+            is_mcp_hop = bool(norm_hdrs.get("x-clover-mcp-hop"))
             try:
-                out = self._invoke_tool(tname, targs)
+                out = self._invoke_tool(tname, targs, is_hop=is_mcp_hop)
                 return 200, resp_hdrs, {
                     "jsonrpc": "2.0",
                     "id": req_id,
@@ -972,7 +974,7 @@ class Mcp2MeshServer:
         # Batch / Clubbed Tool Execution (`tools/call_batch`)
         if method == "tools/call_batch":
             calls = params.get("calls") if isinstance(params.get("calls"), list) else []
-            out = self._exec_batch_calls(calls)
+            out = self._exec_batch_calls(calls, is_hop=bool(norm_hdrs.get("x-clover-mcp-hop")))
             return 200, resp_hdrs, {"jsonrpc": "2.0", "id": req_id, "result": out}
 
         # MCP 2.0 `tasks/*` Async Queue Extension (`tasks/create`, `tasks/batch`, `tasks/get`, `tasks/result`, `tasks/cancel`)
@@ -1009,18 +1011,20 @@ class Mcp2MeshServer:
         }
 
     # -- Tool & Specialist implementations ---------------------------------------------------------------------------
-    def _invoke_tool(self, name: str, args: dict[str, Any], _batch_depth: int = 0) -> dict[str, Any]:
+    def _invoke_tool(self, name: str, args: dict[str, Any], _batch_depth: int = 0, *, is_hop: bool = False) -> dict[str, Any]:
         if name not in _TOOL_BY_NAME:
             raise KeyError(name)
         spec = _TOOL_BY_NAME[name]
 
-        # If mapped to a remote specialist peer and not hosted locally, forward via stateless MCP 2.0!
+        # If mapped to a remote specialist peer and not hosted locally, forward via stateless MCP 2.0 (at most 1 hop)!
         local_hosted = bool(
             spec.target_model
             and spec.target_model in self.router.backends
             and getattr(self.router.backends[spec.target_model], "kind", "") != "remote-http"
         )
         if name in self.tool_peers and not local_hosted:
+            if is_hop:
+                raise RuntimeError(f"Refusing multi-hop MCP forwarding loop for tool '{name}' on node '{self.node_id}'")
             peer = self.tool_peers[name]
             payload = json.dumps({
                 "jsonrpc": "2.0", "id": uuid.uuid4().hex[:12], "method": "tools/call",
@@ -1159,10 +1163,19 @@ class Mcp2MeshServer:
             return {"tool": name, "safe": True, "specialist": spec_choice, "reason": reason}
 
         if name == "xcruncher_exact_math":
-            expr = str(args.get("expression") or "")
+            expr = str(args.get("expression") or args.get("expr") or "").strip()
             obs = sxc.extract_prompt_math_obligations(expr)
+            direct_result: str | None = None
+            if obs:
+                direct_result = str(obs[0].get("exact") or "")
+            else:
+                ev_pair = sxc.eval_exact_bigint_expr(expr)
+                if ev_pair is not None:
+                    direct_result, ev_backend = ev_pair
+                    obs = [{"kind": "exact_expr", "expr": expr, "exact": direct_result, "backend": ev_backend}]
             return {
                 "tool": name,
+                "result": direct_result,
                 "obligations_solved": len(obs),
                 "verified_values": obs,
             }
@@ -1200,20 +1213,26 @@ class Mcp2MeshServer:
 
                 code_txt = sout._extract_lean_block(cand)
                 cand_stripped = sout._strip_lean_comments_and_strings(code_txt)
-                # Candidate must supply tactics after `:= by`, NOT redeclare its own trivial theorem!
-                if _re.search(r"\b(?:theorem|lemma|axiom|def)\s+", cand_stripped):
-                    out_lean["finding"] = "Candidate must provide only tactic steps after `:= by`, not redeclare `theorem`/`lemma`."
+                # Candidate must supply tactics after `:= by`, NOT redeclare its own theorem or execute top-level #eval/IO!
+                if _re.search(r"\b(?:theorem|lemma|axiom|def|elab|macro|syntax|initialize|run_cmd|run_elab|run_meta|IO|System)\b|#\s*(?:eval|check|print|reduce|synth)\b", cand_stripped) or _re.search(r"#\s*(?:eval|check|print|reduce|synth)\b", code_txt):
+                    out_lean["finding"] = "Candidate must provide pure tactic steps after `:= by` (no `theorem`/`lemma` redeclaration, `#eval`, or `IO`/metaprogramming)."
                     return out_lean
+                for ln_i, raw_ln in enumerate(code_txt.splitlines()):
+                    if ln_i > 0 and raw_ln.strip() and not raw_ln[0].isspace():
+                        # Indent every tactic line strictly inside the `by` block so column-0 top-level commands can never escape
+                        pass
 
                 header = clean_stmt.rstrip()
                 if not header.endswith(":= by"):
                     header = header + " := by"
-                full_lean = header + "\n  " + code_txt.strip() + "\n"
+                indented_tactics = "\n".join(("  " + ln if ln.strip() else "") for ln in code_txt.strip().splitlines())
+                full_lean = header + "\n" + indented_tactics + "\n"
 
                 import shutil as _shutil
                 import subprocess
                 import tempfile
 
+                sandbox_prefix = [p for p in os.environ.get("CLOVER_STUDIO_SANDBOX_CMD", "").split() if p]
                 env_l = sout._minimal_subprocess_env()
                 elan_bin = (os.environ.get("CLOVER_ELAN_BIN") or "").strip()
                 if elan_bin and os.path.isdir(elan_bin):
@@ -1229,7 +1248,7 @@ class Mcp2MeshServer:
                     tmp_lean.write_text(full_lean, encoding="utf-8")
                     try:
                         proc_l = subprocess.run(
-                            ["lake", "env", "lean", "--memory=4096", "--threads=2", str(tmp_lean)],
+                            [*sandbox_prefix, "lake", "env", "lean", "--memory=4096", "--threads=2", str(tmp_lean)],
                             cwd=str(lean_proj),
                             env=env_l,
                             capture_output=True,
@@ -1253,10 +1272,10 @@ class Mcp2MeshServer:
             import tempfile
 
             prompt_dt = str(args.get("prompt_with_doctest") or "")
-            cand = str(args.get("candidate_code") or "")
+            cand = str(args.get("candidate_code") or args.get("code") or "")
             test_code = str(args.get("test_code") or "")
             safe_ast = sout._is_safe_candidate_ast(cand)
-            out_py: dict[str, Any] = {"tool": name, "safe_ast": safe_ast}
+            out_py: dict[str, Any] = {"tool": name, "safe_ast": safe_ast, "valid_syntax": safe_ast}
             if not safe_ast:
                 out_py["passed"] = False
                 out_py["diagnostics"] = (
@@ -1389,29 +1408,45 @@ class Mcp2MeshServer:
                     "p90": [round(r[2], 4) for r in q_np],
                 }
             except Exception:
-                # Deterministic damped linear-trend + residual-spread quantiles (never text-LLM float guessing!)
-                import math as _math
+                # Unified 0B Periodogram + Harmonic OLS + Split-Conformal fallback (matches Studio forecast_series_0b!)
+                try:
+                    import sys as _sys
+                    studio_clover = Path(__file__).resolve().parents[3] / "studio" / "clover"
+                    if studio_clover.is_dir() and str(studio_clover) not in _sys.path:
+                        _sys.path.insert(0, str(studio_clover))
+                    import clover_v6_system as _cv6  # type: ignore[import-not-found]
+                    fc0 = _cv6.forecast_series_0b(raw_series, horizon=horizon)
+                    return {
+                        "tool": name,
+                        "served_by": fc0["engine"],
+                        "horizon": horizon,
+                        "p10": fc0["p10"],
+                        "p50": fc0["p50"],
+                        "p90": fc0["p90"],
+                    }
+                except Exception:
+                    import math as _math
 
-                n_s = len(raw_series)
-                slope = (raw_series[-1] - raw_series[max(0, n_s - 8)]) / max(1, min(7, n_s - 1)) if n_s >= 2 else 0.0
-                diffs = [abs(raw_series[i] - raw_series[i - 1]) for i in range(1, n_s)]
-                sigma = (sum(diffs) / len(diffs)) if diffs else max(1e-3, abs(raw_series[-1]) * 0.02)
-                p10, p50, p90 = [], [], []
-                cur = raw_series[-1]
-                for step_i in range(1, horizon + 1):
-                    cur = cur + slope * (0.90 ** step_i)
-                    band = 1.2816 * sigma * _math.sqrt(step_i)
-                    p50.append(round(cur, 4))
-                    p10.append(round(cur - band, 4))
-                    p90.append(round(cur + band, 4))
-                return {
-                    "tool": name,
-                    "served_by": "damped-trend-statistical-fallback",
-                    "horizon": horizon,
-                    "p10": p10,
-                    "p50": p50,
-                    "p90": p90,
-                }
+                    n_s = len(raw_series)
+                    slope = (raw_series[-1] - raw_series[max(0, n_s - 8)]) / max(1, min(7, n_s - 1)) if n_s >= 2 else 0.0
+                    diffs = [abs(raw_series[i] - raw_series[i - 1]) for i in range(1, n_s)]
+                    sigma = (sum(diffs) / len(diffs)) if diffs else max(1e-3, abs(raw_series[-1]) * 0.02)
+                    p10, p50, p90 = [], [], []
+                    cur = raw_series[-1]
+                    for step_i in range(1, horizon + 1):
+                        cur = cur + slope * (0.90 ** step_i)
+                        band = 1.2816 * sigma * _math.sqrt(step_i)
+                        p50.append(round(cur, 4))
+                        p10.append(round(cur - band, 4))
+                        p90.append(round(cur + band, 4))
+                    return {
+                        "tool": name,
+                        "served_by": "damped-trend-statistical-fallback",
+                        "horizon": horizon,
+                        "p10": p10,
+                        "p50": p50,
+                        "p90": p90,
+                    }
 
         # Specialist model backed tools (`goedel_lean4_prove`, `boltz2_fold_structure`, `vjepa2_predict_physics`, `chronos2_forecast`)
         target_mid = spec.target_model or "clover-fusion-cluster"
@@ -1449,7 +1484,7 @@ class Mcp2MeshServer:
                 out["lean_finding"] = finding
         return out
 
-    def _exec_batch_calls(self, calls: list[Any], _batch_depth: int = 1) -> dict[str, Any]:
+    def _exec_batch_calls(self, calls: list[Any], _batch_depth: int = 1, *, is_hop: bool = False) -> dict[str, Any]:
         """Club duplicate tool calls & run independent specialist calls in parallel without pool self-deadlock!"""
         t0 = time.perf_counter()
         dedup_futures: dict[str, concurrent.futures.Future] = {}
@@ -1471,7 +1506,7 @@ class Mcp2MeshServer:
             if cname in stateful_tools:
                 fut_sync: concurrent.futures.Future = concurrent.futures.Future()
                 try:
-                    fut_sync.set_result(self._invoke_tool(cname, cargs, _batch_depth))
+                    fut_sync.set_result(self._invoke_tool(cname, cargs, _batch_depth, is_hop=is_hop))
                 except Exception as exc:
                     fut_sync.set_exception(exc)
                 slots.append((idx, fut_sync, None, False))
@@ -1483,7 +1518,7 @@ class Mcp2MeshServer:
                 slots.append((idx, dedup_futures[sig], None, True))
                 clubbed_n += 1
             else:
-                f = self._batch_pool.submit(self._invoke_tool, cname, cargs, _batch_depth)
+                f = self._batch_pool.submit(lambda cn=cname, ca=cargs: self._invoke_tool(cn, ca, _batch_depth, is_hop=is_hop))
                 dedup_futures[sig] = f
                 slots.append((idx, f, None, False))
 

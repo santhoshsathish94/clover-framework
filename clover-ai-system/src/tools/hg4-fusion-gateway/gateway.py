@@ -13,6 +13,7 @@ Endpoints:
 from __future__ import annotations
 
 import argparse
+import hmac
 import json
 import os
 import sys
@@ -103,11 +104,24 @@ class GatewayHandler(BaseHTTPRequestHandler):
     def _error(self, status: int, message: str, code: str = "invalid_request_error") -> None:
         self._send_json({"error": {"message": message, "type": code, "code": code, "param": None}}, status)
 
+    def _drain_and_error(self, status: int, message: str, code: str = "invalid_request_error") -> None:
+        try:
+            cl = int(self.headers.get("Content-Length") or 0)
+            if 0 < cl <= 65536:
+                _ = self.rfile.read(cl)
+            elif cl > 65536:
+                self.close_connection = True
+        except Exception:
+            self.close_connection = True
+        self._error(status, message, code)
+
     def _authorized(self) -> bool:
         if not self.api_key:
             return True
-        auth = self.headers.get("Authorization") or ""
-        return auth == f"Bearer {self.api_key}" or self.headers.get("api-key") == self.api_key
+        key_b = self.api_key.encode("utf-8")
+        auth = (self.headers.get("Authorization") or "").encode("utf-8")
+        hdr_k = (self.headers.get("api-key") or "").encode("utf-8")
+        return hmac.compare_digest(auth, b"Bearer " + key_b) or hmac.compare_digest(hdr_k, key_b)
 
     def _path(self) -> str:
         p = self.path.split("?", 1)[0].rstrip("/")
@@ -180,7 +194,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:  # noqa: N802
         p = self._path()
         if not self._authorized():
-            self._error(401, "invalid API key", "authentication_error")
+            self._drain_and_error(401, "invalid API key", "authentication_error")
             return
         if p in ("/v1/cache/reset", "/cache/reset"):
             self._send_json(self.router.reset_caches())
@@ -191,6 +205,9 @@ class GatewayHandler(BaseHTTPRequestHandler):
         if p in ("/v1/cluster/register", "/cluster/register"):
             try:
                 n_reg = int(self.headers.get("Content-Length") or 0)
+                if n_reg > MAX_BODY:
+                    self._drain_and_error(413, "oversized petal registration")
+                    return
                 reg_body = json.loads(self.rfile.read(n_reg).decode("utf-8")) if 0 < n_reg <= MAX_BODY else {}
                 out_reg = self.petal_registry.register(reg_body)
                 self._send_json(out_reg)
@@ -203,10 +220,21 @@ class GatewayHandler(BaseHTTPRequestHandler):
             except ValueError:
                 n_mcp = 0
             if n_mcp <= 0 or n_mcp > MAX_BODY:
-                self._error(400 if n_mcp <= 0 else 413, "missing or oversized MCP body")
+                self._drain_and_error(400 if n_mcp <= 0 else 413, "missing or oversized MCP body")
                 return
+            t_mcp0 = time.perf_counter()
             raw_mcp = self.rfile.read(n_mcp)
             status, extra_hdrs, resp_obj = self.mcp2.handle_http(raw_mcp, dict(self.headers.items()))
+            try:
+                req_mcp = json.loads(raw_mcp.decode("utf-8"))
+                if isinstance(req_mcp, dict) and req_mcp.get("method") == "tools/call":
+                    t_nm = str((req_mcp.get("params") or {}).get("name") or self.headers.get("Mcp-Name") or "").strip()
+                    if t_nm:
+                        res_m = (resp_obj or {}).get("result") or {}
+                        ok_m = status == 200 and not res_m.get("isError") and "error" not in (resp_obj or {})
+                        self.metrics_ledger.record_tool(t_nm, ok_m, (time.perf_counter() - t_mcp0) * 1000.0)
+            except Exception:
+                pass
             self._send_json(resp_obj, status=status, extra_headers=extra_hdrs)
             return
         if p in ("/v1/chat/completions/batch", "/chat/completions/batch"):
@@ -215,17 +243,17 @@ class GatewayHandler(BaseHTTPRequestHandler):
             except ValueError:
                 n_b = 0
             if n_b <= 0 or n_b > MAX_BODY:
-                self._error(400 if n_b <= 0 else 413, "missing or oversized batch body")
+                self._drain_and_error(400 if n_b <= 0 else 413, "missing or oversized batch body")
                 return
             try:
                 bbody = json.loads(self.rfile.read(n_b).decode("utf-8"))
                 reqs = bbody.get("requests") if isinstance(bbody, dict) else bbody
                 if not isinstance(reqs, list):
                     raise ValueError("expected `{\"requests\": [...]}` or a JSON list")
-            except (ValueError, UnicodeDecodeError) as exc:
+                prio = int(bbody.get("priority", 2)) if isinstance(bbody, dict) else 2
+            except (ValueError, TypeError, UnicodeDecodeError) as exc:
                 self._error(400, f"invalid batch JSON: {exc}")
                 return
-            prio = int(bbody.get("priority", 2)) if isinstance(bbody, dict) else 2
             is_hop = bool(self.headers.get("X-Clover-Hop"))
             batch_out = self.batch_queue.submit_batch(reqs, priority=prio, local_only_hop=is_hop)
             now_ts = int(time.time())
@@ -240,7 +268,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
             except ValueError:
                 n_s = 0
             if n_s <= 0 or n_s > MAX_BODY:
-                self._error(400 if n_s <= 0 else 413, "missing or oversized solve body")
+                self._drain_and_error(400 if n_s <= 0 else 413, "missing or oversized solve body")
                 return
             try:
                 sbody = json.loads(self.rfile.read(n_s).decode("utf-8"))
@@ -256,22 +284,24 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 self._error(500, f"{type(exc).__name__}: {exc}", "server_error")
             return
         if p not in ("/v1/chat/completions", "/chat/completions"):
-            self._error(404, f"unknown endpoint {p}", "not_found")
+            self._drain_and_error(404, f"unknown endpoint {p}", "not_found")
             return
         try:
             n = int(self.headers.get("Content-Length") or 0)
         except ValueError:
             n = 0
         if n <= 0 or n > MAX_BODY:
-            self._error(400 if n <= 0 else 413, "missing or oversized request body")
+            self._drain_and_error(400 if n <= 0 else 413, "missing or oversized request body")
             return
         try:
             body = json.loads(self.rfile.read(n).decode("utf-8"))
             if not isinstance(body, dict):
                 raise ValueError("body must be a JSON object")
-        except (ValueError, UnicodeDecodeError) as exc:
+            prio_chk = int(body.get("x_clover_priority", 1))
+        except (ValueError, TypeError, UnicodeDecodeError) as exc:
             self._error(400, f"invalid JSON body: {exc}")
             return
+        body["x_clover_priority"] = prio_chk
         if body.get("n") not in (None, 1):
             self._error(400, "only n=1 is supported")
             return
@@ -412,7 +442,12 @@ class GatewayHandler(BaseHTTPRequestHandler):
 def create_server(router: FusionRouter, host: str = "127.0.0.1", port: int = DEFAULT_PORT,
                   api_key: str | None = None, quiet: bool = False,
                   batch_window_ms: float | None = None) -> ThreadingHTTPServer:
-    eff_key = api_key if api_key is not None else (os.environ.get("CLOVER_GATEWAY_API_KEY") or None)
+    eff_key = (api_key if api_key is not None else (os.environ.get("CLOVER_GATEWAY_API_KEY") or "")).strip() or None
+    if host not in ("127.0.0.1", "localhost", "::1") and not eff_key and os.environ.get("CLOVER_ALLOW_UNAUTH_PUBLIC_GATEWAY") != "1":
+        raise ValueError(
+            f"Refusing to bind non-loopback host {host!r} without --api-key or CLOVER_GATEWAY_API_KEY "
+            "(set CLOVER_ALLOW_UNAUTH_PUBLIC_GATEWAY=1 only on an isolated private VLAN)."
+        )
     bqueue = ClusterBatchQueue(router.complete, batch_window_ms=batch_window_ms)
     mcp2 = Mcp2MeshServer(router, bqueue)
     preg = PetalRegistry(router, mcp2)

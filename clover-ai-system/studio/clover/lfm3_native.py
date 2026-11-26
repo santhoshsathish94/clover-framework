@@ -850,10 +850,48 @@ class LFM3Native:
             return False, (P.DECLINED_TEXT if why == "not allowed by you" else P.DENIED_TEXT[perm]) + f" ({why})", why
         tid = self._task_begin(name, args)
         self.stage = {"name": f"running {name}", "since": time.time()}
+        ws_guard_dir = (
+            Path(self.workdir)
+            if (
+                name in ("run_python", "run_powershell", "write_file", "vscode_run")
+                and getattr(self, "workdir", None)
+                and Path(self.workdir).is_dir()
+                and os.environ.get("CLOVER_ALLOW_TEST_EDITS") != "1"
+            )
+            else None
+        )
+        ws_before: dict[str, tuple[str, bytes | None]] = {}
+        if ws_guard_dir is not None:
+            try:
+                gw_dir = Path(__file__).resolve().parents[2] / "src" / "tools" / "hg4-fusion-gateway"
+                if gw_dir.is_dir():
+                    import sys as _sys_g
+                    if str(gw_dir) not in _sys_g.path:
+                        _sys_g.path.insert(0, str(gw_dir))
+                    import clover_cycle_engine as _cce_g
+                    ws_before = _cce_g.CloverCycleEngine.snapshot_protected_files(ws_guard_dir)
+            except Exception:
+                ws_before = {}
+        tool_raised = False
         try:
             out = extra["run"](args) if extra else self._run_tool(name, args)
         except Exception as exc:  # report tool failures to the model as results
             out = f"Error: {type(exc).__name__}: {exc}"
+            tool_raised = True
+        if ws_guard_dir is not None:
+            try:
+                import clover_cycle_engine as _cce_g
+                restored = _cce_g.CloverCycleEngine.restore_and_verify_protected_files(ws_guard_dir, ws_before)
+                if restored:
+                    out = (
+                        f"[Clover Execution Integrity Refusal — AGENTS.md §4] Tool `{name}` touched "
+                        f"protected verification file(s) {restored}; pre-existing protected files were restored automatically."
+                    )
+                    self._task_done(tid, name, args, out, "verification_control_tamper_fs")
+                    return False, out, "verification_control_tamper_fs"
+            except Exception:
+                pass
+        if tool_raised:
             self._task_done(tid, name, args, out, why)
             return True, out, why
         if name == "run_powershell" and "is not recognized as the name of a cmdlet" in str(out):

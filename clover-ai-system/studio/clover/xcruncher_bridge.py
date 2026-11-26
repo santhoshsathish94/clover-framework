@@ -302,9 +302,53 @@ def pi_hex_exact(hex_offset: int, digits: int = 20) -> str:
 _SAFE_INT_EXPR = re.compile(r"^[0-9+\-*()<>\s^]+$")
 
 
+_BIGINT_PARSE_SEM = threading.BoundedSemaphore(4)
+
+
+def _bigint_to_decimal_safe(val: int) -> str:
+    if val == 0:
+        return "0"
+    neg = val < 0
+    v = -val if neg else val
+    if v.bit_length() <= 14_000:
+        s = str(v)
+        return ("-" + s) if neg else s
+
+    def _conv(x: int, approx_digs: int) -> str:
+        if x.bit_length() <= 14_000 or approx_digs <= 2000:
+            return str(x)
+        half = max(2000, (approx_digs // 4000) * 2000)
+        hi, lo = divmod(x, 10 ** half)
+        if hi == 0:
+            return _conv(lo, half)
+        return _conv(hi, approx_digs - half) + _conv(lo, half).zfill(half)
+
+    res = _conv(v, int(v.bit_length() * 0.30103) + 2)
+    return ("-" + res) if neg else res
+
+
+def _decimal_to_bigint_safe(s: str) -> int:
+    neg = s.startswith("-")
+    digits = s[1:] if s[:1] in "+-" else s
+    if len(digits) <= 4000:
+        v = int(digits)
+        return -v if neg else v
+
+    def _parse_range(lo_i: int, hi_i: int) -> int:
+        span = hi_i - lo_i
+        if span <= 2000:
+            return int(digits[lo_i:hi_i])
+        mid_len = max(2000, (span // 4000) * 2000)
+        split = hi_i - mid_len
+        return _parse_range(lo_i, split) * (10 ** mid_len) + _parse_range(split, hi_i)
+
+    v = _parse_range(0, len(digits))
+    return -v if neg else v
+
+
 def _parse_big_operand(raw: str | int) -> int:
     """Safely parse either a decimal/hex integer string or a simple near-2^k integer expression
-    such as `(1 << 200000) - 6` or `2**100000 - 1` without eval()."""
+    such as `(1 << 200000) - 6` or `2**100000 - 1` without eval() or raising sys.set_int_max_str_digits."""
     if isinstance(raw, int) and not isinstance(raw, bool):
         return raw
     s = str(raw or "").strip().replace(",", "").replace("_", "")
@@ -313,12 +357,11 @@ def _parse_big_operand(raw: str | int) -> int:
     if len(s) > MAX_STR_DIGITS + 32:
         raise ValueError(f"operand exceeds {MAX_STR_DIGITS:,} characters")
 
-    old_lim = getattr(sys, "get_int_max_str_digits", lambda: 4300)()
-    if hasattr(sys, "set_int_max_str_digits") and old_lim < MAX_STR_DIGITS + 64:
-        sys.set_int_max_str_digits(MAX_STR_DIGITS + 64)
-    try:
-        if re.fullmatch(r"[+-]?(?:0x[0-9a-fA-F]+|\d+)", s):
-            return int(s, 0)
+    with _BIGINT_PARSE_SEM:
+        if re.fullmatch(r"[+-]?0x[0-9a-fA-F]+", s):
+            return int(s, 16)
+        if re.fullmatch(r"[+-]?\d+", s):
+            return _decimal_to_bigint_safe(s)
         s_norm = s.replace("^", "**")
         if not re.fullmatch(r"[0-9+\-*()<>\s]+", s_norm) or len(s_norm) > 256:
             raise ValueError(f"unsupported integer operand syntax: {s[:80]!r}")
@@ -352,27 +395,18 @@ def _parse_big_operand(raw: str | int) -> int:
             raise ValueError("unsupported operator in integer operand")
 
         return _ev(tree)
-    finally:
-        if hasattr(sys, "set_int_max_str_digits"):
-            sys.set_int_max_str_digits(old_lim)
 
 
 def _format_bigint(val: int) -> dict:
-    old_lim = getattr(sys, "get_int_max_str_digits", lambda: 4300)()
-    need = max(old_lim, int(abs(val).bit_length() * 0.31) + 64)
-    if need > MAX_STR_DIGITS * 3:
+    est_need = int(abs(val).bit_length() * 0.31) + 64
+    if est_need > MAX_STR_DIGITS * 3:
         return {
             "bit_length": val.bit_length(),
             "hex_low_64": f"{abs(val) & ((1 << 64) - 1):016x}",
             "note": "Result exceeds decimal conversion display limit; exact binary product computed.",
         }
-    if hasattr(sys, "set_int_max_str_digits") and need > old_lim:
-        sys.set_int_max_str_digits(need)
-    try:
-        dec = str(val)
-    finally:
-        if hasattr(sys, "set_int_max_str_digits") and need > old_lim:
-            sys.set_int_max_str_digits(old_lim)
+    with _BIGINT_PARSE_SEM:
+        dec = _bigint_to_decimal_safe(val)
 
     digits_only = dec.lstrip("-")
     n_digits = len(digits_only)
