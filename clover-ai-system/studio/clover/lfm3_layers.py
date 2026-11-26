@@ -666,55 +666,20 @@ class LayerKit:
                     for x in e.entities
                 )
             ]
-        q_low = q.lower()
-        core_tech_notes = []
-        core_tech_ids = []
-        if ("attention sink" in q_low or "streamingllm" in q_low or ("sink" in q_low and "transformer" in q_low)):
-            core_tech_ids.append("CS_ML:STREAMINGLLM_ATTENTION_SINKS")
-            core_tech_notes.append(
-                "- Attention Sinks & StreamingLLM (Xiao et al., 2023):\n"
-                "  Key points: In autoregressive Transformers, Softmax attention requires weights to sum to 1.0 across visible tokens. "
-                "When a query token has no strong match in the context, excess attention mass is dumped onto the very first 1–4 initial tokens "
-                "because causal masking makes them visible to every subsequent token — turning initial tokens into 'attention sinks' with disproportionately HIGH attention scores. "
-                "Standard sliding-window attention collapses when those initial tokens slide out of the KV cache. "
-                "StreamingLLM fixes this by permanently retaining the KV states of the first k (e.g., 4) attention sink tokens plus a rolling sliding window of recent tokens, "
-                "Assigning positional encodings (RoPE) relative to positions within the rolling cache rather than absolute sequence positions."
-            )
-        if "sqlite" in q_low and ("postgres" in q_low or "mysql" in q_low or "compare" in q_low or "vs" in q_low):
-            core_tech_ids.append("CS_DB:SQLITE_VS_POSTGRESQL")
-            core_tech_notes.append(
-                "- SQLite vs PostgreSQL 4-Row Comparison:\n"
-                "  | Dimension | SQLite | PostgreSQL |\n"
-                "  |---|---|---|\n"
-                "  | Architecture | Embedded serverless single-file library | Client-server relational database process |\n"
-                "  | Concurrency | Multiple concurrent readers, single writer (WAL lock) | Full MVCC with high multi-writer concurrency |\n"
-                "  | Transactions & Indexing | Full ACID transactions; B-tree & FTS5 indexes | Full ACID; B-tree, GIN, GiST, BRIN & pgvector indexes |\n"
-                "  | Best Use Case | Mobile/desktop apps, local caches, CLI & edge devices | Multi-user web backends, high-write & enterprise scale |"
-            )
-        if ("monolith" in q_low and "microservice" in q_low):
-            core_tech_ids.append("CS_ARCH:STRANGLER_FIG_MIGRATION")
-            core_tech_notes.append(
-                "- Monolith to Microservices Safe Migration (Strangler Fig Pattern):\n"
-                "  Key points: (1) Place an API Gateway / reverse proxy in front of the monolith and establish observability, distributed tracing, and contract tests; "
-                "(2) Identify bounded contexts (DDD) with low coupling and select one well-bounded edge domain first; "
-                "(3) Extract the service incrementally using the Strangler Fig pattern and decouple its database (avoid shared mutable tables, use CDC/outbox events); "
-                "(4) Shift traffic gradually via canary flags, verify SLAs/rollback paths, and retire the legacy monolith module."
-            )
-        if not ev and not core_tech_notes:
+        if not ev:
             return None, None
         self.last_ontology_evidence = list(ev)
-        all_ents = [e for item in ev for e in item.entities] + core_tech_ids
-        info = {"layer": "ontology", "entities": all_ents, "n_evidence": len(ev) + len(core_tech_notes),
+        all_ents = [e for item in ev for e in item.entities]
+        info = {"layer": "ontology", "entities": all_ents, "n_evidence": len(ev),
                 "ms": round((time.perf_counter() - t0) * 1000, 1)}
         if bridged_from_mem:
             info["bridged_from_memory"] = bridged_from_mem
             info["bridged_entities"] = bridged_entities
-        rendered = self.cl.render_evidence(ev) if ev else ""
+        rendered = self.cl.render_evidence(ev)
         if self.memory_root is None:
-            extra_blk = ("\n\n" + "\n\n".join(core_tech_notes)) if core_tech_notes else ""
-            return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + extra_blk + "\n" + ONTOLOGY_INSTRUCTION, info
+            return "Ontology-Guided Symbolic Evidence & Provenance Paths:\n" + rendered + "\n" + ONTOLOGY_INSTRUCTION, info
         # app: told not to, LFM3-Omni still quoted [E2]/[P5] and raw IDs, so the labels, IDs and paths are left out
-        notes = list(core_tech_notes)
+        notes = []
         for blk in rendered.split("\n\n"):
             lines = blk.strip().splitlines()
             if not lines or not re.match(r"\[E\d+\]", lines[0]):

@@ -583,7 +583,7 @@ def tool_inventory():
     else:
         unavailable_cond.extend(vs_names)
     base_dir = Path(S.args.base) if S.args else None
-    if base_dir and (base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file():
+    if base_dir and ((base_dir / "tools" / "sd.cpp" / "vulkan" / "sd-cli.exe").is_file() or paths.ANDROID or paths.WEB):
         installed_cond.append("generate_image")
     else:
         unavailable_cond.append("generate_image")
@@ -2580,6 +2580,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(data)
+        self.wfile.flush()
 
     def do_OPTIONS(self):
         if not self._host_ok():
@@ -3497,6 +3498,17 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 with urllib.request.urlopen(req, timeout=240) as resp:
                     return self._send(200, resp.read(), "application/json")
+            if path == "/api/worker/image":
+                import image_gen
+                preset_w = str(body.get("preset") or "sd15-lcm").strip() or "sd15-lcm"
+                prompt_w = str(body.get("prompt") or "").strip()
+                size_w = int(body.get("size") or 512)
+                seed_w = body.get("seed")
+                gen_w = image_gen.ImageGen(S.args.base, preset_w)
+                res_w = gen_w.generate(prompt_w, media_dir(), size=size_w, seed=seed_w)
+                img_path = media_dir() / res_w["file"]
+                img_b64 = base64.b64encode(img_path.read_bytes()).decode("ascii")
+                return self._send(200, {"ok": True, "image_base64": img_b64, **res_w})
             if path in ("/api/worker/csi", "/api/worker/csi/analyze"):
                 if S.csi is None or not S.csi.alive() or not S.csi.url.startswith("http://127.0.0.1:"):
                     return self._send(503, {"error": "CSI service is not ready"})

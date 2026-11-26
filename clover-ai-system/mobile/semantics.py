@@ -70,6 +70,7 @@ ASKS = (
     (("python",), r"\b(?:use|using)\s+python\b|\bpython\s+to\s+(?:compute|calculate|check|solve|count|find|test)\b|"
                   r"\b(?:run|execute|test)\s+(?:this|the|my|that|it|some)?\s*(?:code|script|program|python)\b|"
                   r"\b(?:write|create|make)\b[^.?!\n]{0,60}\b(?:python|script|program|code)\b[^.?!\n]{0,60}\band\s+(?:run|execute|test)\s+it\b|"
+                  r"\b(?:what\s+is|find|calculate|compute)\s+the\s+(?:minimum|maximum|least|lowest|highest|cheapest|optimal)\s+(?:cost|price|number|amount|total|profit)\b(?=[\s\S]*\d)|"
                   # not the phone's old "calculate <number>": it gave a 70-task word problem ("calculate 1000 - 920 and
                   # state whether the bead floats") a tool, and unasked tools cost the laptop's model 6 of 65 (ladder 8-9)
                   # "How much did I spend on groceries? The file is ...expenses.csv" read the right amounts and added
@@ -119,7 +120,7 @@ ASKS = (
                  r"\b(?:show|give)\s+me\s+(?:a|an)\s+(?:image|picture|drawing|painting|illustration)\s+of\b|"
                  r"^\W*(?:(?:please|just|now|ok(?:ay)?|hey|clover)\W+){0,2}(?:a|an|the|one|some|another|simple|quick|detailed|realistic|minimalistic|cute|beautiful|high[\s-]?res(?:olution)?|hd)?\s*(?:\w+\s+){0,2}(?:image|picture|photo|drawing|painting|illustration|sketch|artwork|portrait|wallpaper|poster)\s+(?:of|showing|with|featuring|depicting)\s+\S|"
                  r"\b(?:i\s+want|i\s+need|i'?d\s+like|give\s+me|show\s+me|send\s+me)\s+(?:the\s+|a\s+|an\s+|actual\s+|real\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\b|"
-                 r"\b(?:it'?s\s+just\s+(?:a\s+)?description|not\s+(?:just\s+)?(?:a\s+)?description|where\s+is\s+the\s+(?:image|picture|photo|drawing|tree|cat|dog|car|house))\b|"
+                 r"\b(?:it'?s\s+just\s+(?:a\s+)?description|not\s+(?:just\s+)?(?:a\s+)?description|where\s+is\s+the\s+(?:image|picture|photo|drawing|painting|illustration|sketch))\b|"
                  r"^\W*(?:(?:please|can\s+you|could\s+you|would\s+you)\s+)?(?:draw|sketch|paint|illustrate)\s+(?:me\s+)?(?:a|an|the)\s+"
                  r"(?!(?:conclusion|line\b|comparison|parallel|distinction|blank|inference|graph\b|chart\b|table\b))[a-z]"),
     (("vscode.open", "vscode.clone", "vscode.install", "vscode.run"),
@@ -154,8 +155,6 @@ ASKS = (
     (("calc",),
      r"\b(?:use\s+(?:the\s+)?calculator|with\s+calculate)\b|"
      r"\bcompounded\s+(?:annually|semi[\s-]?annually|quarterly|monthly|daily)\b|"
-     r"\b(?:boxes|packs|bags|bundles|batches)\s+of\s+\d+\s+for\s+\$?\d+|"
-     r"\b(?:what\s+is|find|calculate|compute)\s+the\s+(?:minimum|maximum|least|lowest|highest|smallest|largest|cheapest|optimal)\s+(?:cost|price|number|amount|total|profit|time|distance|value)\b|"
      r"\b(?:calculate|compute|evaluate)\s+\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*|"
      r"^\s*(?:(?:what(?:'?s|\s+is|\s+are)|calculate|compute|evaluate)\s+)?\(?-?\d[\d,.]*\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*(?:\s*(?:[+\-*/\u00d7\u00f7^]|\*\*)\s*\(?-?\d[\d,.]*)*\)?\s*[?.!]*(?:\s+(?:and\s+)?(?:return|reply\s+with|output|give|provide|write|respond\s+with)\s+(?:only|just)\b[\s\S]*)?$"),
     (("units",),

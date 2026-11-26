@@ -4,5 +4,5 @@ laptop/CloverAIStudio-Setup.exe  5.0.6  Windows 10 2004+ x64, 16 GB RAM, AVX2, 2
   1ac5091885360d4fcd3eff0f0209fd25de7b4c556eda306928ebcff74ca2603b
 laptop/CloverFramework-CodeSign.cer  Clover Framework Authenticode certificate  832 bytes
   9365ec5d455b0ef8179ccf1c061cf481c86dad234b9f3dc62244e487c659072d
-mobile/CloverAIStudio.apk  5.0.6 (code 20, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  82649699 bytes
-  d0684b3349c515cd7d24893af177da350da2917092dbab28f7e959acfe68b33b
+mobile/CloverAIStudio.apk  5.0.6 (code 20, targetSdk 36)  Android 8+ arm64, Snapdragon GPU via OpenCL, about 3 GB free  82643388 bytes
+  afd6ef9460d4cb11d1ba297503154f0e080d5ac02a8529453967c05963dcade5

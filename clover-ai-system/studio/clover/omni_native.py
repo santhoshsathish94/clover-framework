@@ -114,19 +114,19 @@ MEDIA_WORD = {"image_url": "image", "input_audio": "audio", "input_video": "vide
 
 def _resolve_image_prompt(query: str, past_msgs=()) -> str:
     """Resolve the visual description to pass to `generate_image`, looking back at `past_msgs` when `query` is a
-    follow-up such as 'Ask nemotron to generate', 'Where?', 'Try again', or 'Where is the tree its just description i want the image'."""
+    meta follow-up such as 'Ask nemotron to generate', 'Where?', 'Try again', or 'Where is the <subject> it's just description i want the image'."""
     q = " ".join(str(query or "").split()).strip()
-    m_where = re.search(r"\bwhere\s+is\s+the\s+([a-z][a-z\s]{1,35}?)(?:\s+it'?s\b|\s+i\s+want\b|[?.!,]|$)", q, re.I)
-    if m_where and m_where.group(1).strip().lower() not in ("image", "picture", "photo", "drawing", "illustration"):
-        return f"a clear, detailed illustration of a {m_where.group(1).strip()}"
+    m_where = re.search(r"\bwhere\s+is\s+the\s+([a-z0-9][a-z0-9\s,\-]{1,60}?)(?:\s+it'?s\b|\s+i\s+want\b|[?.!,]|$)", q, re.I)
+    if m_where and m_where.group(1).strip().lower() not in ("image", "picture", "photo", "drawing", "illustration", "art", "artwork"):
+        return m_where.group(1).strip()
     is_meta_followup = bool(
-        re.match(r"^\W*(?:where(?:\s+is\s+it)?|try\s+again|retry|redo|generate\s+it|make\s+it|draw\s+it|show\s+me)\s*[?.!]*\W*$", q, re.I)
+        re.match(r"^\W*(?:where(?:\s+is\s+(?:it|the\s+(?:image|picture|photo|drawing|illustration)))?|try\s+again|retry|redo|generate\s+it|make\s+it|draw\s+it|show\s+me)\s*[?.!]*\W*$", q, re.I)
         or re.search(r"\b(?:ask|use|have|let|tell)\s+(?:nemotron|kimi|clover|lfm\w*|the\s+model)\s+to\s+(?:generate|create|make|draw|render)\b", q, re.I)
         or re.search(r"\b(?:it'?s\s+just\s+(?:a\s+)?description|i\s+want\s+the\s+(?:image|picture))\b", q, re.I)
     )
     if not is_meta_followup and q:
         cleaned = re.sub(
-            r"^\W*(?:(?:please|just|can\s+you|could\s+you|would\s+you)\s+)*(?:generate|create|make|draw|paint|render|sketch|illustrate|show\s+me|give\s+me)\s+(?:me\s+)?(?:a|an|the|some)?\s*(?:simple\s+|detailed\s+|high[\s-]?res(?:olution)?\s+|hd\s+)?(?:image|picture|photo|drawing|painting|illustration|sketch)\s+(?:of|showing|with|featuring)\s+",
+            r"^\W*(?:(?:please|just|can\s+you|could\s+you|would\s+you)\s+)*(?:generate|create|make|draw|paint|render|sketch|illustrate|show\s+me|give\s+me)(?:\s+me)?\s+",
             "",
             q,
             flags=re.I,
@@ -140,16 +140,12 @@ def _resolve_image_prompt(query: str, past_msgs=()) -> str:
             continue
         if m.get("role") == "user":
             u_c = " ".join(c.split()).strip()
-            if re.match(r"^\W*(?:can\s+you\s+generate\s+images|where|try\s+again|hi|hello)\b", u_c, re.I):
+            if re.match(r"^\W*(?:(?:can|could|do|are)\s+you\s+(?:able\s+to\s+)?(?:generate|create|make|draw)|where|try\s+again|hi|hello)\b", u_c, re.I):
                 continue
             if re.search(r"\b(?:ask|use)\s+(?:nemotron|kimi)\b|\bit'?s\s+just\s+(?:a\s+)?description\b", u_c, re.I):
                 continue
-            return u_c
-        elif m.get("role") == "assistant":
-            m_desc = re.search(r"(?:Here is (?:the image|a different version)|The image is):\s*([^.!\n]{8,180})", c, re.I)
-            if m_desc:
-                return m_desc.group(1).strip()
-    return q or "a scenic nature illustration with a tree and sunlight"
+            return _resolve_image_prompt(u_c, ())
+    return q
 
 
 def _direct_s3_or_concept_plan(query: str, s3_pre_call: dict | None, s3_extra_calls: list | tuple, rounds: list) -> str | None:
@@ -757,16 +753,6 @@ def plan_s3_pre_calls(engine, query, only_tools, by_name, *, meaning=None, past_
                 "name": "calculate",
                 "arguments": {"expression": expr_int},
             })
-        elif hasattr(C, "solve_quantitative_word_problem"):
-            wp = C.solve_quantitative_word_problem(query or "")
-            if wp is not None:
-                wp_expr, _, wp_expl = wp
-                s3_pre_call = {
-                    "id": "call_" + uuid.uuid4().hex[:16],
-                    "name": "calculate",
-                    "arguments": {"expression": wp_expr},
-                    "note": wp_expl,
-                }
     elif (
         "generate_image" in only_tools
         and "generate_image" in by_name
@@ -1547,10 +1533,7 @@ class OmniNative(N.LFM3Native):
                         is_live_gpu = getattr(self, "gpu", None) is not None and "_chat" not in getattr(self, "__dict__", {})
                         if is_cap_q and r == 0 and attempt == 0:
                             schemas = []
-                            direct_plan = (
-                                "Yes, I can generate images and illustrations from any text description. "
-                                "What would you like the image to show?"
-                            )
+                            direct_plan = None
                         else:
                             direct_plan = (
                                 _direct_s3_or_concept_plan(query, s3_pre_call, s3_extra_calls, rounds)

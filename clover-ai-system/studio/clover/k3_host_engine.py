@@ -12,6 +12,7 @@ import http.client
 import json
 import os
 import re
+import socket
 import subprocess
 import threading
 import time
@@ -25,6 +26,36 @@ import clover_cycle as C
 import lfm3_native as N
 import omni_native
 import paths
+
+_ORIG_GETADDRINFO = getattr(socket, "_clover_orig_getaddrinfo", socket.getaddrinfo)
+_DNS_CACHE: dict[tuple[str, int], list] = {}
+
+
+def _ipv4_cached_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    key = (str(host or "").lower(), int(port) if isinstance(port, int) or str(port or "").isdigit() else 0)
+    try:
+        res = _ORIG_GETADDRINFO(host, port, family, type, proto, flags)
+        v4 = [r for r in res if r[0] == socket.AF_INET]
+        v6 = [r for r in res if r[0] != socket.AF_INET]
+        ordered = (v4 + v6) if v4 else res
+        if ordered and key[0]:
+            _DNS_CACHE[key] = ordered
+        return ordered
+    except socket.gaierror:
+        if key in _DNS_CACHE:
+            return _DNS_CACHE[key]
+        if key[0] == "api.cloverframework.com":
+            p_num = key[1] or 443
+            return [
+                (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("104.21.59.94", p_num)),
+                (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("172.67.222.116", p_num)),
+            ]
+        raise
+
+
+if not hasattr(socket, "_clover_orig_getaddrinfo"):
+    socket._clover_orig_getaddrinfo = _ORIG_GETADDRINFO
+    socket.getaddrinfo = _ipv4_cached_getaddrinfo
 
 WORKER_URL = os.environ.get("CLOVER_K3_WORKER_URL", "http://127.0.0.1:8765")
 K3_URLS = (

@@ -48,9 +48,12 @@ def _fn(name, description, props=None, required=()):
 
 
 STUDIO_TOOLS = [
-    _fn("run_python", "Run Python 3 code on this laptop and return what it prints. Use print() for results. pandas, "
-        "openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). To show "
-        "a chart, save it as a PNG file (plt.savefig('chart.png')); the user sees it in the chat. 60-second limit.",
+    _fn("run_python", "Run Python 3 code and return what it prints. Use print() for results. "
+        "For math or optimization problems, define scalar variables size1, price1, size2, price2, target first "
+        "(do not use lists), loop c1 in range(target // size1 + 2) and c2 in range(target // size2 + 2), "
+        "check if c1 * size1 + c2 * size2 >= target, and find the minimum cost = c1 * price1 + c2 * price2. "
+        "pandas, openpyxl, numpy and matplotlib are installed (read an attached document from the path it was saved at). "
+        "To show a chart, save it as a PNG file (plt.savefig('chart.png')); the user sees it in the chat. 60-second limit.",
         {"code": {"type": "string", "description": "Python source code"}}, ["code"]),
     _fn("web_search", "Search the web. Returns results with links.",
         {"query": {"type": "string"}}, ["query"]),
